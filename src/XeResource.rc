@@ -1,0 +1,298 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "XeResource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+
+//IDR_MAINFRAME           ICON                    "../res/Drava_48x48.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open file...\tCtrl-O",       ID__FILE_OPEN
+        POPUP "&Recent files"
+        BEGIN
+            MENUITEM "MRU 1",                       ID_MRU_ITEM1
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Open containing folder",      ID__OPENCONTAININGFOLDER
+        MENUITEM "Filename to Clipboard",       ID__FILENAMETOCLIPBOARD
+        MENUITEM "Full File Path to Clipboard", ID__FULLFILEPATHTOCLIPBOARD
+        MENUITEM "&Close file",                 ID_CLOSE_CURRENT_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "Close &all files",            ID_FILE_CLOSEALLWINDOWS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID__APP_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        POPUP "Ta&b"
+        BEGIN
+            MENUITEM "&1st Tab\tCtrl-Numpad 1",     ID_TAB_1STTAB
+            MENUITEM "&2nd Tab\tCtrl-Numpad 2",     ID_TAB_2NDTAB
+            MENUITEM "&3rd Tab\tCtrl-Numpad 3",     ID_TAB_3RDTAB
+            MENUITEM "&4th Tab\tCtrl-Numpad 4",     ID_TAB_4THTAB
+            MENUITEM "&5th Tab\tCtrl-Numpad 5",     ID_TAB_5THTAB
+            MENUITEM "&6th Tab\tCtrl-Numpad 6",     ID_TAB_6THTAB
+            MENUITEM "&7th Tab\tCtrl-Numpad 7",     ID_TAB_7THTAB
+            MENUITEM "&8th Tab\tCtrl-Numpad 8",     ID_TAB_8THTAB
+            MENUITEM "&9th Tab\tCtrl-Numpad 9",     ID_TAB_9THTAB
+            MENUITEM SEPARATOR
+            MENUITEM "&Previous Tab\tCtrl-Page up", ID_TAB_PREVTAB
+            MENUITEM "&Next Tab\tCtrl-Page down",   ID_TAB_NEXTTAB
+        END
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Set window &title...",        ID_FILE_SET_TITLE
+        MENUITEM SEPARATOR
+        MENUITEM "&Settings...",                ID_SHOW_SETTINGS
+        MENUITEM SEPARATOR
+        POPUP "Theme"
+        BEGIN
+            MENUITEM "{empty}",                     ID_THEME_LIST_ITEM1
+        END
+        MENUITEM "Theme editor...",             ID_TOOLS_THEMEEDITOR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About 'this' application...", ID__APP_ABOUT
+    END
+END
+
+IDR_TAB_CONTEXT_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Open containing folder",      ID__OPENCONTAININGFOLDER
+        MENUITEM SEPARATOR
+        MENUITEM "Filename to Clipboard",       ID__FILENAMETOCLIPBOARD
+        MENUITEM "Full File Path to Clipboard", ID__FULLFILEPATHTOCLIPBOARD
+        MENUITEM SEPARATOR
+        MENUITEM "Move to other view",          ID__MOVETOOTHER
+        MENUITEM SEPARATOR
+        MENUITEM "Move to first tab",           ID__MOVETOFIRSTTAB
+        MENUITEM "Move to last tab",            ID__MOVETOLASTTAB
+        MENUITEM "Move left",                   ID__MOVELEFT
+        MENUITEM "Move right",                  ID__MOVERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Close this tab",              33240
+        MENUITEM "Close other tabs",            ID__CLOSEOTHERTABS
+        MENUITEM "Close All to the Left",       ID__CLOSEALLTOTHELEFT
+        MENUITEM "Close All to the Right",      ID__CLOSEALLTOTHERIGHT
+        MENUITEM "Close all but pinned tabs",   33241
+        MENUITEM SEPARATOR
+        MENUITEM "Pin tab",                     33242
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT_BOX DIALOGEX 0, 0, 253, 107
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_APP_ICON,11,14,20,20
+    LTEXT           "name",IDC_APP_NAME,40,19,184,10,SS_NOPREFIX
+    LTEXT           "copyright",IDC_APP_COPYRIGHT,14,49,209,10
+    LTEXT           "ver",IDC_APP_VERSION,14,39,209,10
+    DEFPUSHBUTTON   "OK",IDOK,108,84,50,16,WS_GROUP
+END
+
+IDD_ASK_STRING DIALOGEX 0, 0, 255, 49
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dlg title"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_ASK_STRING,7,7,241,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,31,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,198,31,50,14
+END
+
+IDD_SETTINGS DIALOGEX 0, 0, 347, 274
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LISTBOX         IDC_SETTINGS_LIST,7,7,106,260,LBS_NOINTEGRALHEIGHT | NOT WS_BORDER | WS_VSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
+    DEFPUSHBUTTON   "Save",IDOK,177,253,50,14
+    PUSHBUTTON      "Apply",IDC_APPLY_SETTINGS,233,253,50,14
+    PUSHBUTTON      "Close",IDCANCEL,290,253,50,14
+END
+
+IDD_THEME_EDITOR DIALOGEX 0, 0, 639, 334
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Theme editor"
+FONT 8, "Segoe UI", 400, 0, 0x1
+BEGIN
+    LTEXT           "ColorID",IDC_STATIC,18,20,88,8
+    LTEXT           "Defined as",IDC_STATIC,121,20,55,8
+    LTEXT           "Group :: Description",IDC_STATIC,221,20,105,8
+    LISTBOX         IDC_LB_COLOR_ID,7,30,370,237,LBS_USETABSTOPS | NOT WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
+    LTEXT           "ColorID:",IDC_STATIC,7,263,28,8
+    EDITTEXT        IDC_CLRNUM_NAME,51,261,66,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Rename...",IDC_RENAME_CID,119,261,50,12
+    LTEXT           "",IDC_CLRNUM_ID,173,263,19,8
+    LTEXT           "Sort by:",IDC_STATIC,281,263,27,8
+    COMBOBOX        IDC_CID_SORT_BY,311,261,66,122,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Defined as: ",IDC_STATIC,7,280,40,8
+    COMBOBOX        IDC_CB_COLOR_ID_DEF_AS_LABEL,51,278,129,277,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_COLOR_ID_DEF_COLOR,"MfcColorButton",WS_TABSTOP,182,278,50,12
+    LTEXT           "Static",IDC_DEFINED_AS,237,280,71,8
+    LTEXT           "Description:",IDC_STATIC,7,298,39,8
+    EDITTEXT        IDC_CLRNUM_COMMENT,52,296,291,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Edit...",IDC_EDIT_CID_DESCRIPTION,345,296,32,12
+    PUSHBUTTON      "Cancel changes",IDC_CANCEL_CHANGES,6,316,64,14
+    PUSHBUTTON      "Save changes",IDC_SAVE_CHANGES,76,316,64,14
+    PUSHBUTTON      "Add new ColorID...",IDC_ADD_NEW_COLORID,146,316,83,14
+    PUSHBUTTON      "Delete ColorID",IDC_DELETE_COLORID,235,316,68,14
+    PUSHBUTTON      "Save ColorIds",IDC_SAVE_COLORIDS,309,316,68,14
+    LTEXT           "Palette color",IDC_STATIC,401,20,60,8
+    LTEXT           "Defined as",IDC_STATIC,515,20,54,8
+    LISTBOX         IDC_LB_PALETTE,390,30,241,237,LBS_USETABSTOPS | NOT WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
+    PUSHBUTTON      "Invert Palette",IDC_PALETTE_INVERT,390,261,54,14
+    PUSHBUTTON      "Edit Palette",IDC_EDIT_PALETTE_ONLY,447,261,54,14
+    LTEXT           "Sort by:",IDC_STATIC,536,263,27,8
+    COMBOBOX        IDC_PALETTE_SORT_BY,566,261,66,115,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Palette color:",IDC_STATIC1,390,280,54,8
+    EDITTEXT        IDC_PALETTE_ITEM,447,278,98,12,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Rename...",IDC_RENAME_PALETTE_LABEL,548,278,50,12
+    LTEXT           "Defined as:",IDC_STATIC2,390,298,54,8
+    COMBOBOX        IDC_CB_PALETTE_DEF_AS,447,296,98,277,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_PALETTE_DEF_AS_COLOR,"MfcColorButton",WS_TABSTOP,548,296,50,12
+    PUSHBUTTON      "Add new label",IDC_ADD_NEW_PALETTE_ITEM,447,316,60,14
+    LTEXT           "Static",IDC_CLRDEF_DEFINED_AS,550,318,81,8
+    PUSHBUTTON      "Delete",IDC_DELETE_PALETTE_LABEL,511,316,34,14
+    CTEXT           "Theme Color",IDC_STATIC,7,5,370,12,0,WS_EX_STATICEDGE
+    CTEXT           "Selected Palette Color",IDC_STATIC,390,5,241,12,0,WS_EX_STATICEDGE
+END
+
+IDD_MSGBOX DIALOGEX 0, 0, 199, 55
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Message title"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Btn3",IDC_MSG_BTN3,143,35,50,14
+    ICON            IDR_MAINFRAME,IDC_MSG_ICON,7,7,20,20
+    EDITTEXT        IDC_MESSAGE,34,7,159,25,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    PUSHBUTTON      "Btn2",IDC_MSG_BTN2,88,35,50,14
+    DEFPUSHBUTTON   "Btn1",IDC_MSG_BTN1,33,35,50,14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 163
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+1 TEXTINCLUDE
+BEGIN
+    "XeResource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#include ""XeResource.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""PNG_Images.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+#endif
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE resource.
+//
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#include "XeResource.rc2"  // non-Microsoft Visual C++ edited resources
+#include "PNG_Images.rc2"  // non-Microsoft Visual C++ edited resources
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

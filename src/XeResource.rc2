@@ -1,0 +1,21 @@
+//
+// XeResource.rc2 - resources Microsoft Visual C++ does not edit directly
+//
+
+#ifdef APSTUDIO_INVOKED
+#error this file is not editable by Microsoft Visual C++
+#endif //APSTUDIO_INVOKED
+
+#include "XeResource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// Add manually edited resources here...
+
+IDR_COLOR_IDS_JSON      290                     "../res/ColorIDs.json"
+
+IDR_THEME1_JSON         290                     "../res/Theme_1.json"
+
+IDR_THEME2_JSON         290                     "../res/Theme_2.json"
+
+IDR_DEFAULT_GENERAL_SETTINGS_JSON 290           "../res/DefaultGeneralSettings.json"
+

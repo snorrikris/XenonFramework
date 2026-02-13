@@ -1,0 +1,457 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\XenonFramework">
+      <UniqueIdentifier>{ad2b7378-ddc7-4340-8d7b-ecb47edf60eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\XenonFramework\UG">
+      <UniqueIdentifier>{cec58c56-fff2-4201-a75e-619d34f9ce4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\VSRL">
+      <UniqueIdentifier>{e17c2d30-251c-4775-91c4-918940c12624}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\CeXDib.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\logging.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\os_minimal.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PPDrawManager.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PPHtmlDrawer.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PPTooltipDefs.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Xe_res.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\XeAssert.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCBType.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCell.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCelTyp.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCTarrw.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCTprogress.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCtrl.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCTsarw.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGCTurlbtn.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\ugdefine.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGDLType.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGDrwHnt.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGDtaSrc.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\ugformat.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\uggdinfo.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGGrid.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\ughscrol.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGMemMan.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGMultiS.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\ugptrlst.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\ugsidehd.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\ugstruct.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGTopHdg.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\ugvscrol.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\XeGridDefs.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\XeResource.h">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\UG\UGEdit.h">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vsrollinglog\VSRL.h">
+      <Filter>Source Files\VSRL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vsrollinglog\VSRL_IF.h">
+      <Filter>Source Files\VSRL</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="XenonDemo.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CeXDib.cpp">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mfc_types.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Monitors.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PPDrawManager.cpp">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PPHtmlDrawer.cpp">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PPTooltip.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ViewsListWnd.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeAssert.cpp">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeBaseDlg.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeCalendarCtrl.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeChronoTimer.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeColorPicker.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DAppBase.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DButton.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DRenderContext.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DStatic.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DToolbar.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DToolbarIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DToolbarItems.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeDefData.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeDialogTemplateEx.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeDirect2DBase.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeDurationCtrl.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeFileDlgHelpers.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeFileHelpers.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeFileHelpersJson.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeFileTimeX.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeFileVersionInfo.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeFileVwIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeListBoxEx.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeListBoxExCommon.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeMainFrameBase.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeMenu.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeMessageBoxDlg.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeMRUList.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeNaryTree.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XePopupCtrl.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XePopupCtrlBase.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeScintillaEditControl.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeScrollBar.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeSettingsDlg.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeStringTools.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeTabsList.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeTabsView.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeTheme.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeThemeEditorDlg.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeThemeIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeTreeCtrlEx.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUIcolors.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUIcolorsIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUItypes.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUIWorkThread.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUserSetting.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUserSettingControl.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUserSettings.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUserSettings_Changed.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUserSettingsForUI.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUtils.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeVerifyDirectoryAccessible.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeViewManager.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeViewManagerIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeWindowStyle.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeWindowStyleRects.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeWindowStyleValue.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCBType.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCell.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCelTyp.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCTarrw.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCTprogress.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCtrl.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCTsarw.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCTurlbtn.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGDLType.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGDrwHnt.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGDtaSrc.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\ugformat.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\uggdinfo.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGGrid.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\ughscrol.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGMemMan.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGMultiS.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\ugptrlst.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\ugsidehd.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGTopHdg.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\ugvscrol.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWnd.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeHelpers.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeUItypesPID.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeTooltipIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeComboBoxEx.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeProgressCtrl.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeGridDataDefs.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeGridDataSource.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeGridTableIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeRGB_HLS_Color.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeAskStringDlg.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeOpenFileExplorerAsync.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGEdit.cpp">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vsrollinglog\VSRL.cpp">
+      <Filter>Source Files\VSRL</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewManagerDemo_IF.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewManagerDemo.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\XeResource.rc2">
+      <Filter>Source Files\XenonFramework</Filter>
+    </None>
+    <None Include="..\src\PNG_Images.rc2">
+      <Filter>Source Files\XenonFramework</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\XeResource.rc">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

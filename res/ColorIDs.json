@@ -1,0 +1,539 @@
+{
+    "CID_Colors": [
+        {
+            "CID": 0,
+            "CIDname": "Invalid",
+            "comment": ""
+        },
+        {
+            "CID": 11,
+            "CIDname": "CtrlFocusDots",
+            "comment": "CXePngButton :: 'focus' outline (dots) color"
+        },
+        {
+            "CID": 12,
+            "CIDname": "GrdBorder",
+            "comment": "CXeGrid :: Border color"
+        },
+        {
+            "CID": 16,
+            "CIDname": "GrdHdrCurCell",
+            "comment": "CXeGrid :: bg color for current cell in TH and SH."
+        },
+        {
+            "CID": 17,
+            "CIDname": "GrdHdrDefBg",
+            "comment": "CXeGrid :: default bg color for header cells."
+        },
+        {
+            "CID": 18,
+            "CIDname": "GrdHdrFillBg",
+            "comment": "CXeGrid :: fill bg color for header area left of col header and below last row header."
+        },
+        {
+            "CID": 19,
+            "CIDname": "GrdBRcorner",
+            "comment": "CXeGrid :: fill color for bottom right corner between scrollbars"
+        },
+        {
+            "CID": 20,
+            "CIDname": "GrdCellDefBg",
+            "comment": "CXeGrid :: default bg color for data cells"
+        },
+        {
+            "CID": 21,
+            "CIDname": "GrdPaperBg",
+            "comment": "CXeGrid :: bg color for grid 'paper'"
+        },
+        {
+            "CID": 22,
+            "CIDname": "GrdExcelBrd",
+            "comment": "CXeGrid :: excel style border color."
+        },
+        {
+            "CID": 23,
+            "CIDname": "GrdHdrBrd",
+            "comment": "CXeGrid :: Header border."
+        },
+        {
+            "CID": 25,
+            "CIDname": "TmlRulerTxt",
+            "comment": "CXeTimelineWnd :: Ruler text color."
+        },
+        {
+            "CID": 26,
+            "CIDname": "TmlRulerBg",
+            "comment": "CXeTimelineWnd :: Ruler background color."
+        },
+        {
+            "CID": 28,
+            "CIDname": "TmlRulerLines",
+            "comment": "CXeTimelineWnd :: Ruler lines color."
+        },
+        {
+            "CID": 29,
+            "CIDname": "TmlRulerBrd",
+            "comment": "CXeTimelineWnd :: Ruler border color."
+        },
+        {
+            "CID": 31,
+            "CIDname": "TmlTrackLblBg",
+            "comment": "CXeTimelineWnd :: Track label bg color."
+        },
+        {
+            "CID": 32,
+            "CIDname": "TmlTrackLines",
+            "comment": "CXeTimelineWnd :: Track dividing lines color."
+        },
+        {
+            "CID": 33,
+            "CIDname": "TmlTrackTxt",
+            "comment": "CXeTimelineWnd :: Track text color."
+        },
+        {
+            "CID": 34,
+            "CIDname": "TmlTrackBg",
+            "comment": "CXeTimelineWnd :: Track background color."
+        },
+        {
+            "CID": 35,
+            "CIDname": "TmlTrackBgND",
+            "comment": "CXeTimelineWnd :: Track background color where no data."
+        },
+        {
+            "CID": 36,
+            "CIDname": "TmlTrackBgDF",
+            "comment": "CXeTimelineWnd :: Track background color where datetime filter."
+        },
+        {
+            "CID": 37,
+            "CIDname": "TmlPaperBg",
+            "comment": "CXeTimelineWnd :: Bg below bottom track to scrollbar top."
+        },
+        {
+            "CID": 41,
+            "CIDname": "XTbBarBg",
+            "comment": "CXeToolBar :: Toolbar background color"
+        },
+        {
+            "CID": 43,
+            "CIDname": "XTbHotBrd",
+            "comment": "CXeToolBar :: Flyby hot border"
+        },
+        {
+            "CID": 45,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 46,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 49,
+            "CIDname": "XGbNrmLine",
+            "comment": "GroupBox :: Group box normal line color"
+        },
+        {
+            "CID": 50,
+            "CIDname": "XGbAlt1Line",
+            "comment": "GroupBox :: Group box alternate 1 line color"
+        },
+        {
+            "CID": 51,
+            "CIDname": "XGbNrmText",
+            "comment": "GroupBox :: Group box normal text color"
+        },
+        {
+            "CID": 54,
+            "CIDname": "CtrlBg",
+            "comment": "Controls :: background color"
+        },
+        {
+            "CID": 55,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 56,
+            "CIDname": "TT_Bg",
+            "comment": "Tooltip :: Bg color."
+        },
+        {
+            "CID": 57,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 58,
+            "CIDname": "TT_BgBorder",
+            "comment": "Tooltip :: Bg border color."
+        },
+        {
+            "CID": 59,
+            "CIDname": "TT_Text",
+            "comment": "Tooltip :: Text color."
+        },
+        {
+            "CID": 60,
+            "CIDname": "CtrlBgDis",
+            "comment": "Controls :: disabled background color. Used for edit control bg color."
+        },
+        {
+            "CID": 61,
+            "CIDname": "GrdHdrDefTxt",
+            "comment": "CXeGrid :: default text color for header cells."
+        },
+        {
+            "CID": 62,
+            "CIDname": "GrdCellDefTxt",
+            "comment": "CXeGrid :: default text color for cells."
+        },
+        {
+            "CID": 63,
+            "CIDname": "WarnBg",
+            "comment": "LogLevel :: Log warning bg color."
+        },
+        {
+            "CID": 64,
+            "CIDname": "ErrorBg",
+            "comment": "LogLevel :: Log error bg color."
+        },
+        {
+            "CID": 65,
+            "CIDname": "FatalBg",
+            "comment": "LogLevel :: Log fatal bg color."
+        },
+        {
+            "CID": 66,
+            "CIDname": "DebugBg",
+            "comment": "LogLevel :: Log debug bg color."
+        },
+        {
+            "CID": 67,
+            "CIDname": "InfoBg",
+            "comment": "LogLevel :: Log debug bg color."
+        },
+        {
+            "CID": 68,
+            "CIDname": "XTbBarBgCtrl",
+            "comment": "CXeToolBar :: Toolbar controls bg color."
+        },
+        {
+            "CID": 69,
+            "CIDname": "XTbPen",
+            "comment": "CXeToolBar :: Toolbar 'black' pen color."
+        },
+        {
+            "CID": 70,
+            "CIDname": "XTbTxt",
+            "comment": "CXeToolBar :: Toolbar UI text Fg color."
+        },
+        {
+            "CID": 71,
+            "CIDname": "TabTxtFg",
+            "comment": "Tab :: text fg color."
+        },
+        {
+            "CID": 72,
+            "CIDname": "TabFocusBg",
+            "comment": "Tab :: focus (cur) bg color."
+        },
+        {
+            "CID": 73,
+            "CIDname": "TabBg",
+            "comment": "Tab :: bg color."
+        },
+        {
+            "CID": 74,
+            "CIDname": "TabBorder",
+            "comment": "Tab :: border color."
+        },
+        {
+            "CID": 75,
+            "CIDname": "TabBtmBorder",
+            "comment": "Tab :: bottom border."
+        },
+        {
+            "CID": 76,
+            "CIDname": "WndTitleTxt",
+            "comment": "Other :: Window title text color."
+        },
+        {
+            "CID": 77,
+            "CIDname": "ActWndTitleTxt",
+            "comment": "Other :: Active window title text color."
+        },
+        {
+            "CID": 78,
+            "CIDname": "LogFilterHdrBg",
+            "comment": "CXeGrid :: Grid TH bg color when log filter active."
+        },
+        {
+            "CID": 79,
+            "CIDname": "MrgLogNoDataBg",
+            "comment": "CXeGrid :: Grid cell bg color when no data (file closed)."
+        },
+        {
+            "CID": 80,
+            "CIDname": "RebuildMergeBg",
+            "comment": "CXeGrid :: Grid Title bg color when rebuild merge needed."
+        },
+        {
+            "CID": 81,
+            "CIDname": "DateOffsetBg",
+            "comment": "CXeGrid :: DataTime grid cell bg when has offset."
+        },
+        {
+            "CID": 82,
+            "CIDname": "TmlRulrMrk",
+            "comment": "CXeTimelineWnd :: Ruler from/to markers pen color."
+        },
+        {
+            "CID": 83,
+            "CIDname": "GrdSHDefTxt",
+            "comment": "CXeGrid :: default text color for SH cell."
+        },
+        {
+            "CID": 84,
+            "CIDname": "GrdSHCurTxt",
+            "comment": "CXeGrid :: cur row text color for SH cell."
+        },
+        {
+            "CID": 85,
+            "CIDname": "GrdCbPen",
+            "comment": "CXeGrid :: Grid checkbox pen color."
+        },
+        {
+            "CID": 86,
+            "CIDname": "LogEvBg",
+            "comment": "CXeGrid :: Bg color for LogEvent col when MultiLine cell not visible."
+        },
+        {
+            "CID": 87,
+            "CIDname": "TmlTrkLblLine",
+            "comment": "CXeTimelineWnd :: Track labels dividing lines color (used by Theme2)."
+        },
+        {
+            "CID": 88,
+            "CIDname": "GrdHiLtTxtBg",
+            "comment": "CXeGrid :: Find highlighted text BG color."
+        },
+        {
+            "CID": 89,
+            "CIDname": "GrdHiLtTxtFg",
+            "comment": "CXeGrid :: Find highlighted text FG color."
+        },
+        {
+            "CID": 90,
+            "CIDname": "GrdProgressBg",
+            "comment": "CXeGrid :: Progress indicator cell BG color."
+        },
+        {
+            "CID": 91,
+            "CIDname": "SbBookmarkBg",
+            "comment": "Other :: Scrollbar Bookmark Bg color"
+        },
+        {
+            "CID": 92,
+            "CIDname": "SbBookmarkSign",
+            "comment": "Other :: Scrollbar Bookmark with comment sign (pen)."
+        },
+        {
+            "CID": 93,
+            "CIDname": "TmlTrackBgNDln",
+            "comment": "CXeTimelineWnd :: Track background xhatch line where no data."
+        },
+        {
+            "CID": 94,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 95,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 96,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 97,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 98,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 99,
+            "CIDname": "unused",
+            "comment": ""
+        },
+        {
+            "CID": 100,
+            "CIDname": "GrdBlankBG",
+            "comment": "CXeGrid :: grid blank areas bg color (below rows, right of cols)"
+        },
+        {
+            "CID": 101,
+            "CIDname": "XTbGrayTxt",
+            "comment": "CXeToolBar :: Toolbar UI gray text Fg color."
+        },
+        {
+            "CID": 102,
+            "CIDname": "HiliteFilterBg",
+            "comment": "CXeGrid :: Hilite only filter cell BG color"
+        },
+        {
+            "CID": 103,
+            "CIDname": "GrdHiLt2TxtBg",
+            "comment": "CXeGrid :: Find highlighted text BG color."
+        },
+        {
+            "CID": 104,
+            "CIDname": "GrdHiLt2TxtFg",
+            "comment": "CXeGrid :: Find highlighted text FG color."
+        },
+        {
+            "CID": 105,
+            "CIDname": "GrdSelTxtFg",
+            "comment": "CXeGrid :: Selected text FG color"
+        },
+        {
+            "CID": 106,
+            "CIDname": "GrdSelTxtBg",
+            "comment": "CXeGrid :: Selected text BG color"
+        },
+        {
+            "CID": 107,
+            "CIDname": "GrdSelFindTxtFg",
+            "comment": "CXeGrid :: Selected find text FG color"
+        },
+        {
+            "CID": 108,
+            "CIDname": "GrdSelFindTxtBg",
+            "comment": "CXeGrid :: Selected find text BG color"
+        },
+        {
+            "CID": 109,
+            "CIDname": "GrdSelFind2TxtFg",
+            "comment": "CXeGrid :: Selected find2 text FG color"
+        },
+        {
+            "CID": 110,
+            "CIDname": "GrdSelFind2TxtBg",
+            "comment": "CXeGrid :: Selected find2 text BG color"
+        },
+        {
+            "CID": 112,
+            "CIDname": "TmlTrackBGInvalid",
+            "comment": "CXeTimelineWnd :: Track background when track data is invalid (has time jumps)"
+        },
+        {
+            "CID": 115,
+            "CIDname": "GrdHdrCurCellInActPane",
+            "comment": "CXeGrid :: bg color for current cell in TH and SH for inactive pane."
+        },
+        {
+            "CID": 116,
+            "CIDname": "TabTitleBg",
+            "comment": "Tab :: title bg color"
+        },
+        {
+            "CID": 117,
+            "CIDname": "ActTabTitleBg",
+            "comment": "Tab :: active Tab Title bg color"
+        },
+        {
+            "CID": 118,
+            "CIDname": "TabCurBg",
+            "comment": "Tab :: current bg color (in inactive Tab view)"
+        },
+        {
+            "CID": 119,
+            "CIDname": "CtrlTxt",
+            "comment": "Controls :: text color"
+        },
+        {
+            "CID": 120,
+            "CIDname": "CtrlTxtDis",
+            "comment": "Controls :: disabled text color"
+        },
+        {
+            "CID": 121,
+            "CIDname": "CtrlCurItemBg",
+            "comment": "Controls :: current item background color"
+        },
+        {
+            "CID": 122,
+            "CIDname": "CtrlBorder",
+            "comment": "Controls :: border color"
+        },
+        {
+            "CID": 123,
+            "CIDname": "CtrlCurItemTxt",
+            "comment": "Controls :: selected text color"
+        },
+        {
+            "CID": 124,
+            "CIDname": "DialogBg",
+            "comment": "Other :: Dialog box background color"
+        },
+        {
+            "CID": 125,
+            "CIDname": "ActWndBorderPen",
+            "comment": "Other :: Active window border pen color."
+        },
+        {
+            "CID": 126,
+            "CIDname": "WndBorderPen",
+            "comment": "Other :: Window (inactive) border pen color."
+        },
+        {
+            "CID": 127,
+            "CIDname": "CtrlBtnBorder",
+            "comment": "Controls :: buttons border color"
+        },
+        {
+            "CID": 128,
+            "CIDname": "CtrlBtnDefBorder",
+            "comment": "Controls :: Default Button border color"
+        },
+        {
+            "CID": 129,
+            "CIDname": "CtrlBtnHotBg",
+            "comment": "Controls :: buttons 'flyby' bg color"
+        },
+        {
+            "CID": 130,
+            "CIDname": "CtrlSelItemBg",
+            "comment": "Controls :: selected item background color"
+        },
+        {
+            "CID": 131,
+            "CIDname": "Hilite2FilterBg",
+            "comment": "CXeGrid :: Hilite2 only filter cell BG color"
+        },
+        {
+            "CID": 132,
+            "CIDname": "Hilite3FilterBg",
+            "comment": "CXeGrid :: Hilite3 only filter cell BG color"
+        },
+        {
+            "CID": 133,
+            "CIDname": "CtrlTxtUrl",
+            "comment": "Controls :: text color - url button"
+        },
+        {
+            "CID": 134,
+            "CIDname": "CtrlTxtUrlHot",
+            "comment": "Controls :: text color hot - url button"
+        }
+    ]
+}

@@ -1,0 +1,234 @@
+//
+// PNG_Images.rc2 - resources Microsoft Visual C++ does not edit directly
+//
+
+#ifdef APSTUDIO_INVOKED
+#error this file is not editable by Microsoft Visual C++
+#endif //APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Add manually edited resources here...
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+TL_ZOOMIN_THEME1        PNG                     "../res/TL_ZoomIn.png"
+
+TL_ZOOMOUT_THEME1       PNG                     "../res/TL_ZoomOut.png"
+
+TL_CENTER_THEME1        PNG                     "../res/TL_Center.png"
+
+TL_ZOOMIN_THEME2        PNG                     "../res/TL_ZoomIn_2.png"
+
+TL_ZOOMOUT_THEME2       PNG                     "../res/TL_ZoomOut_2.png"
+
+TL_CENTER_THEME2        PNG                     "../res/TL_Center_2.png"
+
+TB_PNG_ABOUT            PNG                     "../res/2007-info.png"
+
+TB_PNG_FILE_OPEN        PNG                     "../res/0003-folder.png"
+
+TB_PNG_MERGE            PNG                     "../res/Merge.png"
+
+CWF_BTN_MIN_DN          PNG                     "../res/CWF_BTN_MIN_Dn.png"
+
+CWF_BTN_MIN_HOT         PNG                     "../res/CWF_BTN_MIN_Hot.png"
+
+CWF_BTN_MIN_UP          PNG                     "../res/CWF_BTN_MIN_Up.png"
+
+CWF_BTN_MAX_DN          PNG                     "../res/CWF_BTN_MAX_Dn.png"
+
+CWF_BTN_MAX_HOT         PNG                     "../res/CWF_BTN_MAX_Hot.png"
+
+CWF_BTN_MAX_UP          PNG                     "../res/CWF_BTN_MAX_Up.png"
+
+CWF_BTN_RST_DN          PNG                     "../res/CWF_BTN_RST_Dn.png"
+
+CWF_BTN_RST_HOT         PNG                     "../res/CWF_BTN_RST_Hot.png"
+
+CWF_BTN_RST_UP          PNG                     "../res/CWF_BTN_RST_Up.png"
+
+CWF_BTN_CLS_DN          PNG                     "../res/CWF_BTN_CLS_Dn.png"
+
+CWF_BTN_CLS_HOT         PNG                     "../res/CWF_BTN_CLS_Hot.png"
+
+CWF_BTN_CLS_UP          PNG                     "../res/CWF_BTN_CLS_Up.png"
+
+LOG_FILTER_PNG          PNG                     "../res/2082-triangle_green.png"
+
+FILEICON_SERVER_IMG     PNG                     "../res/FileIcon_Server.png"
+
+FILEICON_CONSOLE_IMG    PNG                     "../res/FileIcon_ConsoleApp.png"
+
+FILEICON_APP_IMG        PNG                     "../res/FileIcon_DesktopApp.png"
+
+FILEICON_SERVICE_IMG    PNG                     "../res/FileIcon_Service.png"
+
+FILEICON_USER_IMG       PNG                     "../res/FileIcon_User.png"
+
+FILEICON_DEVICE_IMG     PNG                     "../res/FileIcon_Device.png"
+
+TB_FILTER_OFF           PNG                     "../res/FilterTBbtnOff.png"
+
+TB_FILTER_ON            PNG                     "../res/FilterTBbtnOn.png"
+
+TB_FILTER_DEACTIVATE    PNG                     "../res/FilterTBbtnDeactivate.png"
+
+TB_FILTER_ACTIVATE      PNG                     "../res/FilterTBbtnActivate.png"
+
+TB_GLB_FILTER_CANCEL    PNG                     "../res/FilterTBbtnCancel.png"
+
+TB_FILTER_CLEAR_ALL     PNG                     "../res/FilterClearAll.png"
+
+TB_FILTER_QUICK_SET     PNG                     "../res/FilterQuickSet.png"
+
+TB_FILTER_QUICK_CLEAR   PNG                     "../res/FilterQuickClear.png"
+
+TB_FILTER_RECALL        PNG                     "../res/FilterRecall.png"
+
+TB_FIND                 PNG                     "../res/Find.png"
+
+TB_FIND_PREV            PNG                     "../res/FindPrev.png"
+
+TB_FIND_NEXT            PNG                     "../res/FindNext.png"
+
+TB_FIND_ALL             PNG                     "../res/FindAll.png"
+
+TB_FIND_SAVE            PNG                     "../res/FindSave.png"
+
+TB_FIND_REMOVE          PNG                     "../res/FindRemove.png"
+
+TB_FIND_CLOSE           PNG                     "../res/FindClose.png"
+
+TB_TIME_OFFSET          PNG                     "../res/TimeOffset.png"
+
+TB_ADD_TO_HILITE_LIST   PNG                     "../res/AddToHiliteList.png"
+
+TB_EDIT_HILITE_LIST     PNG                     "../res/EditHiliteList.png"
+
+TB_STOP_FILE_REFRESH    PNG                     "../res/StopFileRefresh.png"
+
+TB_START_FILE_REFRESH   PNG                     "../res/StartFileRefresh.png"
+
+MULTILINE_EXP_BTN       PNG                     "../res/MultilineExpBtn.png"
+
+MULTILINE_CLPS_BTN      PNG                     "../res/MultilineClpsBtn.png"
+
+MULTILINE_EXP_BTN20X20  PNG                     "../res/MultilineExpBtn20x20.png"
+
+MULTILINE_CLPS_BTN20X20 PNG                     "../res/MultilineClpsBtn20x20.png"
+
+BOOKMARK_TOGGLE_THEME1  PNG                     "../res/ToggleBookmark.png"
+
+BOOKMARK_TOGGLE_THEME2  PNG                     "../res/ToggleBookmark_2.png"
+
+BOOKMARK_PREV_THEME1    PNG                     "../res/PrevBookmark.png"
+
+BOOKMARK_PREV_THEME2    PNG                     "../res/PrevBookmark_2.png"
+
+BOOKMARK_NEXT_THEME1    PNG                     "../res/NextBookmark.png"
+
+BOOKMARK_NEXT_THEME2    PNG                     "../res/NextBookmark_2.png"
+
+BOOKMARKS_CLEAR_THEME1  PNG                     "../res/ClearBookmarks.png"
+
+BOOKMARKS_CLEAR_THEME2  PNG                     "../res/ClearBookmarks_2.png"
+
+BOOKMARK_TOGGLE_WITH_COMMENT_THEME1 PNG         "../res/ToggleBookmarkWithComment.png"
+
+BOOKMARK_TOGGLE_WITH_COMMENT_THEME2 PNG         "../res/ToggleBookmarkWithComment_2.png"
+
+BOOKMARK_CURRENT_THEME1 PNG                     "../res/CurrentBookmark.png"
+
+BOOKMARK_CURRENT_THEME2 PNG                     "../res/CurrentBookmark_2.png"
+
+BOOKMARK_CURRENT_WITH_COMMENT_THEME1 PNG        "../res/CurrentBookmarkWithComment.png"
+
+BOOKMARK_CURRENT_WITH_COMMENT_THEME2 PNG        "../res/CurrentBookmarkWithComment_2.png"
+
+TIME_JUMP_WARNING_THEME1 PNG                    "../res/TimeJumpWarning.png"
+
+TIME_JUMP_WARNING_THEME2 PNG                    "../res/TimeJumpWarning.png"
+
+REBUILD_MERGE_NEEDED_THEME1 PNG                 "../res/RebuildMergeNeeded.png"
+
+REBUILD_MERGE_NEEDED_THEME2 PNG                 "../res/RebuildMergeNeeded.png"
+
+IMGUI_RESET_THEME1      PNG                     "../res/ImgUIreset.png"
+
+IMGUI_RESET_THEME2      PNG                     "../res/ImgUIreset.png"
+
+IMGUI_ZOOM_IN_THEME1    PNG                     "../res/ImgUIzoom_in.png"
+
+IMGUI_ZOOM_IN_THEME2    PNG                     "../res/ImgUIzoom_in.png"
+
+IMGUI_ZOOM_OUT_THEME1   PNG                     "../res/ImgUIzoom_out.png"
+
+IMGUI_ZOOM_OUT_THEME2   PNG                     "../res/ImgUIzoom_out.png"
+
+IMGUI_ROTATE_LEFT_THEME1 PNG                    "../res/ImgUIrotate_left.png"
+
+IMGUI_ROTATE_LEFT_THEME2 PNG                    "../res/ImgUIrotate_left.png"
+
+IMGUI_ROTATE_RIGHT_THEME1 PNG                   "../res/ImgUIrotate_right.png"
+
+IMGUI_ROTATE_RIGHT_THEME2 PNG                   "../res/ImgUIrotate_right.png"
+
+LOG_FILE_ERROR_THEME1   PNG                     "../res/LogError.png"
+
+LOG_FILE_ERROR_THEME2   PNG                     "../res/LogError.png"
+
+IDB_EREQUESTED          PNG                     "../res/eRequested.png"
+
+IDB_EQUEUED             PNG                     "../res/eRequested.png"
+
+IDB_EOPENING            PNG                     "../res/eOpening.png"
+
+IDB_EUNZIPPING          PNG                     "../res/eUnzipping.png"
+
+IDB_EPARSING            PNG                     "../res/eParsing.png"
+
+IDB_EMERGING            PNG                     "../res/eMerging.png"
+
+IDB_EINDEXING           PNG                     "../res/eIndexing.png"
+
+IDB_EDONE               PNG                     "../res/eDone.png"
+
+IDB_EDONEALREADYOPEN    PNG                     "../res/eDoneAlreadyOpen.png"
+
+IDB_EERRORFILENOTFOUND  PNG                     "../res/eErrorFileNotFound.png"
+
+IDB_EERRORNETWORKPATHINVALID PNG                "../res/eErrorNetworkPathInvalid.png"
+
+IDB_EERRORACCESSDENIED  PNG                     "../res/eErrorAccessDenied.png"
+
+IDB_EERROROTHER         PNG                     "../res/eErrorOther.png"
+
+IDB_ECANCELLED          PNG                     "../res/eCancelled.png"
+
+IDB_ERM_CONNECTING      PNG                     "../res/eRm_Connecting.png"
+
+IDB_ERM_READING         PNG                     "../res/eRm_Reading.png"
+
+IDB_EERRORRMCONNECT     PNG                     "../res/eErrorRmConnect.png"
+
+IDB_EERRORRMREADFAILED  PNG                     "../res/eErrorRmReadFailed.png"
+
+IDB_EERRORRMWRITELOCALFAILED PNG                "../res/eErrorRmWriteLocalFailed.png"
+
+IDB_ERMCONNECTED        PNG                     "../res/eRmConnected.png"
+
+TB_FONT_SIZE            PNG                     "../res/font_size.png"
+
+IDB_EL_OPERATIONAL      PNG                     "../res/EL_Operational.png"
+
+IDB_EL_ADMIN            PNG                     "../res/EL_Admin.png"
+
+IDB_EL_ANALYTIC         PNG                     "../res/EL_Analytic.png"
+
+IDB_EL_DEBUG            PNG                     "../res/EL_Debug.png"
+
+/////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,71 @@
+{
+    "DescriptionList": "General",
+    "DescriptionUI": "General settings",
+  "UserSettings": [
+    {
+      "description": "Select user interface font",
+      "display_name": "UI Font name",
+      "display_position": 0,
+      "group_name": "grpUIfont",
+      "group_order": 0,
+      "group_title": "User interface font",
+      "name": "UI_FontName",
+      "range": "",
+      "type": "Font",
+      "value": "Segoe UI",
+      "value_is_default": true
+    },
+    {
+      "description": "Select monospaced user interface font",
+      "display_name": "Monospaced UI Font name",
+      "display_position": 1,
+      "group_name": "grpUIfont",
+      "group_order": 0,
+      "group_title": "User interface font",
+      "name": "UI_MonospacedFontName",
+      "range": "",
+      "type": "Font",
+      "value": "Consolas",
+      "value_is_default": true
+    },
+    {
+      "description": "Select user interface font point size",
+      "display_name": "UI font size",
+      "display_position": 1,
+      "group_name": "grpUIfont",
+      "group_order": 0,
+      "group_title": "User interface font",
+      "name": "UI_FontPointSize",
+      "range": "8,9,10,11,12,14,16,18,20,22,24,26,28,30",
+      "type": "String",
+      "value": "10",
+      "value_is_default": true
+    },
+    {
+      "description": "[DEPRECATED] Select log file data grid font size",
+      "display_name": "UI font size",
+      "display_position": 100000,
+      "group_name": "grpUIfont",
+      "group_order": 0,
+      "group_title": "User interface font",
+      "name": "UI_FontSize",
+      "range": "12,14,16,18,20,22,24,26,28,30",
+      "type": "String",
+      "value": "14",
+      "value_is_default": true
+    },
+    {
+      "description": "How many items to save in the 'Recent files' list.",
+      "display_name": "Number of 'Recent files' items",
+      "display_position": 0,
+      "group_name": "grpOther",
+      "group_order": 1,
+      "group_title": "Other settings",
+      "name": "MRU_Items",
+      "range": "5,100",
+      "type": "U32",
+      "value": "30",
+      "value_is_default": true
+    }
+  ]
+}

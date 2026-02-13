@@ -1,0 +1,613 @@
+{
+    "01_Name" :  "Dark theme",
+    "02_IsAppDefined" :  true,
+    "03_BasedOn" :  "",
+    "10_Palette": [
+        {
+            "ColorDef": "RGB(255,0,255)",
+            "ColorName": "UI_TEST"
+        },
+        {
+            "ColorDef": "RGB(37,37,38)",
+            "ColorName": "UI_BG"
+        },
+        {
+            "ColorDef": "RGB(241,241,241)",
+            "ColorName": "UI_TXT"
+        },
+        {
+            "ColorDef": "RGB(192,192,192)",
+            "ColorName": "UI_TXT_DIS"
+        },
+        {
+            "ColorDef": "RGB(51,51,55)",
+            "ColorName": "UI_BORDER"
+        },
+        {
+            "ColorDef": "RGB(67,67,70)",
+            "ColorName": "UI_HDR_BG"
+        },
+        {
+            "ColorDef": "RGB(45,45,48)",
+            "ColorName": "UI_DIV_BG"
+        },
+        {
+            "ColorDef": "RGB(127,127,132)",
+            "ColorName": "UI_DIV_HL"
+        },
+        {
+            "ColorDef": "RGB(113,96,232)",
+            "ColorName": "UI_CUR_VW_HILT_BG"
+        },
+        {
+            "ColorDef": "RGB(160,160,160)",
+            "ColorName": "UI_LT_GRAY"
+        },
+        {
+            "ColorDef": "RGB(134,78,8)",
+            "ColorName": "LL_WARN_BG"
+        },
+        {
+            "ColorDef": "RGB(134,0,0)",
+            "ColorName": "LL_ERROR_BG"
+        },
+        {
+            "ColorDef": "RGB(196,3,46)",
+            "ColorName": "LL_FATAL_BG"
+        },
+        {
+            "ColorDef": "RGB(4,4,71)",
+            "ColorName": "LL_DEBUG_BG"
+        },
+        {
+            "ColorDef": "UI_BG",
+            "ColorName": "LL_INFO_BG"
+        },
+        {
+            "ColorDef": "RGB(91,93,28)",
+            "ColorName": "LOGEV_BG"
+        },
+        {
+            "ColorDef": "RGB(0,109,0)",
+            "ColorName": "LOGFILTER_BG"
+        },
+        {
+            "ColorDef": "RGB(105,163,202)",
+            "ColorName": "GRID_HDR_CUR_INACT_PANE"
+        },
+        {
+            "ColorDef": "RGB(30,30,30)",
+            "ColorName": "UI_BG2"
+        },
+        {
+            "ColorDef": "RGB(42,140,171)",
+            "ColorName": "GRID_SH_TXT"
+        },
+        {
+            "ColorDef": "RGB(255,242,0)",
+            "ColorName": "UI_HILT_TXT_BG"
+        },
+        {
+            "ColorDef": "RGB(0,0,0)",
+            "ColorName": "UI_HILT_TXT_FG"
+        },
+        {
+            "ColorDef": "RGB(255,127,39)",
+            "ColorName": "UI_HILT2_TXT_BG"
+        },
+        {
+            "ColorDef": "RGB(0,0,0)",
+            "ColorName": "UI_HILT2_TXT_FG"
+        },
+        {
+            "ColorDef": "RGB(1,97,29)",
+            "ColorName": "GRID_PROGRESS_BG"
+        },
+        {
+            "ColorDef": "RGB(128,128,128)",
+            "ColorName": "UI_GRAY"
+        },
+        {
+            "ColorDef": "RGB(160,160,160)",
+            "ColorName": "UI_TXT_DIS2"
+        },
+        {
+            "ColorDef": "RGB(238, 60, 53)",
+            "ColorName": "MRGLOG_NODATA_BG"
+        },
+        {
+            "ColorDef": "RGB(16,104,136)",
+            "ColorName": "HILITE_FILTER_BG"
+        },
+        {
+            "ColorDef": "RGB(86, 0, 0)",
+            "ColorName": "MRG_REBUILD_BG"
+        },
+        {
+            "ColorDef": "RGB(46,56,31)",
+            "ColorName": "LOG_DATA_OFFSET_BG"
+        },
+        {
+            "ColorDef": "RGB(1, 34, 48)",
+            "ColorName": "TOOLTIP_BG"
+        },
+        {
+            "ColorDef": "RGB(130, 174, 193)",
+            "ColorName": "TOOLTIP_BG_BORDER"
+        },
+        {
+            "ColorDef": "UI_TXT",
+            "ColorName": "TOOLTIP_BODY_TEXT"
+        },
+        {
+            "ColorDef": "RGB(192,196,192)",
+            "ColorName": "SB_BOOKMARK_BG"
+        },
+        {
+            "ColorDef": "RGB(62,62,66)",
+            "ColorName": "SB_BOOKMARK_SIGN"
+        },
+        {
+            "ColorDef": "RGB(106,0,0)",
+            "ColorName": "BG_INVALID_DATA"
+        },
+        {
+            "ColorDef": "RGB(61,61,61)",
+            "ColorName": "UI_MED_GRAY"
+        },
+        {
+            "ColorDef": "RGB(46,46,46)",
+            "ColorName": "UI_MED_GRAY2"
+        },
+        {
+            "ColorDef": "UI_CUR_ITEM_BG",
+            "ColorName": "UI_HDR_CUR_BG"
+        },
+        {
+            "ColorDef": "RGB(40,40,40)",
+            "ColorName": "UI_BORDER_DARK"
+        },
+        {
+            "ColorDef": "RGB(20,20,20)",
+            "ColorName": "UI_BG3"
+        },
+        {
+            "ColorDef": "RGB(10,10,10)",
+            "ColorName": "UI_BG4"
+        },
+        {
+            "ColorDef": "RGB(192,192,192)",
+            "ColorName": "UI_LT_GRAY2"
+        },
+        {
+            "ColorDef": "RGB(0,27,203)",
+            "ColorName": "UI_SEL_TXT_BG"
+        },
+        {
+            "ColorDef": "RGB(71,71,75)",
+            "ColorName": "UI_BORDER_LT"
+        },
+        {
+            "ColorDef": "RGB(105,105,105)",
+            "ColorName": "UI_BORDER_LT2"
+        },
+        {
+            "ColorDef": "RGB(85,90,97)",
+            "ColorName": "UI_GRAY2"
+        },
+        {
+            "ColorDef": "RGB(0,122,204)",
+            "ColorName": "UI_CUR_ITEM_BG"
+        },
+        {
+            "ColorDef": "RGB(44,113,159)",
+            "ColorName": "UI_SEL_ITEM_BG"
+        }
+    ],
+    "20_CID_Value": [
+        {
+            "CIDname": "Invalid",
+            "ColorDef": ""
+        },
+        {
+            "CIDname": "CtrlFocusDots",
+            "ColorDef": "UI_GRAY"
+        },
+        {
+            "CIDname": "GrdBorder",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "GrdHdrCurCell",
+            "ColorDef": "UI_HDR_CUR_BG"
+        },
+        {
+            "CIDname": "GrdHdrDefBg",
+            "ColorDef": "UI_HDR_BG"
+        },
+        {
+            "CIDname": "GrdHdrFillBg",
+            "ColorDef": "UI_HDR_BG"
+        },
+        {
+            "CIDname": "GrdBRcorner",
+            "ColorDef": "UI_HDR_BG"
+        },
+        {
+            "CIDname": "GrdCellDefBg",
+            "ColorDef": "UI_BG"
+        },
+        {
+            "CIDname": "GrdPaperBg",
+            "ColorDef": "UI_BG"
+        },
+        {
+            "CIDname": "GrdExcelBrd",
+            "ColorDef": "UI_BORDER_DARK"
+        },
+        {
+            "CIDname": "GrdHdrBrd",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "TmlRulerTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "TmlRulerBg",
+            "ColorDef": "UI_HDR_BG"
+        },
+        {
+            "CIDname": "TmlRulerLines",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "TmlRulerBrd",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "TmlTrackLblBg",
+            "ColorDef": "UI_BG"
+        },
+        {
+            "CIDname": "TmlTrackLines",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "TmlTrackTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "TmlTrackBg",
+            "ColorDef": "UI_BG"
+        },
+        {
+            "CIDname": "TmlTrackBgND",
+            "ColorDef": "UI_BG4"
+        },
+        {
+            "CIDname": "TmlTrackBgDF",
+            "ColorDef": "LOGFILTER_BG"
+        },
+        {
+            "CIDname": "TmlPaperBg",
+            "ColorDef": "UI_BG"
+        },
+        {
+            "CIDname": "XTbBarBg",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "XTbHotBrd",
+            "ColorDef": "UI_DIV_HL"
+        },
+        {
+            "CIDname": "unused",
+            "ColorDef": ""
+        },
+        {
+            "CIDname": "unused",
+            "ColorDef": ""
+        },
+        {
+            "CIDname": "XGbNrmLine",
+            "ColorDef": "UI_BORDER_LT"
+        },
+        {
+            "CIDname": "XGbAlt1Line",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "XGbNrmText",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "CtrlBg",
+            "ColorDef": "UI_HDR_BG"
+        },
+        {
+            "CIDname": "unused",
+            "ColorDef": ""
+        },
+        {
+            "CIDname": "TT_Bg",
+            "ColorDef": "TOOLTIP_BG"
+        },
+        {
+            "CIDname": "unused",
+            "ColorDef": ""
+        },
+        {
+            "CIDname": "TT_BgBorder",
+            "ColorDef": "TOOLTIP_BG_BORDER"
+        },
+        {
+            "CIDname": "TT_Text",
+            "ColorDef": "TOOLTIP_BODY_TEXT"
+        },
+        {
+            "CIDname": "CtrlBgDis",
+            "ColorDef": "UI_GRAY2"
+        },
+        {
+            "CIDname": "GrdHdrDefTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "GrdCellDefTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "WarnBg",
+            "ColorDef": "LL_WARN_BG"
+        },
+        {
+            "CIDname": "ErrorBg",
+            "ColorDef": "LL_ERROR_BG"
+        },
+        {
+            "CIDname": "FatalBg",
+            "ColorDef": "LL_FATAL_BG"
+        },
+        {
+            "CIDname": "DebugBg",
+            "ColorDef": "LL_DEBUG_BG"
+        },
+        {
+            "CIDname": "InfoBg",
+            "ColorDef": "LL_INFO_BG"
+        },
+        {
+            "CIDname": "XTbBarBgCtrl",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "XTbPen",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "XTbTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "TabTxtFg",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "TabFocusBg",
+            "ColorDef": "UI_CUR_VW_HILT_BG"
+        },
+        {
+            "CIDname": "TabBg",
+            "ColorDef": "UI_BG"
+        },
+        {
+            "CIDname": "TabBorder",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "TabBtmBorder",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "WndTitleTxt",
+            "ColorDef": "UI_LT_GRAY"
+        },
+        {
+            "CIDname": "ActWndTitleTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "LogFilterHdrBg",
+            "ColorDef": "LOGFILTER_BG"
+        },
+        {
+            "CIDname": "MrgLogNoDataBg",
+            "ColorDef": "MRGLOG_NODATA_BG"
+        },
+        {
+            "CIDname": "RebuildMergeBg",
+            "ColorDef": "MRG_REBUILD_BG"
+        },
+        {
+            "CIDname": "DateOffsetBg",
+            "ColorDef": "LOG_DATA_OFFSET_BG"
+        },
+        {
+            "CIDname": "TmlRulrMrk",
+            "ColorDef": "LOGFILTER_BG"
+        },
+        {
+            "CIDname": "GrdSHDefTxt",
+            "ColorDef": "GRID_SH_TXT"
+        },
+        {
+            "CIDname": "GrdSHCurTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "GrdCbPen",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "LogEvBg",
+            "ColorDef": "LOGEV_BG"
+        },
+        {
+            "CIDname": "TmlTrkLblLine",
+            "ColorDef": "UI_GRAY"
+        },
+        {
+            "CIDname": "GrdHiLtTxtBg",
+            "ColorDef": "UI_HILT_TXT_BG"
+        },
+        {
+            "CIDname": "GrdHiLtTxtFg",
+            "ColorDef": "UI_HILT_TXT_FG"
+        },
+        {
+            "CIDname": "GrdProgressBg",
+            "ColorDef": "GRID_PROGRESS_BG"
+        },
+        {
+            "CIDname": "SbBookmarkBg",
+            "ColorDef": "SB_BOOKMARK_BG"
+        },
+        {
+            "CIDname": "SbBookmarkSign",
+            "ColorDef": "SB_BOOKMARK_SIGN"
+        },
+        {
+            "CIDname": "TmlTrackBgNDln",
+            "ColorDef": "UI_BG2"
+        },
+        {
+            "CIDname": "GrdBlankBG",
+            "ColorDef": "UI_BG2"
+        },
+        {
+            "CIDname": "XTbGrayTxt",
+            "ColorDef": "UI_TXT_DIS2"
+        },
+        {
+            "CIDname": "HiliteFilterBg",
+            "ColorDef": "HILITE_FILTER_BG"
+        },
+        {
+            "CIDname": "GrdHiLt2TxtBg",
+            "ColorDef": "UI_HILT2_TXT_BG"
+        },
+        {
+            "CIDname": "GrdHiLt2TxtFg",
+            "ColorDef": "UI_HILT2_TXT_FG"
+        },
+        {
+            "CIDname": "GrdSelTxtFg",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "GrdSelTxtBg",
+            "ColorDef": "UI_HDR_CUR_BG"
+        },
+        {
+            "CIDname": "GrdSelFindTxtFg",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "GrdSelFindTxtBg",
+            "ColorDef": "UI_SEL_TXT_BG"
+        },
+        {
+            "CIDname": "GrdSelFind2TxtFg",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "GrdSelFind2TxtBg",
+            "ColorDef": "UI_SEL_TXT_BG"
+        },
+        {
+            "CIDname": "TmlTrackBGInvalid",
+            "ColorDef": "BG_INVALID_DATA"
+        },
+        {
+            "CIDname": "GrdHdrCurCellInActPane",
+            "ColorDef": "GRID_HDR_CUR_INACT_PANE"
+        },
+        {
+            "CIDname": "TabTitleBg",
+            "ColorDef": "UI_MED_GRAY"
+        },
+        {
+            "CIDname": "ActTabTitleBg",
+            "ColorDef": "UI_MED_GRAY2"
+        },
+        {
+            "CIDname": "TabCurBg",
+            "ColorDef": "UI_LT_GRAY"
+        },
+        {
+            "CIDname": "CtrlTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "CtrlTxtDis",
+            "ColorDef": "UI_TXT_DIS2"
+        },
+        {
+            "CIDname": "CtrlCurItemBg",
+            "ColorDef": "UI_CUR_ITEM_BG"
+        },
+        {
+            "CIDname": "CtrlBorder",
+            "ColorDef": "UI_BORDER"
+        },
+        {
+            "CIDname": "CtrlCurItemTxt",
+            "ColorDef": "UI_TXT"
+        },
+        {
+            "CIDname": "DialogBg",
+            "ColorDef": "UI_BG"
+        },
+        {
+            "CIDname": "ActWndBorderPen",
+            "ColorDef": "RGB(86,0,128)"
+        },
+        {
+            "CIDname": "WndBorderPen",
+            "ColorDef": "RGB(90,90,90)"
+        },
+        {
+            "CIDname": "CtrlBtnBorder",
+            "ColorDef": "UI_GRAY"
+        },
+        {
+            "CIDname": "CtrlBtnDefBorder",
+            "ColorDef": "UI_CUR_VW_HILT_BG"
+        },
+        {
+            "CIDname": "CtrlBtnHotBg",
+            "ColorDef": "UI_BORDER_LT2"
+        },
+        {
+            "CIDname": "CtrlSelItemBg",
+            "ColorDef": "UI_SEL_ITEM_BG"
+        },
+        {
+            "CIDname": "Hilite2FilterBg",
+            "ColorDef": "RGB(51,102,0)"
+        },
+        {
+            "CIDname": "Hilite3FilterBg",
+            "ColorDef": "RGB(102,51,0)"
+        },
+        {
+            "CIDname": "CtrlTxtUrl",
+            "ColorDef": "RGB(105,182,231)"
+        },
+        {
+            "CIDname": "CtrlTxtUrlHot",
+            "ColorDef": "RGB(37,140,218)"
+        }
+    ]
+}

@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{0cbd78ca-508c-48c6-8838-cf1c1f6e49e9}</ProjectGuid>
+    <RootNamespace>XenonDemo</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>../src;$(ProjectDir)..\json\include;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>../src;$(ProjectDir)..\json\include;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>C:\_Dev\boost_1_82_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>C:\_Dev\boost_1_82_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\CeXDib.h" />
+    <ClInclude Include="..\src\logging.h" />
+    <ClInclude Include="..\src\os_minimal.h" />
+    <ClInclude Include="..\src\PPDrawManager.h" />
+    <ClInclude Include="..\src\PPHtmlDrawer.h" />
+    <ClInclude Include="..\src\PPTooltipDefs.h" />
+    <ClInclude Include="..\src\UG\UGCBType.h" />
+    <ClInclude Include="..\src\UG\UGCell.h" />
+    <ClInclude Include="..\src\UG\UGCelTyp.h" />
+    <ClInclude Include="..\src\UG\UGCTarrw.h" />
+    <ClInclude Include="..\src\UG\UGCTprogress.h" />
+    <ClInclude Include="..\src\UG\UGCtrl.h" />
+    <ClInclude Include="..\src\UG\UGCTsarw.h" />
+    <ClInclude Include="..\src\UG\UGCTurlbtn.h" />
+    <ClInclude Include="..\src\UG\ugdefine.h" />
+    <ClInclude Include="..\src\UG\UGDLType.h" />
+    <ClInclude Include="..\src\UG\UGDrwHnt.h" />
+    <ClInclude Include="..\src\UG\UGDtaSrc.h" />
+    <ClInclude Include="..\src\UG\UGEdit.h" />
+    <ClInclude Include="..\src\UG\ugformat.h" />
+    <ClInclude Include="..\src\UG\uggdinfo.h" />
+    <ClInclude Include="..\src\UG\UGGrid.h" />
+    <ClInclude Include="..\src\UG\ughscrol.h" />
+    <ClInclude Include="..\src\UG\UGMemMan.h" />
+    <ClInclude Include="..\src\UG\UGMultiS.h" />
+    <ClInclude Include="..\src\UG\ugptrlst.h" />
+    <ClInclude Include="..\src\UG\ugsidehd.h" />
+    <ClInclude Include="..\src\UG\ugstruct.h" />
+    <ClInclude Include="..\src\UG\UGTopHdg.h" />
+    <ClInclude Include="..\src\UG\ugvscrol.h" />
+    <ClInclude Include="..\src\UG\XeGridDefs.h" />
+    <ClInclude Include="..\src\XeAssert.h" />
+    <ClInclude Include="..\src\XeResource.h" />
+    <ClInclude Include="..\src\Xe_res.h" />
+    <ClInclude Include="..\vsrollinglog\VSRL.h" />
+    <ClInclude Include="..\vsrollinglog\VSRL_IF.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\CeXDib.cpp" />
+    <ClCompile Include="..\src\mfc_types.ixx" />
+    <ClCompile Include="..\src\Monitors.ixx" />
+    <ClCompile Include="..\src\PPDrawManager.cpp" />
+    <ClCompile Include="..\src\PPHtmlDrawer.cpp" />
+    <ClCompile Include="..\src\PPTooltip.ixx" />
+    <ClCompile Include="..\src\UG\UGCBType.cpp" />
+    <ClCompile Include="..\src\UG\UGCell.cpp" />
+    <ClCompile Include="..\src\UG\UGCelTyp.cpp" />
+    <ClCompile Include="..\src\UG\UGCTarrw.cpp" />
+    <ClCompile Include="..\src\UG\UGCTprogress.cpp" />
+    <ClCompile Include="..\src\UG\UGCtrl.ixx" />
+    <ClCompile Include="..\src\UG\UGCTsarw.cpp" />
+    <ClCompile Include="..\src\UG\UGCTurlbtn.cpp" />
+    <ClCompile Include="..\src\UG\UGDLType.cpp" />
+    <ClCompile Include="..\src\UG\UGDrwHnt.cpp" />
+    <ClCompile Include="..\src\UG\UGDtaSrc.cpp" />
+    <ClCompile Include="..\src\UG\UGEdit.cpp" />
+    <ClCompile Include="..\src\UG\ugformat.cpp" />
+    <ClCompile Include="..\src\UG\uggdinfo.cpp" />
+    <ClCompile Include="..\src\UG\UGGrid.cpp" />
+    <ClCompile Include="..\src\UG\ughscrol.cpp" />
+    <ClCompile Include="..\src\UG\UGMemMan.cpp" />
+    <ClCompile Include="..\src\UG\UGMultiS.cpp" />
+    <ClCompile Include="..\src\UG\ugptrlst.cpp" />
+    <ClCompile Include="..\src\UG\ugsidehd.cpp" />
+    <ClCompile Include="..\src\UG\UGTopHdg.cpp" />
+    <ClCompile Include="..\src\UG\ugvscrol.cpp" />
+    <ClCompile Include="..\src\ViewsListWnd.ixx" />
+    <ClCompile Include="..\src\XeAskStringDlg.ixx" />
+    <ClCompile Include="..\src\XeAssert.cpp" />
+    <ClCompile Include="..\src\XeBaseDlg.ixx" />
+    <ClCompile Include="..\src\XeCalendarCtrl.ixx" />
+    <ClCompile Include="..\src\XeChronoTimer.ixx" />
+    <ClCompile Include="..\src\XeColorPicker.ixx" />
+    <ClCompile Include="..\src\XeComboBoxEx.ixx" />
+    <ClCompile Include="..\src\XeD2DAppBase.ixx" />
+    <ClCompile Include="..\src\XeD2DButton.ixx" />
+    <ClCompile Include="..\src\XeD2DRenderContext.ixx" />
+    <ClCompile Include="..\src\XeD2DStatic.ixx" />
+    <ClCompile Include="..\src\XeD2DToolbar.ixx" />
+    <ClCompile Include="..\src\XeD2DToolbarIF.ixx" />
+    <ClCompile Include="..\src\XeD2DToolbarItems.ixx" />
+    <ClCompile Include="..\src\XeDefData.ixx" />
+    <ClCompile Include="..\src\XeDialogTemplateEx.ixx" />
+    <ClCompile Include="..\src\XeDirect2DBase.ixx" />
+    <ClCompile Include="..\src\XeDurationCtrl.ixx" />
+    <ClCompile Include="..\src\XeFileDlgHelpers.ixx" />
+    <ClCompile Include="..\src\XeFileHelpers.ixx" />
+    <ClCompile Include="..\src\XeFileHelpersJson.ixx" />
+    <ClCompile Include="..\src\XeFileTimeX.ixx" />
+    <ClCompile Include="..\src\XeFileVersionInfo.ixx" />
+    <ClCompile Include="..\src\XeFileVwIF.ixx" />
+    <ClCompile Include="..\src\XeGridDataDefs.ixx" />
+    <ClCompile Include="..\src\XeGridDataSource.ixx" />
+    <ClCompile Include="..\src\XeGridTableIF.ixx" />
+    <ClCompile Include="..\src\XeHelpers.ixx" />
+    <ClCompile Include="..\src\XeListBoxEx.ixx" />
+    <ClCompile Include="..\src\XeListBoxExCommon.ixx" />
+    <ClCompile Include="..\src\XeMainFrameBase.ixx" />
+    <ClCompile Include="..\src\XeMenu.ixx" />
+    <ClCompile Include="..\src\XeMessageBoxDlg.ixx" />
+    <ClCompile Include="..\src\XeMRUList.ixx" />
+    <ClCompile Include="..\src\XeNaryTree.ixx" />
+    <ClCompile Include="..\src\XeOpenFileExplorerAsync.ixx" />
+    <ClCompile Include="..\src\XePopupCtrl.ixx" />
+    <ClCompile Include="..\src\XePopupCtrlBase.ixx" />
+    <ClCompile Include="..\src\XeProgressCtrl.ixx" />
+    <ClCompile Include="..\src\XeRGB_HLS_Color.ixx" />
+    <ClCompile Include="..\src\XeScintillaEditControl.ixx" />
+    <ClCompile Include="..\src\XeScrollBar.ixx" />
+    <ClCompile Include="..\src\XeSettingsDlg.ixx" />
+    <ClCompile Include="..\src\XeStringTools.ixx" />
+    <ClCompile Include="..\src\XeTabsList.ixx" />
+    <ClCompile Include="..\src\XeTabsView.ixx" />
+    <ClCompile Include="..\src\XeTheme.ixx" />
+    <ClCompile Include="..\src\XeThemeEditorDlg.ixx" />
+    <ClCompile Include="..\src\XeThemeIF.ixx" />
+    <ClCompile Include="..\src\XeTooltipIF.ixx" />
+    <ClCompile Include="..\src\XeTreeCtrlEx.ixx" />
+    <ClCompile Include="..\src\XeUIcolors.ixx" />
+    <ClCompile Include="..\src\XeUIcolorsIF.ixx" />
+    <ClCompile Include="..\src\XeUItypes.ixx" />
+    <ClCompile Include="..\src\XeUItypesPID.ixx" />
+    <ClCompile Include="..\src\XeUIWorkThread.ixx" />
+    <ClCompile Include="..\src\XeUserSetting.ixx" />
+    <ClCompile Include="..\src\XeUserSettingControl.ixx" />
+    <ClCompile Include="..\src\XeUserSettings.ixx" />
+    <ClCompile Include="..\src\XeUserSettingsForUI.ixx" />
+    <ClCompile Include="..\src\XeUserSettings_Changed.ixx" />
+    <ClCompile Include="..\src\XeUtils.ixx" />
+    <ClCompile Include="..\src\XeVerifyDirectoryAccessible.ixx" />
+    <ClCompile Include="..\src\XeViewManager.ixx" />
+    <ClCompile Include="..\src\XeViewManagerIF.ixx" />
+    <ClCompile Include="..\src\XeWindowStyle.ixx" />
+    <ClCompile Include="..\src\XeWindowStyleRects.ixx" />
+    <ClCompile Include="..\src\XeWindowStyleValue.ixx" />
+    <ClCompile Include="..\vsrollinglog\VSRL.cpp" />
+    <ClCompile Include="MainWnd.ixx" />
+    <ClCompile Include="ViewManagerDemo.ixx" />
+    <ClCompile Include="ViewManagerDemo_IF.ixx" />
+    <ClCompile Include="XenonDemo.ixx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\XeResource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\XeResource.rc2">
+      <FileType>RC</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\PNG_Images.rc2">
+      <FileType>RC</FileType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

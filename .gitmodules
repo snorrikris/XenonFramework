@@ -1,0 +1,6 @@
+[submodule "vsrollinglog"]
+	path = vsrollinglog
+	url = https://github.com/snorrikris/vsrollinglog.git
+[submodule "json"]
+	path = json
+	url = https://github.com/nlohmann/json.git

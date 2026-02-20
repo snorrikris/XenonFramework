@@ -6,6 +6,7 @@ module;
 #include <cctype>
 #include <string>
 #include <memory>
+#include "XeResource.h"
 
 export module Xe.Menu;
 
@@ -240,7 +241,7 @@ public:
 		m_uSubmenuSelectedID = 0;
 		m_cmn->OnSetCurSelMsg((WPARAM)-1, 0);
 		m_cmn->m_uSelectedItemCommandID = 0;
-		if (uSelectedID && uSelectedID != ID_APP_EXIT)	// ID_APP_EXIT is handled by toolbar.
+		if (uSelectedID && uSelectedID != ID__APP_EXIT)	// ID__APP_EXIT is handled by toolbar.
 		{
 			//TRACE("Menu WM_COMMAND - cmdid: %u\n", uSelectedID);
 			::SendMessage(m_hParentWnd, WM_COMMAND, uSelectedID, 0);

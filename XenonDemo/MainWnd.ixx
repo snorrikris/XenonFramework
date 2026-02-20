@@ -26,8 +26,8 @@ public:
 	}
 
 protected:
-	virtual int _GetViewProp(int view_id, XeViewProp view_property_id, int param = 0) override
-	{
-		return 0;
-	}
+	//virtual int _GetViewProp(int view_id, XeViewProp view_property_id, int param = 0) override
+	//{
+	//	return 0;
+	//}
 };

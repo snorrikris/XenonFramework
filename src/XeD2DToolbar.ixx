@@ -6,6 +6,7 @@ module;
 #include <memory>
 #include <optional>
 #include <boost/algorithm/string.hpp>
+#include "XeResource.h"
 
 export module Xe.D2DToolbar;
 
@@ -854,7 +855,7 @@ protected:
 				m_menu->SetTopLevelMenuNavigationCallback(nullptr);
 
 				// Note - WM_COMMAND already sent for selected menu item.
-				if (uSelectedID == ID_APP_EXIT)
+				if (uSelectedID == ID__APP_EXIT)
 				{
 					::PostMessage(::GetParent(Hwnd()), WMU_NOTIFY_ID_APP_EXIT, 0, 0);
 				}

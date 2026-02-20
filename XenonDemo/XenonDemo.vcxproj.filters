@@ -440,6 +440,18 @@
     <ClCompile Include="ViewManagerDemo.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DemoFileVwBase.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DemoImageVw.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DemoTextVw.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeImageCtrl.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\XeResource.rc2">

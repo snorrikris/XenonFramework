@@ -78,6 +78,8 @@ int _GetValueInValidRange(int newValue, int minValue, int maxValue)
 	return (newValue < minValue) ? minValue : (newValue > maxValue) ? maxValue : newValue;
 }
 
+constexpr int VIEW_CX_MIN = 50;
+
 export class CXeMainFrameBase : public CXeD2DWndBase
 {
 #pragma region class_data
@@ -146,6 +148,11 @@ public:
 		m_xeUI->SetGlobalKeyboardFilterCallback(
 				[this](const MSG& msg) { return _OnGlobalKeyboardFilter(msg); });
 
+		XeASSERT(m_pVwMgr);	// Derived class MUST set the pointer after creating the view manager.
+		m_pVwMgr->CreateTabViews(hWnd, m_pToolBar.get());
+
+		//m_pVwMgr->Create(Hwnd(), VW_ID_TABS_0, VW_ID_TABS_1, VW_ID_VIEW_0, VW_ID_VIEW_1);
+
 		_OnCreateClient();	// Derived class creates its view window
 		m_isClientWndCreated = true;
 
@@ -205,6 +212,12 @@ protected:
 		return 0;
 	}
 
+	virtual LRESULT _OnWmCommand(WORD wSource, WORD wID, HWND sender) override
+	{
+		m_pVwMgr->ProcessCommand(wID, 0);
+		return 0;
+	}
+
 	virtual LRESULT _OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override
 	{
 		switch (uMsg)
@@ -220,7 +233,7 @@ protected:
 	}
 
 	// WMU_NOTIFY_ID_APP_EXIT message handler
-	// (posted from toolbar - that can't process ID_APP_EXIT normally - for reasons...).
+	// (posted from toolbar - that can't process ID__APP_EXIT normally - for reasons...).
 	LRESULT _OnNotifyAppExit(WPARAM wParam, LPARAM lParam)
 	{
 		::SendMessage(Hwnd(), WM_SYSCOMMAND, SC_CLOSE, 0);
@@ -546,9 +559,27 @@ public:
 protected:
 	virtual int _GetViewProp(int view_id, XeViewProp view_property_id, int param = 0)
 	{
-		XeASSERT(false);	// Derived class should implement this.
+		bool isTabsVwId = view_id == VW_ID_TABS_0 || view_id == VW_ID_TABS_1;
+		bool isViewsVwId = view_id == VW_ID_VIEW_0 || view_id == VW_ID_VIEW_1;
+		if (isTabsVwId && view_property_id == XeViewProp::RECALC_CY)
+		{
+			return m_pVwMgr->RecalculateTabViewHeight(view_id - VW_ID_TABS_0, param);
+		}
+		else if (isTabsVwId || isViewsVwId)
+		{
+			if (view_property_id == XeViewProp::MIN_CX)
+			{
+				return VIEW_CX_MIN;
+			}
+		}
+		XeASSERT(false);	// Not (needed) implemented.
 		return 0;
 	}
+	//virtual int _GetViewProp(int view_id, XeViewProp view_property_id, int param = 0)
+	//{
+	//	XeASSERT(false);	// Derived class should implement this.
+	//	return 0;
+	//}
 
 	virtual void _SetSideViewWidth(int cxViewWidth)
 	{

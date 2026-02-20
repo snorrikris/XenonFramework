@@ -1,16 +1,27 @@
 module;
 
+#include "os_minimal.h"
+#include <mutex>
 #include "logging.h"
+#include "XeResource.h"
 
 export module ViewManagerDemo;
 
 export import ViewManagerDemo_IF;
 import Xe.ViewManager;
+import Xe.UserSettings;
+import Xe.FileDlgHelpers;
+import Xe.FileHelpers;
+import Demo.ImageVw;
+import Demo.TextVw;
 
 export class CViewManagerDemo : public CXeViewManager, public CViewManagerDemoIF
 {
 private:
-	VSRL::Logger& logger() { return VSRL::s_pVSRL->GetInstance("CXeViewManagerLVS"); }
+	VSRL::Logger& logger() { return VSRL::s_pVSRL->GetInstance("CViewManagerDemo"); }
+
+	std::mutex m_mutex_next_datasource_id;
+	uint32_t m_next_datasource_id = 1;
 
 public:
 	CViewManagerDemo(CXeUIcolorsIF* pUIcolors) : CXeViewManager(pUIcolors)
@@ -18,17 +29,38 @@ public:
 	}
 	virtual ~CViewManagerDemo() {}
 
+	virtual dsid_t GetNextNewDataSourceId() override
+	{
+		std::lock_guard<std::mutex> lock(m_mutex_next_datasource_id);
+		return dsid_t::MakeDSID(m_next_datasource_id++);
+	}
+
 	// Delete assignment operator and copy constructor to prevent object copy.
-	CViewManagerDemo(const CViewManagerDemo&) = delete;
-	CViewManagerDemo& operator=(const CViewManagerDemo&) = delete;
+	//CViewManagerDemo(const CViewManagerDemo&) = delete;
+	//CViewManagerDemo& operator=(const CViewManagerDemo&) = delete;
 
 	virtual void Destroy() override
 	{
 		CXeViewManager::Destroy();
 	}
 
+	virtual void ProcessCommand(UINT uCmdId, UINT param) override
+	{
+		switch (uCmdId)
+		{
+		case ID__FILE_OPEN:
+			_OpenFileDlg(ETABVIEWID::eAnyTabVw);
+			break;
+		default:
+			CXeViewManager::ProcessCommand(uCmdId, param);
+			break;
+		}
+	}
+
+
 	virtual void OnDroppedFiles(CPoint ptScreenCoords, const std::vector<std::wstring>& dropped_files) override
 	{
+		_OpenFiles(dropped_files, CreateViewParams(ETABVIEWID::eAnyTabVw));
 		//std::wstring strNewWindowTitle;
 		//std::vector<std::wstring> listFiles;
 		//ETABVIEWID eTabVwId = CXeViewManager::GetTabVwFromPoint(ptScreenCoords);
@@ -81,7 +113,7 @@ public:
 	virtual void OnMainWindowCreate() override { CXeViewManager::OnMainWindowCreate(); }
 	virtual void OnMainWindowDestroy() override { CXeViewManager::OnMainWindowDestroy(); }
 	//virtual void Destroy() override { CXeViewManager::Destroy(); }
-	virtual void SetMainWindowPtr(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override { CXeViewManager::SetMainWindowPtr(hMainWnd, pMainWndToolBar); }
+	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override { CXeViewManager::CreateTabViews(hMainWnd, pMainWndToolBar); }
 	virtual void On_Timer_1S() override { CXeViewManager::On_Timer_1S(); }
 	virtual int GetTabViewHeight(int idx) override { return CXeViewManager::GetTabViewHeight(idx); }
 	virtual int RecalculateTabViewHeight(int idx, int cxAvailable) override { return CXeViewManager::RecalculateTabViewHeight(idx, cxAvailable); }
@@ -117,7 +149,7 @@ public:
 	virtual void OnTabOrderChanged() override { CXeViewManager::OnTabOrderChanged(); }
 	virtual bool OnViewGotFocus(dsid_t dwDataSourceId) override { return CXeViewManager::OnViewGotFocus(dwDataSourceId); }
 	virtual void OnViewLostFocus(dsid_t dwDataSourceId) override { CXeViewManager::OnViewLostFocus(dwDataSourceId); }
-	virtual void ProcessCommand(UINT uCmdId, UINT param) override { CXeViewManager::ProcessCommand(uCmdId, param); }
+	//virtual void ProcessCommand(UINT uCmdId, UINT param) override { CXeViewManager::ProcessCommand(uCmdId, param); }
 	virtual void OnTabCtxMenuCmd(UINT uCmdId, ETABVIEWID tabId, dsid_t datasourceId) override { CXeViewManager::OnTabCtxMenuCmd(uCmdId, tabId, datasourceId); }
 	virtual CXeCancelEvent* DoWorkThreadWork(WorkThreadWorkCallbackFunc func) override { return CXeViewManager::DoWorkThreadWork(func); }
 	virtual CXeCancelEvent* GetWorkThreadWorkCancelEvent() override { return CXeViewManager::GetWorkThreadWorkCancelEvent(); }
@@ -132,5 +164,142 @@ public:
 	virtual void OpenFileFromMRUlist(size_t idx) override { CXeViewManager::OpenFileFromMRUlist(idx); }
 	//virtual void ProcessCommandLine(const std::wstring& cmd_line) override { CXeViewManager::ProcessCommandLine(cmd_line); }
 #pragma endregion CXeViewManagerIF_impl
+
+#pragma region OpenFiles
+protected:
+	void _OpenFileDlg(ETABVIEWID eTabVwId)
+	{
+		std::wstring lastUsedDir = s_xeLastUsedUIsettings.GetString_or_Val(L"OpenFileDlgLastUsedDir", L"");
+		// Note - try to verify dir is accessible - but only wait 300mS.
+		if (lastUsedDir.size() && !m_verifyDirAccessible.IsAccessible(lastUsedDir.c_str()))
+		{
+			lastUsedDir = L"";
+		}
+
+		std::wstring title = L"Open one or more files";
+		std::vector<std::pair<std::wstring, std::wstring>> file_types{ {L"All files", L"*.*"} };
+		std::vector<std::wstring> files = ShowOpenFileDlg(lastUsedDir, true, file_types, &title);
+		if (files.size() == 0)
+		{
+			return;
+		}
+
+		// File list name is empty when many files selected.
+		//std::wstring strFileListName = files.size() == 1 ? GetFilenameWithExt(files[0]) : L"";
+
+		//OpenFilesAsync(OF_ShowProgress | OF_AddToMRU, m_uNextListId++,
+		//	strFileListName, files, CreateViewParams(eTabVwId), &m_defaultFilterSettings);
+
+		_OpenFiles(files, CreateViewParams(eTabVwId));
+
+		s_xeLastUsedUIsettings.Set(L"OpenFileDlgLastUsedDir", GetDirectory(files[0]));
+	}
+
+	void _OpenFiles(const std::vector<std::wstring>& strPathNames, CreateViewParams viewParams)
+	{
+		CXeTabsView* pTabVw = _GetTabView(viewParams.eTabVwId);
+		XeASSERT(pTabVw);
+		if (!pTabVw)
+		{
+			return;
+		}
+		std::vector<std::wstring> files = strPathNames;	// Copy list.
+		//RemovePathnamesWithExtension(files, L"log_aux");	// Ignore aux data files
+		//std::vector<CWorkContext> workList;
+		//int deleteRolling_SSH_LogFilesGreaterThan
+		//	= (int)s_xeUIsettings[L"RollingLogFilesSettings"].Get(L"AutoCloseRolling_SSH_LogFilesGreterThan").getU32();
+		//std::wstring ssh_DestFolderBase = s_xeLastUsedUIsettings.GetString_or_Val(L"SSHdestFolder",
+		//	GetKnownFolder(L"%temp%"));
+
+
+		// Switch to view for items from list that are already opened - add the rest to worklist.
+		for (auto it = files.begin(); it != files.end(); )
+		{
+			//CWorkContext workContext = CWorkContext::MkLoad(uListId, m_hMainWnd,
+			//	pFilterParams, viewParams);
+
+			//SSHfile ssh_file(*it);	// Parse as SSH file string - in case it is SSH file.
+			//if (ssh_file.HasSSHparams())
+			//{
+			//	*it = ssh_file.GetAs_SSH_file_string();	// Remove password (if any)
+			//	m_sshServerHistory.UpdateSSHfileInfoFromFileHistory(ssh_file);
+			//	workContext.m_sshParameters = ssh_file;
+			//	workContext.m_sshParameters.m_strSSHdest_path_root = ssh_DestFolderBase;
+			//	workContext.m_sshParameters.m_deleteRolling_SSH_LogFilesGreaterThan = deleteRolling_SSH_LogFilesGreaterThan;
+			//}
+			//else if (workContext.m_evtlogParams.Parse(xet::toUTF8(*it)))	// Is the file Event Log channel?
+			//{
+
+			//}
+
+			//if (_FindAndSwitchToViewWithFile(*it, viewParams.makeThisCurrentView))
+			//{
+			//	it = files.erase(it);	// Remove already open file from list.
+			//}
+			//else
+			//{
+				// Add to work list items that are not already open
+				//workContext.m_strPathName = *it;
+				//workContext.m_dwDataSourceId = m_pFilesMgr->GetNextNewDataSourceId();
+				//workContext.m_pLogFormats = m_pLogFormats->GetLogFormatsForFile(*it);
+				//if ((of_flags & OF_SuppressErrorMessageBox) != 0)
+				//{
+				//	workContext.m_bSuppressErrorMessageBox = true;
+				//}
+				//if ((of_flags & OF_RetryOpen) != 0)
+				//{
+				//	workContext.m_bRetryOpen = true;
+				//}
+				//workList.push_back(workContext);
+
+				//CreateNewView(m_hMainWnd, pContainer, context.m_VwParams);
+
+				if (IsImageFileExtension(*it))
+				{
+					std::unique_ptr<CDemoImageVw> view = std::make_unique<CDemoImageVw>(this, GetNextNewDataSourceId());
+					if (view->LoadFile(*it))
+					{
+						pTabVw->AttachView(view.get(), viewParams, true);
+						m_views[view->GetDataSourceId()] = std::move(view);
+						m_MRUList.Add(*it);
+					}
+				}
+				else if (IsFileExtension(L"txt", *it))
+				{
+					std::unique_ptr<CDemoTextVw> view = std::make_unique<CDemoTextVw>(this, GetNextNewDataSourceId());
+					if (view->LoadFile(*it))
+					{
+						pTabVw->AttachView(view.get(), viewParams, true);
+						m_views[view->GetDataSourceId()] = std::move(view);
+						m_MRUList.Add(*it);
+					}
+				}
+				else
+				{
+					XeASSERT(false);	// File type not supported.
+				}
+
+				++it;
+			//}
+		}
+
+		//if ((of_flags & OF_AddToMRU) != 0)	// Add to Most Recently Used file list?
+		//{
+		//	m_MRUList.Add(files);
+		//}
+
+		//if (workList.size() == 0)
+		//{
+		//	return;
+		//}
+
+		//m_pFilesMgr->ScheduleWorkAsync(listname, workList, false);
+
+		//if ((of_flags & OF_ShowProgress) != 0)	// Show progress dialog?
+		//{
+		//	_ShowOpenStatusDialog(uListId, false);
+		//}
+	}
+#pragma endregion OpenFiles
 };
 

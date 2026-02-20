@@ -49,24 +49,24 @@ public:
 
 	virtual void SetFocusToView() = 0;
 
-	virtual std::wstring GetViewTitle() = 0;
+	//virtual std::wstring GetViewTitle() = 0;
 
 	virtual std::wstring GetTooltipForTab() = 0;
 
 	virtual void OnCopyInfoToClipboard(ECLIPBRDOP eClpBrdOp) = 0;
 	virtual bool CanCopyInfoToClipboard(ECLIPBRDOP eClpBrdOp) = 0;
-	virtual bool CanOpenInAnotherInstance() = 0;
+	//virtual bool CanOpenInAnotherInstance() = 0;
 	//virtual void SetContainerParameter(const FCP& param) = 0;
 	//virtual FCP GetContainerParameter(FCParam type) const = 0;
 #pragma endregion CommonForAllFileVws
 
 #pragma region LogFileVwAndMergeVwSpecific
-	virtual void RedrawGrid() = 0;
+	//virtual void RedrawGrid() = 0;
 
-	virtual void GotoLastRowInGrid() = 0;
-	virtual bool IsOnLastRowInGrid() = 0;
+	//virtual void GotoLastRowInGrid() = 0;
+	//virtual bool IsOnLastRowInGrid() = 0;
 
-	virtual long GetGridRowCount() = 0;
+	//virtual long GetGridRowCount() = 0;
 
 	virtual void OnChangedSettings(const ChangedSettings& chg_settings) = 0;
 
@@ -114,7 +114,7 @@ public:
 #pragma endregion MergeVwSpecific
 
 #pragma region ImageVwSpecific
-	virtual void SetImageTitle() = 0;
+	//virtual void SetImageTitle() = 0;
 #pragma endregion ImageVwSpecific
 };
 

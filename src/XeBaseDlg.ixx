@@ -6,7 +6,7 @@ module;
 #include <vector>
 #include <string>
 #include <functional>
-//#include "..\LogViewerStudio\resource.h"
+#include "XeResource.h"
 
 export module Xe.BaseDlg;
 

@@ -14,7 +14,7 @@
 
 #include "XeAssert.h"
 
-#include "Xe_res.h"
+//#include "Xe_res.h"
 
 #ifndef GET_X_LPARAM
 #define GET_X_LPARAM(lp)                        ((int)(short)LOWORD(lp))

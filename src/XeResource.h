@@ -2,6 +2,8 @@
 // Microsoft Visual C++ generated include file.
 // Used by XeResource.rc
 //
+#define IDC_STATIC              (-1)     // all static controls
+
 #define IDR_MAINFRAME			128
 //#define IDR_MAINMENU			129
 
@@ -20,8 +22,6 @@
 #define IDD_SETTINGS                    603
 #define IDD_THEME_EDITOR                615
 #define IDD_MSGBOX                      620
-
-#define IDC_STATIC                      (-1)
 
 #define IDC_ASK_STRING                  1001
 

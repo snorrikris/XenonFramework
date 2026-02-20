@@ -55,21 +55,18 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
-        POPUP "Ta&b"
-        BEGIN
-            MENUITEM "&1st Tab\tCtrl-Numpad 1",     ID_TAB_1STTAB
-            MENUITEM "&2nd Tab\tCtrl-Numpad 2",     ID_TAB_2NDTAB
-            MENUITEM "&3rd Tab\tCtrl-Numpad 3",     ID_TAB_3RDTAB
-            MENUITEM "&4th Tab\tCtrl-Numpad 4",     ID_TAB_4THTAB
-            MENUITEM "&5th Tab\tCtrl-Numpad 5",     ID_TAB_5THTAB
-            MENUITEM "&6th Tab\tCtrl-Numpad 6",     ID_TAB_6THTAB
-            MENUITEM "&7th Tab\tCtrl-Numpad 7",     ID_TAB_7THTAB
-            MENUITEM "&8th Tab\tCtrl-Numpad 8",     ID_TAB_8THTAB
-            MENUITEM "&9th Tab\tCtrl-Numpad 9",     ID_TAB_9THTAB
-            MENUITEM SEPARATOR
-            MENUITEM "&Previous Tab\tCtrl-Page up", ID_TAB_PREVTAB
-            MENUITEM "&Next Tab\tCtrl-Page down",   ID_TAB_NEXTTAB
-        END
+        MENUITEM "&1st Tab\tCtrl-Numpad 1",     ID_TAB_1STTAB
+        MENUITEM "&2nd Tab\tCtrl-Numpad 2",     ID_TAB_2NDTAB
+        MENUITEM "&3rd Tab\tCtrl-Numpad 3",     ID_TAB_3RDTAB
+        MENUITEM "&4th Tab\tCtrl-Numpad 4",     ID_TAB_4THTAB
+        MENUITEM "&5th Tab\tCtrl-Numpad 5",     ID_TAB_5THTAB
+        MENUITEM "&6th Tab\tCtrl-Numpad 6",     ID_TAB_6THTAB
+        MENUITEM "&7th Tab\tCtrl-Numpad 7",     ID_TAB_7THTAB
+        MENUITEM "&8th Tab\tCtrl-Numpad 8",     ID_TAB_8THTAB
+        MENUITEM "&9th Tab\tCtrl-Numpad 9",     ID_TAB_9THTAB
+        MENUITEM SEPARATOR
+        MENUITEM "&Previous Tab\tCtrl-Page up", ID_TAB_PREVTAB
+        MENUITEM "&Next Tab\tCtrl-Page down",   ID_TAB_NEXTTAB
     END
     POPUP "&Tools"
     BEGIN
@@ -105,13 +102,13 @@ BEGIN
         MENUITEM "Move left",                   ID__MOVELEFT
         MENUITEM "Move right",                  ID__MOVERIGHT
         MENUITEM SEPARATOR
-        MENUITEM "Close this tab",              33240
+        MENUITEM "Close this tab",              ID__CLOSETHISTAB
         MENUITEM "Close other tabs",            ID__CLOSEOTHERTABS
         MENUITEM "Close All to the Left",       ID__CLOSEALLTOTHELEFT
         MENUITEM "Close All to the Right",      ID__CLOSEALLTOTHERIGHT
-        MENUITEM "Close all but pinned tabs",   33241
+        MENUITEM "Close all but pinned tabs",   ID__CLOSEALLBUTPINNED
         MENUITEM SEPARATOR
-        MENUITEM "Pin tab",                     33242
+        MENUITEM "Pin tab",                     ID__PINTAB
     END
 END
 

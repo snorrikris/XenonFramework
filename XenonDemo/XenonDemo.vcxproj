@@ -232,6 +232,7 @@
     <ClCompile Include="..\src\XeGridDataSource.ixx" />
     <ClCompile Include="..\src\XeGridTableIF.ixx" />
     <ClCompile Include="..\src\XeHelpers.ixx" />
+    <ClCompile Include="..\src\XeImageCtrl.ixx" />
     <ClCompile Include="..\src\XeListBoxEx.ixx" />
     <ClCompile Include="..\src\XeListBoxExCommon.ixx" />
     <ClCompile Include="..\src\XeMainFrameBase.ixx" />
@@ -273,6 +274,9 @@
     <ClCompile Include="..\src\XeWindowStyleRects.ixx" />
     <ClCompile Include="..\src\XeWindowStyleValue.ixx" />
     <ClCompile Include="..\vsrollinglog\VSRL.cpp" />
+    <ClCompile Include="DemoFileVwBase.ixx" />
+    <ClCompile Include="DemoImageVw.ixx" />
+    <ClCompile Include="DemoTextVw.ixx" />
     <ClCompile Include="MainWnd.ixx" />
     <ClCompile Include="ViewManagerDemo.ixx" />
     <ClCompile Include="ViewManagerDemo_IF.ixx" />

@@ -32,9 +32,8 @@ public:
 	virtual void OnMainWindowDestroy() = 0;
 	virtual void Destroy() = 0;
 
-	// Set pointers to main window, main window toolbar and split window.
-	// (CMainFrameLVS*, CXeToolBarWnd*, CXeSplitWndLVS*)
-	virtual void SetMainWindowPtr(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) = 0;
+	// Set pointers to main window and main window toolbar, create tab views.
+	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) = 0;
 
 	virtual void On_Timer_1S() = 0;
 

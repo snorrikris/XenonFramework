@@ -17,6 +17,7 @@ module;
 export module Xe.ViewManager;
 
 export import Xe.ViewManagerIF;
+export import Xe.D2DToolbarIF;
 //import Xe.FileVw;
 import Xe.TabsView;
 import Xe.FileHelpers;
@@ -95,18 +96,29 @@ protected:
 	std::wstring m_settings_dlg_initial_setting_name;
 
 public:
-	CXeViewManager(CXeUIcolorsIF* pUIcolors) : m_xeUI(pUIcolors) {}
+	CXeViewManager(CXeUIcolorsIF* pUIcolors) : m_xeUI(pUIcolors)
+	{
+	}
 	virtual ~CXeViewManager() {}
 
 	// Delete assignment operator and copy constructor to prevent object copy.
 	CXeViewManager(const CXeViewManager&) = delete;
 	CXeViewManager& operator=(const CXeViewManager&) = delete;
 
-	int Create(HWND hParentOfTabVw, UINT uLeftTabDlgCtrlId, UINT uRightTabDlgCtrlId,
-			UINT uLeftViewDlgCtrlId, UINT uRightViewDlgCtrlId)
+	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar/*HWND hParentOfTabVw, UINT uLeftTabDlgCtrlId, UINT uRightTabDlgCtrlId,
+			UINT uLeftViewDlgCtrlId, UINT uRightViewDlgCtrlId*/) override
 	{
-		m_hParentOfTabVw = hParentOfTabVw;
-		XeASSERT(hParentOfTabVw && m_tabViews.size() == 0);
+		m_hMainWnd = m_hParentOfTabVw = hMainWnd;
+		m_pMainWndToolbar = pMainWndToolBar;
+		XeASSERT(m_hMainWnd && m_pMainWndToolbar);
+
+		m_pMainWndToolbar->SetUpdateMenuCallback(
+			[this](CXeMenu* pMenu, size_t top_level_index) { _UpdateMenuCallback(pMenu, top_level_index); });
+
+		//::SetWindowText(m_hMainWnd, m_strAppName.c_str());
+
+		//m_hParentOfTabVw = hParentOfTabVw;
+		//XeASSERT(hParentOfTabVw && m_tabViews.size() == 0);
 
 		std::wstring settings_path = GetCurrentUserAppDataFolder(m_xeUI->GetAppName());
 
@@ -115,11 +127,12 @@ public:
 		
 		m_uiWorkThread.StartThread();
 
+		XeASSERT(m_tabViews.size() == 0);
 		m_tabViews.push_back(std::make_unique<CXeTabsView>(this));
 		m_tabViews.push_back(std::make_unique<CXeTabsView>(this));
-		m_tabViews[0]->Create(hParentOfTabVw, ETABVIEWID::ePrimaryTabVw, uLeftTabDlgCtrlId, uLeftViewDlgCtrlId, m_tabViews[1].get());
-		m_tabViews[1]->Create(hParentOfTabVw, ETABVIEWID::eSecondaryTabVw, uRightTabDlgCtrlId, uRightViewDlgCtrlId, m_tabViews[0].get());
-		return m_tabViews[0]->GetTabViewHeight();
+		m_tabViews[0]->Create(m_hMainWnd, ETABVIEWID::ePrimaryTabVw, VW_ID_TABS_0, VW_ID_VIEW_0, m_tabViews[1].get());
+		m_tabViews[1]->Create(m_hMainWnd, ETABVIEWID::eSecondaryTabVw, VW_ID_TABS_1, VW_ID_VIEW_1, m_tabViews[0].get());
+		//return m_tabViews[0]->GetTabViewHeight();
 	}
 
 	virtual void OnMainWindowCreate() override
@@ -151,17 +164,17 @@ protected:
 	}
 
 public:
-	virtual void SetMainWindowPtr(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override
-	{
-		m_hMainWnd = hMainWnd;
-		m_pMainWndToolbar = pMainWndToolBar;
-		XeASSERT(m_hMainWnd && m_pMainWndToolbar);
+	//virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override
+	//{
+	//	m_hMainWnd = hMainWnd;
+	//	m_pMainWndToolbar = pMainWndToolBar;
+	//	XeASSERT(m_hMainWnd && m_pMainWndToolbar);
 
-		m_pMainWndToolbar->SetUpdateMenuCallback(
-			[this](CXeMenu* pMenu, size_t top_level_index) { _UpdateMenuCallback(pMenu, top_level_index); });
+	//	m_pMainWndToolbar->SetUpdateMenuCallback(
+	//		[this](CXeMenu* pMenu, size_t top_level_index) { _UpdateMenuCallback(pMenu, top_level_index); });
 
-		::SetWindowText(m_hMainWnd, m_strAppName.c_str());
-	}
+	//	::SetWindowText(m_hMainWnd, m_strAppName.c_str());
+	//}
 
 	virtual void On_Timer_1S() override
 	{

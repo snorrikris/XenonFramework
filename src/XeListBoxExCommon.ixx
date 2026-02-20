@@ -9,6 +9,7 @@ module;
 #include <map>
 #include <d2d1.h>
 #include <dwrite.h>
+#include "XeResource.h"
 
 export module Xe.ListBoxExCommon;
 
@@ -1095,7 +1096,7 @@ protected:
 			}
 			else
 			{
-				if (!(m_type == LBType::Menu && wParam == ID_APP_EXIT))	// App exit is special - handled by toolbar.
+				if (!(m_type == LBType::Menu && wParam == ID__APP_EXIT))	// App exit is special - handled by toolbar.
 				{
 					::SendMessage(::GetParent(Hwnd()), WM_COMMAND, wParam, (LPARAM)Hwnd());
 				}

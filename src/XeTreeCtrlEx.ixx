@@ -180,7 +180,7 @@ typedef CXeNaryTreeNode<TreeCtrlExItem> CXeTreeNode;
 typedef std::function<std::vector<ListBoxExItem>(TVITEMW*)> GetContextMenuCallbackFunc;
 typedef std::function<void(UINT, TVITEMW*)> SelectedContextMenuItemCallbackFunc;
 
-export class CXeTreeCtrlEx : public CXeD2DWndBase
+export class CXeTreeCtrlEx : public CXeD2DCtrlBase
 {
 protected:
 	bool m_hasFocus = false, m_isEnabled = true;
@@ -212,7 +212,7 @@ protected:
 
 #pragma region Create
 public:
-	CXeTreeCtrlEx(CXeUIcolorsIF* pUIcolors) : CXeD2DWndBase(pUIcolors)
+	CXeTreeCtrlEx(CXeUIcolorsIF* pUIcolors) : CXeD2DCtrlBase(pUIcolors)
 	{
 		m_xeUI->RegisterWindowClass(XETREECTRLEXWND_CLASSNAME, D2DCtrl_WndProc);
 		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);

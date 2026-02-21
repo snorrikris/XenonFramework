@@ -54,7 +54,7 @@ import Xe.D2DWndBase;
 import Xe.DefData;
 
 /////////////////////////////////////////////////
-class CUGCtrl : public CXeD2DWndBase
+class CUGCtrl : public CXeD2DCtrlBase
 {
 protected:
 	structGridSelection m_gridsel;	// grid selection data

@@ -5,9 +5,9 @@ module;
 #include "logging.h"
 #include "XeResource.h"
 
-export module ViewManagerDemo;
+export module Demo.ViewManager;
 
-export import ViewManagerDemo_IF;
+export import Demo.ViewManager_IF;
 import Xe.ViewManager;
 import Xe.UserSettings;
 import Xe.FileDlgHelpers;
@@ -56,7 +56,6 @@ public:
 			break;
 		}
 	}
-
 
 	virtual void OnDroppedFiles(CPoint ptScreenCoords, const std::vector<std::wstring>& dropped_files) override
 	{
@@ -114,6 +113,7 @@ public:
 	virtual void OnMainWindowDestroy() override { CXeViewManager::OnMainWindowDestroy(); }
 	//virtual void Destroy() override { CXeViewManager::Destroy(); }
 	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override { CXeViewManager::CreateTabViews(hMainWnd, pMainWndToolBar); }
+	virtual bool AttachView(std::unique_ptr<CXeFileVwIF> view, CreateViewParams viewParams) override { return CXeViewManager::AttachView(std::move(view), viewParams); }
 	virtual void On_Timer_1S() override { CXeViewManager::On_Timer_1S(); }
 	virtual int GetTabViewHeight(int idx) override { return CXeViewManager::GetTabViewHeight(idx); }
 	virtual int RecalculateTabViewHeight(int idx, int cxAvailable) override { return CXeViewManager::RecalculateTabViewHeight(idx, cxAvailable); }
@@ -259,8 +259,7 @@ protected:
 					std::unique_ptr<CDemoImageVw> view = std::make_unique<CDemoImageVw>(this, GetNextNewDataSourceId());
 					if (view->LoadFile(*it))
 					{
-						pTabVw->AttachView(view.get(), viewParams, true);
-						m_views[view->GetDataSourceId()] = std::move(view);
+						AttachView(std::move(view), viewParams);	// Note - view object has been moved and is no longer usable here.
 						m_MRUList.Add(*it);
 					}
 				}
@@ -269,8 +268,7 @@ protected:
 					std::unique_ptr<CDemoTextVw> view = std::make_unique<CDemoTextVw>(this, GetNextNewDataSourceId());
 					if (view->LoadFile(*it))
 					{
-						pTabVw->AttachView(view.get(), viewParams, true);
-						m_views[view->GetDataSourceId()] = std::move(view);
+						AttachView(std::move(view), viewParams);	// Note - view object has been moved and is no longer usable here.
 						m_MRUList.Add(*it);
 					}
 				}

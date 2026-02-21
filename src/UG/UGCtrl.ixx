@@ -97,7 +97,7 @@ export CUGCtrl;
 module :private;
 
 CUGCtrl::CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
-	GridNotifyCallbackFunc gridNotifyCallback /*= nullptr*/) : CXeD2DWndBase(pDS->m_xeUI)
+	GridNotifyCallbackFunc gridNotifyCallback /*= nullptr*/) : CXeD2DCtrlBase(pDS->m_xeUI)
 {
 	XeASSERT(pDS && pDS->m_xeUI);
 	m_xeUI = pDS->m_xeUI;

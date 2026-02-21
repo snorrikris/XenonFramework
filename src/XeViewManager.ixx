@@ -135,6 +135,19 @@ public:
 		//return m_tabViews[0]->GetTabViewHeight();
 	}
 
+	virtual bool AttachView(std::unique_ptr<CXeFileVwIF> view, CreateViewParams viewParams) override
+	{
+		CXeTabsView* pTabVw = _GetTabView(viewParams.eTabVwId);
+		XeASSERT(pTabVw);
+		if (!pTabVw)
+		{
+			return false;
+		}
+		pTabVw->AttachView(view.get(), viewParams, viewParams.makeThisCurrentView);
+		m_views[view->GetDataSourceId()] = std::move(view);
+		return true;
+	}
+
 	virtual void OnMainWindowCreate() override
 	{
 	}

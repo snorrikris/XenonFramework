@@ -157,7 +157,7 @@ export struct TopLevelMenuNavigationParameters
 };
 export typedef std::function<int(const TopLevelMenuNavigationParameters& params)> TopLevelMenuNavigationCallbackFunc;
 
-export class CXeListBoxExCommon : public CXeD2DWndBase, public CXePopupCtrlBase
+export class CXeListBoxExCommon : public CXeD2DCtrlBase, public CXePopupCtrlBase
 {
 #pragma region Class_data
 protected:
@@ -226,7 +226,7 @@ public:
 #pragma endregion Class_data
 
 #pragma region Create
-	CXeListBoxExCommon(CXeUIcolorsIF* pUIcolors) : CXeD2DWndBase(pUIcolors)
+	CXeListBoxExCommon(CXeUIcolorsIF* pUIcolors) : CXeD2DCtrlBase(pUIcolors)
 	{
 		Initialize(LBType::Normal);
 	}

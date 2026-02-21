@@ -244,6 +244,7 @@ protected:
 
 	bool m_isDialogWantsClickOutsideMouseDownToCancel = false;
 
+	// All controls - note - every control is derived from CXeD2DCtrlBase.
 	std::vector<std::unique_ptr<CXeD2DButton>>				m_buttons;
 	std::vector<std::unique_ptr<CXeD2DStatic>>				m_statics;
 	std::vector<std::unique_ptr<CXeListBoxEx>>				m_listboxes;
@@ -256,6 +257,7 @@ protected:
 	std::vector<std::unique_ptr<CXeCalendarCtrl>>			m_calendarcontrols;
 	std::vector<std::unique_ptr<CXeColorPicker>>			m_colorpickers;
 	std::vector<std::unique_ptr<CUGCtrl>>					m_datagrids;
+	// Remember to update _GetAllControls() when new control type added.
 
 	XeGlueControls m_glueControls;
 #pragma endregion class_data
@@ -1249,6 +1251,24 @@ protected:
 	//	ti.sTooltip = strTip.c_str();
 	//	m_xtooltip->AddTooltipTool(ti);
 	//}
+
+	std::vector<CXeD2DCtrlBase*> _GetAllControls() const
+	{
+		std::vector<CXeD2DCtrlBase*> controls;
+		for (auto& ctrl : m_buttons)			{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_statics)			{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_listboxes)			{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_comboboxes)			{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_scrollbars)			{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_editcontrols)		{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_treecontrols)		{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_progresscontrols)	{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_durationcontrols)	{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_calendarcontrols)	{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_colorpickers)		{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		for (auto& ctrl : m_datagrids)			{ if (ctrl->GetSafeHwnd()) { controls.push_back(ctrl.get()); } }
+		return controls;
+	}
 
 	void _SetTooltipForControl(UINT uID, const std::wstring& tooltip)
 	{

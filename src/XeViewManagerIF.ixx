@@ -5,6 +5,7 @@ module;
 #include <optional>
 #include <functional>
 #include <string>
+#include <memory>
 
 export module Xe.ViewManagerIF;
 
@@ -34,6 +35,8 @@ public:
 
 	// Set pointers to main window and main window toolbar, create tab views.
 	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) = 0;
+
+	virtual bool AttachView(std::unique_ptr<CXeFileVwIF> view, CreateViewParams viewParams) = 0;
 
 	virtual void On_Timer_1S() = 0;
 

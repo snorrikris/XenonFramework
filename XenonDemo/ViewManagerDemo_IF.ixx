@@ -1,6 +1,6 @@
 module;
 
-export module ViewManagerDemo_IF;
+export module Demo.ViewManager_IF;
 
 export import Xe.ViewManagerIF;
 

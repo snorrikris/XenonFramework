@@ -6,7 +6,7 @@ module;
 export module Demo.FileVwBase;
 
 export import Xe.FileVwIF;
-export import ViewManagerDemo_IF;
+export import Demo.ViewManager_IF;
 export import Xe.D2DWndBase;
 import Xe.Helpers;
 

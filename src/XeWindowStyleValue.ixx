@@ -304,9 +304,9 @@ public:
 	bool IsSplitButton() const { DWORD bs = m_dwStyle & BS_TYPEMASK; return bs == BS_SPLITBUTTON || bs == BS_DEFSPLITBUTTON; }
 	bool IsUrlButton() const { DWORD bs = m_dwStyle & BS_TYPEMASK; return bs == BS_COMMANDLINK || bs == BS_DEFCOMMANDLINK; }
 
-	// Note - for group box - H LEFT is assumed if horizontal text alignment not specified.
+	// Note - for group box, check box and radio button - H LEFT is assumed if horizontal text alignment not specified.
 	// Note - for others - H CENTER is assumed if horizontal text alignment not specified.
-	bool IsBS_LEFT() const { DWORD bs = m_dwStyle & BS_CENTER; return (IsGroupBox() && bs == 0) || bs == BS_LEFT; }
+	bool IsBS_LEFT() const { DWORD bs = m_dwStyle & BS_CENTER; return ((IsGroupBox() || IsCheckOrRadioBox()) && bs == 0) || bs == BS_LEFT; }
 	bool IsBS_RIGHT() const { DWORD bs = m_dwStyle & BS_CENTER; return bs == BS_RIGHT; }
 	bool IsBS_CENTER() const { DWORD bs = m_dwStyle & BS_CENTER; return (!IsGroupBox() && bs == 0) || bs == BS_CENTER; }
 

@@ -7,7 +7,8 @@ module;
 export module Demo.MainWnd;
 
 import Xe.MainFrameBase;
-import ViewManagerDemo;
+import Demo.ViewManager;
+import Demo.Form;
 
 export class CDemoMainWnd : public CXeMainFrameBase
 {
@@ -30,4 +31,14 @@ protected:
 	//{
 	//	return 0;
 	//}
+
+	virtual void _OnCreateClient() override
+	{
+		dsid_t dsId = m_viewManager->GetNextNewDataSourceId();
+		std::unique_ptr<CDemoForm> view = std::make_unique<CDemoForm>(m_viewManager.get(), dsId, Hwnd());
+		view->CreateView();
+		CreateViewParams viewParams(ETABVIEWID::eAnyTabVw);
+		viewParams.makeThisCurrentView = true;
+		m_viewManager->AttachView(std::move(view), viewParams);
+	}
 };

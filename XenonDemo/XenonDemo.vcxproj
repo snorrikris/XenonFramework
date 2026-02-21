@@ -228,6 +228,7 @@
     <ClCompile Include="..\src\XeFileTimeX.ixx" />
     <ClCompile Include="..\src\XeFileVersionInfo.ixx" />
     <ClCompile Include="..\src\XeFileVwIF.ixx" />
+    <ClCompile Include="..\src\XeFormBase.ixx" />
     <ClCompile Include="..\src\XeGridDataDefs.ixx" />
     <ClCompile Include="..\src\XeGridDataSource.ixx" />
     <ClCompile Include="..\src\XeGridTableIF.ixx" />
@@ -277,6 +278,7 @@
     <ClCompile Include="DemoFileVwBase.ixx" />
     <ClCompile Include="DemoImageVw.ixx" />
     <ClCompile Include="DemoTextVw.ixx" />
+    <ClCompile Include="FormDemo.ixx" />
     <ClCompile Include="MainWnd.ixx" />
     <ClCompile Include="ViewManagerDemo.ixx" />
     <ClCompile Include="ViewManagerDemo_IF.ixx" />

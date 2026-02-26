@@ -31,7 +31,7 @@
     {
       "description": "Select user interface font point size",
       "display_name": "UI font size",
-      "display_position": 1,
+      "display_position": 2,
       "group_name": "grpUIfont",
       "group_order": 0,
       "group_title": "User interface font",

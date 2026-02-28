@@ -1,0 +1,190 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "XeResource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open file...\tCtrl-O",       ID__FILE_OPEN
+        POPUP "&Recent files"
+        BEGIN
+            MENUITEM "MRU 1",                       ID_MRU_ITEM1
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Open containing folder",      ID__OPENCONTAININGFOLDER
+        MENUITEM "Filename to Clipboard",       ID__FILENAMETOCLIPBOARD
+        MENUITEM "Full File Path to Clipboard", ID__FULLFILEPATHTOCLIPBOARD
+        MENUITEM "&Close file",                 ID_CLOSE_CURRENT_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "Close &all files",            ID_FILE_CLOSEALLWINDOWS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID__APP_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&1st Tab\tCtrl-Numpad 1",     ID_TAB_1STTAB
+        MENUITEM "&2nd Tab\tCtrl-Numpad 2",     ID_TAB_2NDTAB
+        MENUITEM "&3rd Tab\tCtrl-Numpad 3",     ID_TAB_3RDTAB
+        MENUITEM "&4th Tab\tCtrl-Numpad 4",     ID_TAB_4THTAB
+        MENUITEM "&5th Tab\tCtrl-Numpad 5",     ID_TAB_5THTAB
+        MENUITEM "&6th Tab\tCtrl-Numpad 6",     ID_TAB_6THTAB
+        MENUITEM "&7th Tab\tCtrl-Numpad 7",     ID_TAB_7THTAB
+        MENUITEM "&8th Tab\tCtrl-Numpad 8",     ID_TAB_8THTAB
+        MENUITEM "&9th Tab\tCtrl-Numpad 9",     ID_TAB_9THTAB
+        MENUITEM SEPARATOR
+        MENUITEM "&Previous Tab\tCtrl-Page up", ID_TAB_PREVTAB
+        MENUITEM "&Next Tab\tCtrl-Page down",   ID_TAB_NEXTTAB
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Set window &title...",        ID_FILE_SET_TITLE
+        MENUITEM SEPARATOR
+        MENUITEM "&Settings...",                ID_SHOW_SETTINGS
+        MENUITEM SEPARATOR
+        POPUP "Theme"
+        BEGIN
+            MENUITEM "{empty}",                     ID_THEME_LIST_ITEM1
+        END
+        MENUITEM "Theme editor...",             ID_TOOLS_THEMEEDITOR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About 'this' application...", ID__APP_ABOUT
+    END
+END
+
+IDR_TAB_CONTEXT_MENU MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Open containing folder",      ID__OPENCONTAININGFOLDER
+        MENUITEM SEPARATOR
+        MENUITEM "Filename to Clipboard",       ID__FILENAMETOCLIPBOARD
+        MENUITEM "Full File Path to Clipboard", ID__FULLFILEPATHTOCLIPBOARD
+        MENUITEM SEPARATOR
+        MENUITEM "Move to other view",          ID__MOVETOOTHER
+        MENUITEM SEPARATOR
+        MENUITEM "Move to first tab",           ID__MOVETOFIRSTTAB
+        MENUITEM "Move to last tab",            ID__MOVETOLASTTAB
+        MENUITEM "Move left",                   ID__MOVELEFT
+        MENUITEM "Move right",                  ID__MOVERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Close this tab",              ID__CLOSETHISTAB
+        MENUITEM "Close other tabs",            ID__CLOSEOTHERTABS
+        MENUITEM "Close All to the Left",       ID__CLOSEALLTOTHELEFT
+        MENUITEM "Close All to the Right",      ID__CLOSEALLTOTHERIGHT
+        MENUITEM "Close all but pinned tabs",   ID__CLOSEALLBUTPINNED
+        MENUITEM SEPARATOR
+        MENUITEM "Pin tab",                     ID__PINTAB
+    END
+END
+
+IDD_FORMVIEW DIALOGEX 0, 0, 365, 260
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Testing static",IDC_STATIC,7,7,44,8
+    EDITTEXT        IDC_EDIT1,7,22,115,14,ES_AUTOHSCROLL
+    CONTROL         "Check1",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,46,113,10
+    PUSHBUTTON      "Button1",IDC_BUTTON1,147,64,50,14
+    COMBOBOX        IDC_COMBO1,7,68,111,134,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LIST1,7,94,110,97,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Static",IDC_STATIC,138,50,193,130
+    CONTROL         "Radio1",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,203,69,10
+    CONTROL         "Radio2",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,87,202,102,10
+END
+
+IDD_ABOUT_BOX DIALOGEX 0, 0, 253, 107
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_APP_ICON,11,14,20,20
+    LTEXT           "name",IDC_APP_NAME,40,19,184,10,SS_NOPREFIX
+    LTEXT           "copyright",IDC_APP_COPYRIGHT,14,49,209,10
+    LTEXT           "ver",IDC_APP_VERSION,14,39,209,10
+    DEFPUSHBUTTON   "OK",IDOK,108,84,50,16,WS_GROUP
+END
+
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "XeResource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

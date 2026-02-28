@@ -3,7 +3,9 @@
 // Used by XeResource.rc
 //
 #define IDD_FORMVIEW                    101
+#ifndef IDR_MAINFRAME
 #define IDR_MAINFRAME                   128
+#endif
 #define JSON_FILE_TYPE                  290
 #define TEXT_FILE_RESOURCE_TYPE         291
 #define IDR_COLOR_IDS_JSON              300
@@ -56,13 +58,6 @@
 #define IDC_MSG_BTN3                    1648
 #define IDC_MSG_BTN2                    1649
 #define IDC_MSG_BTN1                    1650
-#define IDC_EDIT1                       1653
-#define IDC_CHECK1                      1654
-#define IDC_BUTTON1                     1655
-#define IDC_COMBO1                      1656
-#define IDC_LIST1                       1657
-#define IDC_RADIO1                      1658
-#define IDC_RADIO2                      1659
 #define ID__MOVETOOTHER                 33123
 #define ID__MOVETOFIRSTTAB              33124
 #define ID__MOVETOLASTTAB               33125
@@ -102,7 +97,11 @@
 #define ID_MRU_ITEM30                   40330
 #define ID_THEME_LIST_ITEM1             40401
 #define ID_THEME_LIST_ITEM99            40499
+
+#ifndef IDC_STATIC
 #define IDC_STATIC                      -1
+#endif // !IDC_STATIC
+
 
 // Next default values for new objects
 // 

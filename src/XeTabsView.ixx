@@ -325,6 +325,14 @@ public:
 	//	_CloseAndDeleteTabs(m_listTabs->GetTabsOfType(DSType::GetMergedLogsTypes()));
 	//}
 
+	void CloseAndDeleteTabs(const std::vector<CVwInfo>& tabsList)
+	{
+		for (const CVwInfo& tabInfo : tabsList)
+		{
+			_DeleteTabAndView(tabInfo.m_pView);
+		}
+	}
+
 	void DeleteAllTabsAndViews()
 	{
 		// Notify LVSState that views are closing.
@@ -668,14 +676,6 @@ protected:
 			*pdwTrackId = pView->GetDataSourceId();
 		}
 		return fHasFocus;
-	}
-
-	void _CloseAndDeleteTabs(const std::vector<CVwInfo>& tabsList)
-	{
-		for (const CVwInfo& tabInfo : tabsList)
-		{
-			_DeleteTabAndView(tabInfo.m_pView);
-		}
 	}
 
 	void _DeleteTabAndView(CXeFileVwIF* pDelView)
@@ -1477,16 +1477,16 @@ protected:
 			_DeleteTabAndView(pView);
 			break;
 		case ID__CLOSEOTHERTABS:
-			_CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSEOTHERS, pView));
+			CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSEOTHERS, pView));
 			break;
 		case ID__CLOSEALLTOTHELEFT:
-			_CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSETOLEFT, pView));
+			CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSETOLEFT, pView));
 			break;
 		case ID__CLOSEALLTOTHERIGHT:
-			_CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSETORIGHT, pView));
+			CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSETORIGHT, pView));
 			break;
 		case ID__CLOSEALLBUTPINNED:
-			_CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSEALLBUTPINNED, pView));
+			CloseAndDeleteTabs(m_listTabs->GetTabsToClose(ECLOSETABS::eCLOSEALLBUTPINNED, pView));
 			break;
 		case ID__PINTAB:
 			if (pTabInfo && m_listTabs->PinTab(!pTabInfo->m_isPinned, pView))
@@ -1674,7 +1674,7 @@ protected:
 				}
 				if (viewsToClose.size())	// Any to close?
 				{
-					_CloseAndDeleteTabs(viewsToClose);
+					CloseAndDeleteTabs(viewsToClose);
 				}
 				return;
 			}

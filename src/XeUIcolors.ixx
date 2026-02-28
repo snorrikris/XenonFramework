@@ -909,6 +909,11 @@ protected:
 		m_monospacedFontSize = m_uiFontSize;
 
 		std::wstring monospacedFontName = s_xeUIsettings[L"GeneralSettings"].Get(L"UI_MonospacedFontName").getString();
+		XeASSERT(monospacedFontName.size() > 0);
+		if (monospacedFontName.size() == 0)
+		{
+			monospacedFontName = L"Consolas";
+		}
 		//std::wstring monospacedFontName = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontName").getString();
 		//std::wstring gridRowPitch = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridRowPitch").getString();
 		//m_gridRowPitch = xen::stoi(gridRowPitch.c_str());

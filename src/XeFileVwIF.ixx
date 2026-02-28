@@ -37,8 +37,8 @@ public:
 	//virtual CXeFileContainerUI_IF* GetFileContainerUI_IF() = 0;
 	//virtual const CXeFileContainerUI_IF* GetConstFileContainerUI_IF() const = 0;
 
-	virtual const std::wstring& GetViewName() const = 0;
-	virtual const std::wstring& GetPathName() const = 0;
+	virtual std::wstring GetViewName() const = 0;
+	virtual std::wstring GetPathName() const = 0;
 	virtual PID GetViewPID() const = 0;
 	virtual COLORREF GetViewTitleTextColor() const = 0;
 
@@ -139,7 +139,7 @@ public:
 	int				m_cxViewName = 0;
 	CRect			m_rcPos;			// Item position in client coords.
 
-	std::wstring	m_empty_string;
+	std::wstring	m_viewName, m_pathname;
 
 	CVwInfo()
 	{
@@ -149,6 +149,8 @@ public:
 	{
 		m_dsid = pView ? pView->GetDataSourceId() : dsid_t();
 		ClearUIvars();
+		m_viewName = pView ? m_pView->GetViewName() : L"";
+		m_pathname = pView ? m_pView->GetPathName() : L"";
 	}
 	//~CVwInfo() {}
 
@@ -170,17 +172,19 @@ public:
 
 	const std::wstring& GetViewName() const
 	{
-		XeASSERT(m_pView);
-		if (!m_pView) { return m_empty_string; }
-		//return m_pView->GetFileContainerUI_IF()->GetMetadata().m_strLogFilename;
-		return m_pView->GetViewName();
+		//XeASSERT(m_pView);
+		//if (!m_pView) { return m_empty_string; }
+		////return m_pView->GetFileContainerUI_IF()->GetMetadata().m_strLogFilename;
+		//return m_pView->GetViewName();
+		return m_viewName;
 	}
 
 	const std::wstring& GetPathName() const
 	{
-		XeASSERT(m_pView);
-		if (!m_pView) { return m_empty_string; }
-		return m_pView->GetPathName();
+		//XeASSERT(m_pView);
+		//if (!m_pView) { return m_empty_string; }
+		//return m_pView->GetPathName();
+		return m_pathname;
 	}
 };
 

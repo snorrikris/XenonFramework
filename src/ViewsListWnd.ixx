@@ -491,23 +491,10 @@ protected:
 			{
 				continue;
 			}
-			//CXeFileContainerUI_IF* ui_ds = item.m_pView->GetFileContainerUI_IF();
-			//const FileMetadata& md = ui_ds->GetMetadata();
-			//PID pid = PID::None;
 			PID pid = item.m_pView->GetViewPID();
-			//if (md.m_dataSourceType.IsMergedLogsType())	// Is Merge?
-			//{
-			//	pid = md.m_isMergeRebuildNeeded ? PID::RebuildMergeNeededPng : PID::MergePng;
-			//}
-			//else if (md.m_fileIcon != FileIcon::None)
-			//{
-			//	pid = m_xeUI->GetFileIconPID(md.m_fileIcon);
-			//}
-			//COLORREF rgbTxt = md.m_rgbLogFileColor;
 			COLORREF rgbTxt = item.m_pView->GetViewTitleTextColor();
 			if (item.m_dsid == curVwId)
 			{
-				//_DrawIconAndFilename(pRT, md.m_strLogFilename, rcTitle, EXE_FONT::eTabListTitleFont, rgbTxt, pid, false, CRect());
 				_DrawIconAndFilename(pRT, item.GetViewName(), rcTitle, EXE_FONT::eTabListTitleFont, rgbTxt, pid, false, CRect());
 				_CreateAndDrawTextLayout(pRT, item.GetPathName(), rcPath, CID::CtrlTxt);
 				rgbTxt = m_xeUI->GetColor(CID::TabTxtFg);
@@ -516,7 +503,6 @@ protected:
 			{
 				_DrawCurItemBg(pRT, item.m_rcPos);
 			}
-			//_DrawIconAndFilename(pRT, md.m_strLogFilename, item.m_rcPos, EXE_FONT::eUI_Font, rgbTxt, pid, true, CRect());
 			_DrawIconAndFilename(pRT, item.GetViewName(), item.m_rcPos, EXE_FONT::eUI_Font, rgbTxt, pid, true, CRect());
 		}
 	}

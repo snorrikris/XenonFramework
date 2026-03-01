@@ -653,34 +653,37 @@ int CUGCtrl::EditCtrlFinished(LPCTSTR string,BOOL cancelFlag,
 		CRect editRect;
 		::GetClientRect(m_GI->m_editCtrl, &editRect);
 
-		if (( editRect.Width() <= GetColWidth(m_GI->m_editCol ) &&
+		if (editRect.Width() <= GetColWidth(m_GI->m_editCol) &&
 			//( m_GI->m_enableCellOverLap == TRUE ) &&
-			(m_GI->m_editCol < m_GI->m_numberCols - 1 ) &&
-			(std::wstring(QuickGetText(m_GI->m_editCol + 1, m_GI->m_editRow))) == L"" ))
+			m_GI->m_editCol < m_GI->m_numberCols - 1)
 		{
-			// The edit control is the same (or smaller) width as its column,
-			// and the first cell to the left is empty.  Now lets check
-			// if the text contained in the edit control will fit into cell entiely.
-			//CDC *offDc = GetDC();
-			//CFont *cellFont = m_GI->m_editCtrl->GetFont();
-			//CFont *oldFont = NULL;
-			//
-			//if ( cellFont != NULL )
-			//	oldFont = offDc->SelectObject( cellFont );
+			const wchar_t* pCellText = QuickGetText(m_GI->m_editCol + 1, m_GI->m_editRow);
+			if (pCellText && std::wcslen(pCellText) == 0)
+			{
+				// The edit control is the same (or smaller) width as its column,
+				// and the first cell to the left is empty.  Now lets check
+				// if the text contained in the edit control will fit into cell entiely.
+				//CDC *offDc = GetDC();
+				//CFont *cellFont = m_GI->m_editCtrl->GetFont();
+				//CFont *oldFont = NULL;
+				//
+				//if ( cellFont != NULL )
+				//	oldFont = offDc->SelectObject( cellFont );
 
-			//GetCellRect(m_GI->m_editCol, m_GI->m_editRow, editRect );
-			//offDc->DrawText( string, editRect, DT_CALCRECT );
+				//GetCellRect(m_GI->m_editCol, m_GI->m_editRow, editRect );
+				//offDc->DrawText( string, editRect, DT_CALCRECT );
 
-			//// clean up after the off screen DC
-			//if ( cellFont != NULL )
-			//	offDc->SelectObject( oldFont );
+				//// clean up after the off screen DC
+				//if ( cellFont != NULL )
+				//	offDc->SelectObject( oldFont );
 
-			//// Release obtained DC
-			//ReleaseDC( offDc );
+				//// Release obtained DC
+				//ReleaseDC( offDc );
 
-			//if ( editRect.Width() > GetColWidth(m_GI->m_editCol ))
-			{	// We should redraw more than just the currently edited cell
-				RedrawAll();
+				//if ( editRect.Width() > GetColWidth(m_GI->m_editCol ))
+				{	// We should redraw more than just the currently edited cell
+					RedrawAll();
+				}
 			}
 		}
 		

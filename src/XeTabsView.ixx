@@ -1000,14 +1000,6 @@ protected:
 		//	rcProg.right = rcProg.left + (int)((double)(rc.Width() * progress) / 100 + 0.5);
 		//}
 		PID pid = tabInfo.m_pView->GetViewPID(); // PID::None;
-		//if (md.m_dataSourceType.IsMergedLogsType())	// Is Merge?
-		//{
-		//	pid = md.m_isMergeRebuildNeeded ? PID::RebuildMergeNeededPng : PID::MergePng;
-		//}
-		//else if (md.m_fileIcon != FileIcon::None)
-		//{
-		//	pid = m_xeUI->GetFileIconPID(md.m_fileIcon);
-		//}
 		_DrawIconAndFilename(pRT, tabInfo.m_pView->GetViewName(), rc, font, rgbTxt, pid, true, rcProg);
 
 		// Draw close button if 'this' is current tab or mouse over tab.

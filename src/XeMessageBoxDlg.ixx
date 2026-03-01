@@ -131,14 +131,27 @@ protected:
 			// Calculate new dialog size (if it needs to grow).
 			int cx_txtctrl = rcTxtCtrl.Width(), cy_txtctrl = rcTxtCtrl.Height();
 			// Allow cx to grow by max 500%, Allow cy to grow by max 500%
-			int cx_grow = cx_txt > cx_txtctrl ? std::min((5 * cx_txtctrl), cx_txt) - cx_txtctrl : 0;
-			int cy_grow = cy_txt > cy_txtctrl ? std::min((5 * cy_txtctrl), cy_txt) - cy_txtctrl : 0;
+			int cx_grow_max = (5 * cx_txtctrl) - cx_txtctrl, cy_grow_max = 5 * cy_txtctrl - cy_txtctrl;
+			int cx_grow_txt = cx_txt - cx_txtctrl, cy_grow_txt = cy_txt - cy_txtctrl;
+			int cx_grow = cx_txt > cx_txtctrl ? std::min(cx_grow_max, cx_grow_txt) : 0;
+			int cy_grow = cy_txt > cy_txtctrl ? std::min(cy_grow_max, cy_grow_txt) : 0;
 			if (cx_grow || cy_grow)
 			{
+				if ((cx_grow && cx_grow < cx_grow_txt) || (cy_grow && cy_grow < cy_grow_txt))
+				{
+					// Text box will be smaller than needed for text - add space for scrollbars.
+					int cxySB = m_xeUI->GetValue(UIV::cxyScrollbar);
+					cx_grow += cxySB;
+					cy_grow += cxySB;
+				}
 				UINT flags = SWP_NOMOVE | SWP_NOCOPYBITS | SWP_NOZORDER;
 				int cxNew = std::max(cxDlgMin, (rcWnd.Width() + cx_grow));
 				int cyNew = rcWnd.Height() + cy_grow;
 				SetWindowPos(::GetParent(Hwnd()), 0, 0, cxNew, cyNew, flags);
+
+				int cxNew_box = rcTxtCtrl.Width() + cx_grow;
+				int cyNew_box = rcTxtCtrl.Height() + cy_grow;
+				pTxtCtrl->SetWindowPos(nullptr, 0, 0, cxNew_box, cyNew_box, flags);
 
 				int x_btn_offset = cxNew - rcWnd.Width();
 				int y_btn_offset = cyNew - rcWnd.Height();

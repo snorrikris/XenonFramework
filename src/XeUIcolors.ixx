@@ -1263,11 +1263,6 @@ public:
 		return CSize();
 	}
 
-	//virtual CXeGdiPng* GetFileIconPng(FileIcon icn) const override
-	//{
-	//	return m_parrPngs[(UINT)GetFileIconPID(icn)];
-	//}
-
 	//virtual CPen* GetPngBtnFocusPen() const override { return m_ppenDots.get(); }	// Shared 'focus' outline pen for PngButton
 	//virtual CPen* GetPngBtnFocusPen() const override
 	//{
@@ -1693,6 +1688,8 @@ protected:
 			return 3;
 		case UIV::cyWindowCaption:
 			return GetFontMetric(EXE_FONT::eUI_FontBold).GetHeight();
+		case UIV::cxyScrollbar:
+			return std::max(::GetSystemMetrics(SM_CXVSCROLL), ::GetSystemMetrics(SM_CYHSCROLL));		//pixels
 		}
 		XeASSERT(FALSE);
 		return 0;

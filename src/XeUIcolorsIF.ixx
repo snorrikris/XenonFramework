@@ -82,7 +82,8 @@ export enum class UIV
 	cySubMenuArrow,
 	cxyThickBorder,
 	cxyThinBorder,
-	cyWindowCaption
+	cyWindowCaption,
+	cxyScrollbar
 };
 
 export enum class XERESTYPE
@@ -283,22 +284,6 @@ public:
 	virtual CSize GetPngImageSize(PID uPID) = 0;
 
 	//virtual CXeGdiPng* GetFileIconPng(FileIcon icn) const = 0;
-
-	//inline PID GetFileIconPID(FileIcon icn) const
-	//{
-	//	XeASSERT(icn != FileIcon::None);
-	//	switch (icn)
-	//	{
-	//	case FileIcon::None:	return PID::AppAbout;			// INVALID (no icon available)
-	//	case FileIcon::Server:	return PID::FileIconServer;
-	//	case FileIcon::App:		return PID::FileIconApp;
-	//	case FileIcon::Console:	return PID::FileIconConsole;
-	//	case FileIcon::User:	return PID::FileIconUser;
-	//	case FileIcon::Service:	return PID::FileIconService;
-	//	case FileIcon::Device:	return PID::FileIconDevice;
-	//	}
-	//	return PID::AppAbout;			// INVALID (no icon available)
-	//}
 
 	//virtual CFont* GetFont(EXE_FONT eFont) const = 0;
 	//virtual HFONT GetFontHandle(EXE_FONT eFont) const = 0;

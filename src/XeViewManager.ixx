@@ -221,6 +221,10 @@ public:
 	virtual void OnViewClosed(dsid_t dataSourceId) override
 	{
 		m_views.erase(dataSourceId);
+		if (m_dwLastViewWithFocus == dataSourceId)
+		{
+			m_dwLastViewWithFocus.reset();
+		}
 	}
 
 	virtual void DeleteAllViews() override
@@ -476,10 +480,13 @@ public:
 	{
 		if (GetViewFromDataSourceId(dwDataSourceId))	// Is valid view
 		{
-			//TRACE("View got focus DS: %d\n", dwDataSourceId);
-			m_dwLastViewWithFocus = dwDataSourceId;
-			ViewWithFocusChanged(m_dwLastViewWithFocus);
-			return true;
+			if (m_dwLastViewWithFocus != dwDataSourceId)
+			{
+				//TRACE("View got focus DS: %d\n", dwDataSourceId);
+				m_dwLastViewWithFocus = dwDataSourceId;
+				ViewWithFocusChanged(m_dwLastViewWithFocus);
+				return true;
+			}
 		}
 		return false;
 	}
@@ -613,13 +620,16 @@ protected:
 			menu_item.EnableItem(m_xeUI->GetCurrentTheme()->IsInEditMode() ? false : true);
 			break;
 		default: {
-			CXeFileVwIF* pView = GetViewFromDataSourceId(m_dwLastViewWithFocus);
-			CXeTabsView* pTab = _GetTabViewContainingView(pView);
-			if (!pTab)
+			if (m_dwLastViewWithFocus.is_valid())
 			{
-				pTab = _GetTabView(ETABVIEWID::ePrimaryTabVw);
+				CXeFileVwIF* pView = GetViewFromDataSourceId(m_dwLastViewWithFocus);
+				CXeTabsView* pTab = _GetTabViewContainingView(pView);
+				if (!pTab)
+				{
+					pTab = _GetTabView(ETABVIEWID::ePrimaryTabVw);
+				}
+				pTab->UpdateMenuItem(menu_item, pView);
 			}
-			pTab->UpdateMenuItem(menu_item, pView);
 		} break;
 		}
 	}
@@ -633,6 +643,8 @@ public:
 		// http://chabster.blogspot.com/2010/03/focus-and-window-activation-in-win32.html
 		HWND hOldFocusWnd = ::GetFocus();
 		bool isRestoreFocusNeeded = false;
+
+		CXeFileVwIF* pView = m_dwLastViewWithFocus.is_valid() ? GetViewFromDataSourceId(m_dwLastViewWithFocus) : nullptr;
 
 		if (uCmdId >= ID_MRU_ITEM1 && uCmdId <= ID_MRU_ITEM30)
 		{
@@ -650,8 +662,15 @@ public:
 		//}
 		switch (uCmdId)
 		{
+		case ID__FILENAMETOCLIPBOARD:
+			if (pView) { pView->OnCopyInfoToClipboard(ECLIPBRDOP::eFILENAME); }
+			break;
+		case ID__FULLFILEPATHTOCLIPBOARD:
+			if (pView) { pView->OnCopyInfoToClipboard(ECLIPBRDOP::eFULLPATH); }
+			break;
 		case ID_FILE_CLOSEALLWINDOWS:
 			_OnCloseAllWindows();
+			break;
 		case ID__OPENCONTAININGFOLDER:
 			OpenContainingFolder(m_dwLastViewWithFocus);
 			break;

@@ -24,7 +24,7 @@
       "group_title": "User interface font",
       "name": "UI_MonospacedFontName",
       "range": "",
-      "type": "Font",
+      "type": "MonospacedFont",
       "value": "Consolas",
       "value_is_default": true
     },

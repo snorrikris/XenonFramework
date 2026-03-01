@@ -925,7 +925,7 @@ protected:
 			::ClientToScreen(Hwnd(), (LPPOINT)&rcParentCtrl);
 			::ClientToScreen(Hwnd(), ((LPPOINT)&rcParentCtrl) + 1);
 			CRect rcPopup = p->m_cmn->CalcPopupWindowSize(rcParentCtrl.left, rcParentCtrl.bottom,
-					rcParentCtrl.Width(), 2.0, item_count);
+					rcParentCtrl.Width(), 4.0, item_count);
 			p->ShowPopup(Hwnd(), rcPopup, rcParentCtrl);
 			if (p->m_nLastUserSelectedItemIdx >= 0)
 			{

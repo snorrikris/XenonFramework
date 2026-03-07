@@ -23,8 +23,8 @@ public:
 	}
 
 #pragma region CXeFileVwIF_impl
-	virtual const std::wstring& GetViewName() const override { return m_viewname; }
-	virtual const std::wstring& GetPathName() const override { return m_description; }
+	virtual std::wstring GetViewName() const override { return m_viewname; }
+	virtual std::wstring GetPathName() const override { return m_description; }
 	virtual std::wstring GetTooltipForTab() override { return m_description; }
 #pragma endregion CXeFileVwIF_impl
 };

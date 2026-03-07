@@ -28,8 +28,8 @@ public:
 
 	virtual dsid_t GetDataSourceId() const override { return m_dsId; }
 
-	virtual const std::wstring& GetViewName() const override { return m_filename; }
-	virtual const std::wstring& GetPathName() const override { return m_pathname; }
+	virtual std::wstring GetViewName() const override { return m_filename; }
+	virtual std::wstring GetPathName() const override { return m_pathname; }
 
 	virtual HWND GetHwndOfView() const override { return Hwnd(); }
 

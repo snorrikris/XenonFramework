@@ -4,6 +4,8 @@ module;
 #include <memory>
 #include <map>
 #include <random>
+#include <string>
+#include <format>
 //#include "ipp.h"
 #include "logging.h"
 
@@ -830,6 +832,8 @@ public:
 		_Alloc(data_len, true);
 	}
 
+	bool IsEmpty() const { return m_buffer.get() == nullptr || m_buffer_size == 0; }
+
 	// Input string is assumed to contain ONLY hex characters '0'...'9', 'a'...'f', 'A'...'F'.
 	// If pIsValid parameter is supplied - it is set to true if all characters of the string could be parsed,
 	// it is set to false if any character from the string is not a valid hex character.
@@ -907,7 +911,10 @@ protected:
 	}
 };
 
-export CXeBuffer GetResource(const wchar_t* name, const wchar_t* type)
+// Get an item from resources into buffer.
+// name is a string pointer OR ID that was converted to pointer using MAKEINTRESOURCE macro.
+// type is (usually) an resource type ID that was converted to pointer using MAKEINTRESOURCE macro.
+CXeBuffer _GetResource(const wchar_t* name, const wchar_t* type)
 {
 	DWORD dwSize = 0;
 	HRSRC hResource = 0;
@@ -928,13 +935,37 @@ export CXeBuffer GetResource(const wchar_t* name, const wchar_t* type)
 			::GlobalFree(hgmemRes);
 		return xeBuffer;
 	}
-	else
+	return CXeBuffer(0, 0);
+}
+
+// type is (usually) an resource type ID that was converted to pointer using MAKEINTRESOURCE macro.
+export CXeBuffer GetResource(const wchar_t* name, const wchar_t* type)
+{
+	CXeBuffer xeBuffer = _GetResource(name, type);
+	if (xeBuffer.IsEmpty())
 	{
 		XeASSERT(false);
-		std::string str = "Load resource '" + xet::to_astr(name) + "' failed.\n";
+		// Note - we don't assume name is a string - because it could be an ID converted to string pointer.
+		std::string str = "Load resource '" + std::to_string((uint64_t)name)
+				+ "' type '" + std::to_string((uint64_t)type) + "' failed.\n";
 		XeTRACE(str.c_str());
 	}
 	return CXeBuffer(0, 0);
+}
+
+// type is (usually) an resource type ID that was converted to pointer using MAKEINTRESOURCE macro.
+export CXeBuffer GetResource(uint16_t id, const wchar_t* type)
+{
+	CXeBuffer xeBuffer = _GetResource(MAKEINTRESOURCEW(id), type);
+	if (xeBuffer.IsEmpty())
+	{
+		XeASSERT(false);
+		std::string str = "Load resource '" + std::to_string(id) + "' type '"
+				+ std::to_string((uint64_t)type) + "' failed.\n";
+		XeTRACE(str.c_str());
+		return CXeBuffer(0, 0);
+	}
+	return xeBuffer;
 }
 
 export class CXeMenuItemInfo

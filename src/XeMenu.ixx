@@ -152,12 +152,12 @@ public:
 		m_menu.m_menu_items.push_back(submenu);
 	}
 
-	CXeMenu(CXeUIcolorsIF* pUIcolors, LPCTSTR menu_name_in_resources)
+	CXeMenu(CXeUIcolorsIF* pUIcolors, uint16_t menuId)
 		: CXePopupCtrl(pUIcolors, XeShowPopup::FadeIn80),
 		m_getSubMenuCallback([this](UINT uID) { return _GetSubMenu(uID); })
 	{
 		_Init();
-		if (!_LoadAndParseMenuFromResources(menu_name_in_resources))
+		if (!_LoadAndParseMenuFromResources(menuId))
 		{
 			XeASSERT(FALSE);
 		}
@@ -557,10 +557,10 @@ protected:
 		return 0;
 	}
 
-	bool _LoadAndParseMenuFromResources(const wchar_t* menu_name_in_resources)
+	bool _LoadAndParseMenuFromResources(uint16_t menuId)
 	{
 		m_menu.clear();
-		CXeBuffer buf = GetResource(menu_name_in_resources, RT_MENU);
+		CXeBuffer buf = GetResource(menuId, RT_MENU);
 		if (buf.m_buffer_size < 4) { return false; }
 		// MENUHEADER
 		MENUITEMTEMPLATEHEADER* pHdr = (MENUITEMTEMPLATEHEADER*)buf.m_buffer.get();

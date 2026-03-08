@@ -76,7 +76,7 @@ public:
 	CXeTabsView(CXeViewManagerIF* pVwMgr) : CXeD2DWndBase(pVwMgr->GetUIcolors()), m_pVwMgr(pVwMgr)
 	{
 		XeASSERT(pVwMgr);
-		m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"FilesListsSettings"].Get(L"UseColorForLogFileInTabTitle").getBool();
+		m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"GeneralSettings"].Get(L"UseTextColorForFileInTabTitle").getBool();
 		m_listTabs = std::make_unique<CXeTabsList>();
 	}
 	virtual ~CXeTabsView() {}
@@ -157,10 +157,10 @@ public:
 
 	void OnChangedSettings(const ChangedSettings& chg_settings)
 	{
-		if (chg_settings.IsChanged(L"FilesListsSettings", L"UseColorForLogFileInTabTitle")
+		if (chg_settings.IsChanged(L"GeneralSettings", L"UseTextColorForFileInTabTitle")
 			|| m_xeUI->IsFontSettingsChanged(chg_settings))
 		{
-			m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"FilesListsSettings"].Get(L"UseColorForLogFileInTabTitle").getBool();
+			m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"GeneralSettings"].Get(L"UseTextColorForFileInTabTitle").getBool();
 			_CalculateTabsViewUI(_GetClientRect().right, *m_listTabs);
 			_RedrawDirectly();
 		}
@@ -536,7 +536,7 @@ public:
 			{
 			case NFCHG_CODE_SEL_THEME:
 			case NFCHG_CODE_LOGFILE_COLORS_CHANGED:
-				m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"FilesListsSettings"].Get(L"UseColorForLogFileInTabTitle").getBool();
+				m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"GeneralSettings"].Get(L"UseTextColorForFileInTabTitle").getBool();
 				_RedrawDirectly();
 				break;
 			}
@@ -1394,7 +1394,7 @@ public:
 protected:
 	void _OnTabContextMenu(CPoint pt, CXeFileVwIF* pView)
 	{
-		CXeMenu menu(m_xeUI, MAKEINTRESOURCE(IDR_TAB_CONTEXT_MENU));
+		CXeMenu menu(m_xeUI, IDR_TAB_CONTEXT_MENU);
 		CXeSubMenu* pSubMenu = menu.GetTopLevelMenuItem(0);
 		for (ListBoxExItem& menu_item : pSubMenu->m_items)
 		{

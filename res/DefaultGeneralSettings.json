@@ -66,6 +66,19 @@
       "type": "U32",
       "value": "30",
       "value_is_default": true
-    }
+    },
+	{
+		"description": "Use color for file type in view tab title",
+		"display_name": "Tab title",
+		"display_position": 3,
+		"group_name": "grpOther",
+		"group_order": 1,
+		"group_title": "Other settings",
+		"name": "UseTextColorForFileInTabTitle",
+		"range": "",
+		"type": "Bool",
+		"value": "1",
+		"value_is_default": true
+	}
   ]
 }

@@ -138,7 +138,10 @@ protected:
 
 		CXeUserSettings::SetRootFolder(m_settingsFolder);
 
-		s_xeUIsettings.AddSetting(L"GeneralSettings", IDR_DEFAULT_GENERAL_SETTINGS_JSON, JSON_FILE_TYPE);
+		if (!s_xeUIsettings.AddSetting(L"GeneralSettings", IDR_DEFAULT_GENERAL_SETTINGS_JSON, JSON_FILE_TYPE))
+		{
+			XeASSERT(false);	// "GeneralSettings" MUST exist.
+		}
 
 		s_xeLastUsedUIsettings.SetName(L"LastUsedUIsettings");
 		s_xeLastUsedUIsettings.CreateSettingsAutomatically();

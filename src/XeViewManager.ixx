@@ -122,7 +122,7 @@ public:
 
 		std::wstring settings_path = GetCurrentUserAppDataFolder(m_xeUI->GetAppName());
 
-		m_MRUList.SetMaxSize(s_xeUIsettings[L"GeneralSettings"].Get(L"MRU_Items").getU32());
+		m_MRUList.SetMaxSize(s_xeUIsettings[L"GeneralSettings"].GetU32_or_Val(L"MRU_Items", 30));
 		m_MRUList.LoadFromFile(settings_path + L"OpenFileMRUlist.json");
 		
 		m_uiWorkThread.StartThread();

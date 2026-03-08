@@ -895,11 +895,19 @@ protected:
 		//		m_monospacedFontSize = (int)(((float)fontSizePixels / 1.3333f) + 0.5f);
 		//	}
 		//}
-		const CXeUserSetting& settingUIFontPointSize = s_xeUIsettings[L"GeneralSettings"].Get(L"UI_FontPointSize");
-		m_uiFontSize = xen::stoi(settingUIFontPointSize.getString().c_str());
-		if (settingUIFontPointSize.m_value_is_default)
+		if (!s_xeUIsettings.Exists(L"GeneralSettings"))
 		{
-			const CXeUserSetting& settingUIFontSize = s_xeUIsettings[L"GeneralSettings"].Get(L"UI_FontSize");
+			XeASSERT(false);	// "GeneralSettings" MUST exist!
+		}
+		const CXeUserSettings& generalSettings = s_xeUIsettings[L"GeneralSettings"];
+		std::wstring fontSize = generalSettings.GetString_or_Val(L"UI_FontPointSize", L"10");
+		m_uiFontSize = xen::stoi(fontSize);
+		XeASSERT(m_uiFontSize > 0);
+		const CXeUserSetting& settingUIFontPointSize = generalSettings.Get(L"UI_FontPointSize");
+		//m_uiFontSize = xen::stoi(settingUIFontPointSize.getString().c_str());
+		if (settingUIFontPointSize.m_value_is_default && generalSettings.Exists(L"UI_FontSize"))
+		{
+			const CXeUserSetting& settingUIFontSize = generalSettings.Get(L"UI_FontSize");
 			if (!settingUIFontSize.m_value_is_default)	// Deprecated "UI_FontSize" is not default value?
 			{
 				int fontSizePixels = xen::stoi(settingUIFontSize.getString().c_str());
@@ -908,17 +916,17 @@ protected:
 		}
 		m_monospacedFontSize = m_uiFontSize;
 
-		std::wstring monospacedFontName = s_xeUIsettings[L"GeneralSettings"].Get(L"UI_MonospacedFontName").getString();
-		XeASSERT(monospacedFontName.size() > 0);
-		if (monospacedFontName.size() == 0)
-		{
-			monospacedFontName = L"Consolas";
-		}
+		std::wstring monospacedFontName = generalSettings.GetString_or_Val(L"UI_MonospacedFontName", L"Consolas");
+		//XeASSERT(monospacedFontName.size() > 0);
+		//if (monospacedFontName.size() == 0)
+		//{
+		//	monospacedFontName = L"Consolas";
+		//}
 		//std::wstring monospacedFontName = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontName").getString();
 		//std::wstring gridRowPitch = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridRowPitch").getString();
 		//m_gridRowPitch = xen::stoi(gridRowPitch.c_str());
 
-		std::wstring strUI_FontName = s_xeUIsettings[L"GeneralSettings"].Get(L"UI_FontName").getString();
+		std::wstring strUI_FontName = generalSettings.GetString_or_Val(L"UI_FontName", L"Segoe UI");
 
 		m_d2d_fonts.SetFontInfo(EXE_FONT::eMonospacedFont, XeFontMetrics(monospacedFontName, m_monospacedFontSize));
 
@@ -1373,6 +1381,7 @@ protected:
 		bool isOk3 = LoadFileInResource(IDR_THEME2_JSON, JSON_FILE_TYPE, th2_size, th2_data);
 		if (!(isOk1 && isOk2 && isOk3))
 		{
+			XeASSERT(false);	// Theme and colorid json files MUST exist!
 			logger().error("Failed to load One or more theme resources from exe file");
 		}
 

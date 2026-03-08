@@ -173,6 +173,7 @@
     <ClInclude Include="..\src\Xe_res.h" />
     <ClInclude Include="..\vsrollinglog\VSRL.h" />
     <ClInclude Include="..\vsrollinglog\VSRL_IF.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CeXDib.cpp" />
@@ -285,7 +286,8 @@
     <ClCompile Include="XenonDemo.ixx" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\XeResource.rc" />
+    <None Include="..\src\XeResource.rc" />
+    <ResourceCompile Include="XenonDemo.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\XeResource.rc2">

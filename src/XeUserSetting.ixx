@@ -245,52 +245,52 @@ export struct CXeUserSetting
 protected:
 	bool _getBool(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::Bool) { return false; }
+		if (m_typeEnum != SettingType::Bool) { XeASSERT(false); return false; }
 		return xen::stoi(val.c_str()) != 0;
 	}
 	uint8_t _getU8(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::U8) { return 0; }
+		if (m_typeEnum != SettingType::U8) { XeASSERT(false); return 0; }
 		return (uint8_t)xen::stoul(val.c_str());
 	}
 	int8_t _getI8(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::I8) { return 0; }
+		if (m_typeEnum != SettingType::I8) { XeASSERT(false); return 0; }
 		return (int8_t)xen::stoi(val.c_str());
 	}
 	uint16_t _getU16(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::U16) { return 0; }
+		if (m_typeEnum != SettingType::U16) { XeASSERT(false); return 0; }
 		return (uint16_t)xen::stoul(val.c_str());
 	}
 	int16_t _getI16(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::I16) { return 0; }
+		if (m_typeEnum != SettingType::I16) { XeASSERT(false); return 0; }
 		return (int16_t)xen::stoi(val.c_str());
 	}
 	uint32_t _getU32(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::U32) { return 0; }
+		if (m_typeEnum != SettingType::U32) { XeASSERT(false); return 0; }
 		return xen::stoul(val.c_str());
 	}
 	int32_t _getI32(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::I32) { return 0; }
+		if (m_typeEnum != SettingType::I32) { XeASSERT(false); return 0; }
 		return xen::stol(val.c_str());
 	}
 	uint64_t _getU64(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::U64) { return 0; }
+		if (m_typeEnum != SettingType::U64) { XeASSERT(false); return 0; }
 		return xen::stoull(val.c_str());
 	}
 	int64_t _getI64(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::I64) { return 0; }
+		if (m_typeEnum != SettingType::I64) { XeASSERT(false); return 0; }
 		return xen::stoll(val.c_str());
 	}
 	double _getDouble(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::Double) { return 0; }
+		if (m_typeEnum != SettingType::Double) { XeASSERT(false); return 0; }
 		return std::wcstod(val.c_str(), nullptr);
 	}
 	std::wstring _getString(const std::wstring& val) const
@@ -302,7 +302,7 @@ protected:
 	// Return true if successfully parsed the m_value into binary of size data_len.
 	bool _getBinary(const std::wstring& val, void* pData, size_t data_len) const
 	{
-		if (m_typeEnum != SettingType::Binary) { return false; }
+		if (m_typeEnum != SettingType::Binary) { XeASSERT(false); return false; }
 		size_t strLen = data_len * 3;
 		XeASSERT(strLen == val.size());
 		if (strLen != val.size()) { return false; }
@@ -327,7 +327,7 @@ protected:
 	}
 	I32x2 _getI32x2(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::I32x2) { return I32x2(); }
+		if (m_typeEnum != SettingType::I32x2) { XeASSERT(false); return I32x2(); }
 		bool isValid;
 		std::vector<int32_t> csv = _numericSplitCSV<int32_t>(isValid, val);
 		XeASSERT(csv.size() == 2);
@@ -339,7 +339,7 @@ protected:
 	}
 	I32x4 _getI32x4(const std::wstring& val) const
 	{
-		if (m_typeEnum != SettingType::I32x4) { return I32x4(); }
+		if (m_typeEnum != SettingType::I32x4) { XeASSERT(false); return I32x4(); }
 		bool isValid;
 		std::vector<int32_t> csv = _numericSplitCSV<int32_t>(isValid, val);
 		XeASSERT(csv.size() == 4);

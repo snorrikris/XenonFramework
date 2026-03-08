@@ -72,31 +72,43 @@ public:
 		return true;
 	}
 
-	void AddSetting(const std::wstring& setting_name, int resource_id, int json_file_type)
+	bool AddSetting(const std::wstring& setting_name, int resource_id, int json_file_type)
 	{
 		CXeUserSettings settings;
 		settings.SetName(setting_name);
-		settings.Load(resource_id, json_file_type);
+		bool isOk = settings.Load(resource_id, json_file_type);
 		m_user_settings_names.push_back(setting_name);
 		m_user_settings_list.push_back(settings);
 		m_user_settings_map[setting_name] = m_user_settings_list.size() - 1;
+		return isOk;
 	}
 
 	// Load default settings from resource and load user (modified) settings.
 	// Note - XeApp calls here from InitInstance - to load settings json files from 
 	//        resources ('this'.exe file).
-	void AddSettings(const std::vector<std::tuple<std::wstring, int>>& user_setting_names_and_idr,
-		int json_file_type)
+	bool AddSettings(const std::vector<std::tuple<std::wstring, int>>& user_setting_names_and_idr,
+			int json_file_type)
 	{
+		bool isOk = true;
 		for (auto [ setting_name, resource_id ] : user_setting_names_and_idr)
 		{
 			CXeUserSettings settings;
 			settings.SetName(setting_name);
-			settings.Load(resource_id, json_file_type);
+			if (!settings.Load(resource_id, json_file_type))
+			{
+				isOk = false;
+			}
 			m_user_settings_names.push_back(setting_name);
 			m_user_settings_list.push_back(settings);
 			m_user_settings_map[setting_name] = m_user_settings_list.size() - 1;
 		}
+		return isOk;
+	}
+
+	bool Exists(const std::wstring& settings_name) const
+	{
+		auto it_map = m_user_settings_map.find(settings_name);
+		return it_map != m_user_settings_map.end();
 	}
 
 	const CXeUserSettings* GetSettingsFromNameConst(const std::wstring& settings_name)

@@ -132,6 +132,9 @@
     <ClInclude Include="..\vsrollinglog\VSRL_IF.h">
       <Filter>Source Files\VSRL</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XenonDemo.ixx">
@@ -466,10 +469,13 @@
     <None Include="..\src\PNG_Images.rc2">
       <Filter>Source Files\XenonFramework</Filter>
     </None>
+    <None Include="..\src\XeResource.rc">
+      <Filter>Source Files\XenonFramework</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\XeResource.rc">
-      <Filter>Source Files\XenonFramework</Filter>
+    <ResourceCompile Include="XenonDemo.rc">
+      <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

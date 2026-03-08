@@ -236,7 +236,7 @@ public:
 	uint64_t	GetU64_or_Val(const std::wstring& s, uint64_t val) const	{ if (Exists(s)) { return Get(s).getU64(); }	return val; }
 	int64_t		GetI64_or_Val(const std::wstring& s, int64_t val) const		{ if (Exists(s)) { return Get(s).getI64(); }	return val; }
 	double		GetDouble_or_Val(const std::wstring& s, double val) const	{ if (Exists(s)) { return Get(s).getDouble(); } return val; }
-	std::wstring GetString_or_Val(const std::wstring& s, std::wstring val)	{ if (Exists(s)) { return Get(s).getString(); } return val; }
+	std::wstring GetString_or_Val(const std::wstring& s, std::wstring val) const { if (Exists(s)) { return Get(s).getString(); } return val; }
 	I32x2 GetI32x2_or_Val(const std::wstring& s, I32x2 val) const			{ if (Exists(s)) { return Get(s).getI32x2(); }	return val; }
 	I32x4 GetI32x4_or_Val(const std::wstring& s, I32x4 val) const			{ if (Exists(s)) { return Get(s).getI32x4(); }	return val; }
 
@@ -306,7 +306,7 @@ public:
 	}
 
 	// Load default settings from resource and load user (modified) settings.
-	void Load(int idr_resource_file, int json_file_type)
+	bool Load(int idr_resource_file, int json_file_type)
 	{
 		XeASSERT(m_pathname.size() > 0);	// Call SetSettingsFilePathname first.
 		m_settingsTmp.clear();
@@ -314,35 +314,38 @@ public:
 
 		uint32_t size = 0;
 		const char* data = NULL;
-		LoadFileInResource(idr_resource_file, json_file_type, size, data);
-		XeASSERT(data && size);
-		std::string json_str(data, size);
-		auto j2 = json::parse(json_str);
-		j2.at("UserSettings").get_to(m_settingsTmp);
-		_processSettingsTmp(true);
-		std::string utf8;
-		if (j2.find("DescriptionList") != j2.end())
+		if (LoadFileInResource(idr_resource_file, json_file_type, size, data))
 		{
-			j2.at("DescriptionList").get_to(utf8);
-			this->m_description_List = xet::fromUTF8toWStr(utf8);
-		}
-		if (j2.find("DescriptionUI") != j2.end())
-		{
-			j2.at("DescriptionUI").get_to(utf8);
-			this->m_description_UI = xet::fromUTF8toWStr(utf8);
-		}
+			XeASSERT(data && size);
+			std::string json_str(data, size);
+			auto j2 = json::parse(json_str);
+			j2.at("UserSettings").get_to(m_settingsTmp);
+			_processSettingsTmp(true);
+			std::string utf8;
+			if (j2.find("DescriptionList") != j2.end())
+			{
+				j2.at("DescriptionList").get_to(utf8);
+				this->m_description_List = xet::fromUTF8toWStr(utf8);
+			}
+			if (j2.find("DescriptionUI") != j2.end())
+			{
+				j2.at("DescriptionUI").get_to(utf8);
+				this->m_description_UI = xet::fromUTF8toWStr(utf8);
+			}
 
-		Load();
+			return Load();
+		}
+		return false;
 	}
 
 	// Load default settings from json file and load user (modified) settings.
-	void Load(const std::wstring& pathname)
+	bool Load(const std::wstring& pathname)
 	{
 		XeASSERT(m_pathname.size() > 0);	// Call SetSettingsFilePathname first.
 		m_settingsTmp.clear();
 		m_settingsMap.clear();
 
-		LoadJsonDataFromFile(pathname, [this](json& j)
+		bool isOk = LoadJsonDataFromFile(pathname, [this](json& j)
 			{
 				j.at("UserSettings").get_to(this->m_settingsTmp);
 				std::string utf8;
@@ -357,17 +360,22 @@ public:
 					this->m_description_UI = xet::fromUTF8toWStr(utf8);
 				}
 			});
-		_processSettingsTmp(true);
+		if (isOk)
+		{
+			_processSettingsTmp(true);
 
-		Load();
+			return Load();
+		}
+		return false;
 	}
 
 	// Load user modified settings.
-	void Load()
+	bool Load()
 	{
+		bool isOk = true;
 		if (FileExists(m_pathname))
 		{
-			LoadJsonDataFromFile(m_pathname, [this](json& j)
+			isOk = LoadJsonDataFromFile(m_pathname, [this](json& j)
 				{
 					j.at("UserSettings").get_to(this->m_settingsTmp);
 					std::string utf8;
@@ -384,6 +392,7 @@ public:
 				});
 			_processSettingsTmp();
 		}
+		return isOk;
 	}
 
 	// Save user modified settings.

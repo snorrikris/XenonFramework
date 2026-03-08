@@ -87,7 +87,7 @@ public:
 		// Add menu items (menubar) to list of toolbar items
 		if (uIDMenu)
 		{
-			m_menu = std::make_unique<CXeMenu>(m_xeUI, MAKEINTRESOURCE(uIDMenu));
+			m_menu = std::make_unique<CXeMenu>(m_xeUI, uIDMenu);
 			m_menu_first_index = (int)m_itemlist.size();
 			m_menu_item_count = (int)m_menu->GetTopLevelMenuItemCount();
 			for (int i = 0; i < (int)m_menu->GetTopLevelMenuItemCount(); i++)

@@ -1,5 +1,8 @@
 // Microsoft Visual C++ generated resource script.
 //
+// Note - this file is to be copied - when new project created.
+
+#include "resource.h"
 #include "XeResource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -144,6 +147,7 @@ END
 
 1 TEXTINCLUDE 
 BEGIN
+    "resource.h\0"
     "XeResource.h\0"
 END
 
@@ -155,6 +159,7 @@ BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
     "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""..\\src\\XeResource.h""\r\n"
     "\0"
 END
 
@@ -163,6 +168,9 @@ BEGIN
     "\r\n"
     "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
     "LANGUAGE 9, 1\r\n"
+    "#include ""..\\src\\XeResource.rc""  // Xenon Framework resources"
+    "#include ""..\\src\\XeResource.rc2""  // Xenon Framework resources"
+    "#include ""..\\src\\PNG_Images.rc2""  // Xenon Framework resources"
     "#endif\r\n"
     "\0"
 END
@@ -183,6 +191,9 @@ END
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE 9, 1
+#include "..\src\XeResource.rc"  // Xenon Framework resources
+#include "..\src\XeResource.rc2"  // Xenon Framework resources
+#include "..\src\PNG_Images.rc2"  // Xenon Framework resources"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////

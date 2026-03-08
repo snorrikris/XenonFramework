@@ -69,7 +69,7 @@
     },
 	{
 		"description": "Use color for file type in view tab title",
-		"display_name": "Tab title",
+		"display_name": "Use file color in tab title",
 		"display_position": 3,
 		"group_name": "grpOther",
 		"group_order": 1,

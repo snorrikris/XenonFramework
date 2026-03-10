@@ -1615,10 +1615,13 @@ protected:
 		int cxMaxName = 0;
 		for (CXeFileVwIF* pView : allViews)
 		{
-			//const FileMetadata& md = pView->GetFileContainerUI_IF()->GetMetadata();
 			ListBoxExItem item = ListBoxExItem::MakeCheckBox(pView->GetViewName(), false);
 			item.m_extra_data = pView->GetDataSourceId().get();
-			item.m_item_data.SetIcon(pView->GetViewPID());
+			PID pid = pView->GetViewPID();
+			if (pid != PID::None)
+			{
+				item.m_item_data.SetIcon(pid);
+			}
 			if (m_bUseDataSourceTextFgColorInTab)
 			{
 				item.m_item_data.SetColor(pView->GetViewTitleTextColor());

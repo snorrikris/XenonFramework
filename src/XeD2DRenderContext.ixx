@@ -859,7 +859,7 @@ public:
 	void _DrawTextLayout(ID2D1RenderTarget* pRT, IDWriteTextLayout* pLayout, const D2D1_POINT_2F& pt,
 			const D2D1_RECT_F& rcClipping, ID2D1SolidColorBrush* pBrush)
 	{
-		XeASSERT(pLayout)
+		XeASSERT(pLayout);
 		if (pLayout)
 		{
 			pRT->PushAxisAlignedClip(rcClipping, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);

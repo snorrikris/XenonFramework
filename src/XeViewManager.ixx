@@ -47,14 +47,6 @@ import Xe.StringTools;
 //static char THIS_FILE[] = __FILE__;
 //#endif
 
-// Automatic software upgrade code is only enabled for release builds.
-#ifndef _DEBUG
-#define UPGRADE_ENABLED
-#endif // DEBUG
-
-// Un-comment the following to enable software upgrade in debug mode.
-//#define UPGRADE_ENABLED
-
 export class CXeViewManager : public virtual CXeViewManagerIF
 {
 private:
@@ -778,7 +770,7 @@ public:
 		}
 	}
 
-	void _ShowSettingsDlg()
+	virtual void _ShowSettingsDlg()
 	{
 		CRect rcBtn = m_pMainWndToolbar->GetItemRect(ID_XE_FILE_OPEN);
 		rcBtn.OffsetRect(-30, 8);
@@ -786,19 +778,6 @@ public:
 		dlg.m_initial_setting_name = m_settings_dlg_initial_setting_name;
 		dlg.DoModal();
 		m_settings_dlg_initial_setting_name = dlg.m_initial_setting_name;
-
-#ifdef UPGRADE_ENABLED
-		// Check if SW upgrade setting was changed.
-		bool isSWupgradeEnabled = s_xeUIsettings[L"SoftwareUpgradeSettings"].Get(L"AutoUpgradeEnabled").getBool();
-		if (isSWupgradeEnabled && !m_pLVSupdater)
-		{
-			m_pLVSupdater = std::make_unique<CLVSupdater>(m_hMainWnd, WMU_NOTIFY_SOFTWARE_UPGRADE);
-		}
-		else if (!isSWupgradeEnabled && m_pLVSupdater)	// disable SW upgrade AND upgrader is running?
-		{
-			m_pLVSupdater.reset();
-		}
-#endif // UPGRADE_ENABLED
 	}
 
 	void _ChangeFontSize()

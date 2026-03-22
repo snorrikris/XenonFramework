@@ -94,6 +94,23 @@ export CUGCtrl;
 #pragma warning(default:4091)
 #pragma warning(default:5201)
 
+export constexpr UINT NM_GRID_CELL_CHANGED = 0x1000;
+
+export struct NMGRID : public NMHDR
+{
+	int oldcol, newcol;
+	long oldrow, newrow;
+
+	NMGRID() = default;
+	NMGRID(HWND from, UINT ctrlID, UINT nf_code, int old_col, int new_col, long old_row, long new_row)
+			: NMHDR(), oldcol(old_col), newcol(new_col), oldrow(old_row), newrow(new_row)
+	{
+		tagNMHDR::hwndFrom = from;
+		tagNMHDR::idFrom = ctrlID;
+		tagNMHDR::code = nf_code;
+	}
+};
+
 module :private;
 
 CUGCtrl::CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
@@ -7006,11 +7023,13 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnCellChange(int oldcol,int newcol,long oldrow,long newrow){
-	UNREFERENCED_PARAMETER(oldcol);
-	UNREFERENCED_PARAMETER(newcol);
-	UNREFERENCED_PARAMETER(oldrow);
-	UNREFERENCED_PARAMETER(newrow);
+void CUGCtrl::OnCellChange(int oldcol,int newcol,long oldrow,long newrow)
+{
+	HWND hWnd = Hwnd();
+	HWND hWndParent = ::GetParent(hWnd);
+	UINT uID = ::GetDlgCtrlID(hWnd);
+	NMGRID nf(hWnd, uID, NM_GRID_CELL_CHANGED, oldcol, newcol, oldrow, newrow);
+	::SendMessageW(hWndParent, WM_NOTIFY, uID, reinterpret_cast<LPARAM>(&nf));
 }
 
 /***************************************************

@@ -534,6 +534,11 @@
             "CID": 134,
             "CIDname": "CtrlTxtUrlHot",
             "comment": "Controls :: text color hot - url button"
+        },
+        {
+            "CID": 135,
+            "CIDname": "GrdCellAltBg",
+            "comment": "CXeGrid :: alternate bg color for data cells"
         }
     ]
 }

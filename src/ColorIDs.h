@@ -101,4 +101,5 @@ enum class CID : UINT
 	Hilite3FilterBg        = 132, // CXeGrid :: Hilite3 only filter cell BG color
 	CtrlTxtUrl             = 133, // Controls :: text color - url button
 	CtrlTxtUrlHot          = 134, // Controls :: text color hot - url button
+	GrdCellAltBg           = 135, // CXeGrid :: alternate bg color for data cells
 };

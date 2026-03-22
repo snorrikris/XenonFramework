@@ -800,6 +800,10 @@
         {
             "CIDname": "CtrlTxtUrlHot",
             "ColorDef": "RGB(37,140,218)"
+        },
+        {
+            "CIDname": "GrdCellAltBg",
+            "ColorDef": "RGB(55,55,57)"
         }
   ]
 }

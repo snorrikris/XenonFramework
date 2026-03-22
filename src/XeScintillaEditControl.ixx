@@ -243,6 +243,8 @@ public:
 		return hWnd != 0;
 	}
 
+	XeWindowStyle GetXeStyle() const { return m_style; }
+
 	void SetComboBoxKeyDownFilterCallback(KeyDownFilterCallback keyDownFilterFunc)
 	{
 		m_comboBoxKeydownFilterFunc = keyDownFilterFunc;
@@ -412,6 +414,11 @@ protected:
 		size_t len = wcslen(pWStr);
 		std::wstring txtW(pWStr, len);
 		std::string txtUTF8 = xet::toUTF8(txtW);
+		if (m_editStyle.WS().isES_readOnly())
+		{
+			// Need to clear the read-only flag before setting text (scintilla does not allow set text when read-only).
+			::SendMessage(m_hSciEdWnd, SCI_SETREADONLY, 0, 0);
+		}
 		SetText(txtUTF8.c_str(), txtUTF8.size(), false);
 		_RedrawDirectly();
 		return (TRUE);

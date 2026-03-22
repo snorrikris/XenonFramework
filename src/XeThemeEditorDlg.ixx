@@ -488,7 +488,7 @@ protected:
 			theme_name = m_last_asked_theme_name;
 		}
 		std::wstring user_data_folder = GetCurrentUserAppDataFolder(m_xeUI->GetAppName());
-		std::wstring json_pathname = user_data_folder + L"Theme_" + theme_name + L".json";
+		std::wstring json_pathname = user_data_folder + L"\\Theme_" + theme_name + L".json";
 		std::wstring error_str = m_theme->SaveThemeJson(json_pathname, theme_name);
 		if (error_str.size())
 		{

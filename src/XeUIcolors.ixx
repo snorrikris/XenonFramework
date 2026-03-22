@@ -1422,14 +1422,14 @@ protected:
 	{
 		std::vector<std::wstring> files;
 		std::wstring user_data_folder = GetCurrentUserAppDataFolder(m_appName);
-		std::wstring json_search = user_data_folder + L"Theme_*.json";
+		std::wstring json_search = user_data_folder + L"\\Theme_*.json";
 		WIN32_FIND_DATAW ffd;
 		HANDLE hFind = ::FindFirstFileW(json_search.c_str(), &ffd);
 		if (INVALID_HANDLE_VALUE != hFind)
 		{
 			do
 			{
-				std::wstring pathname = user_data_folder + ffd.cFileName;
+				std::wstring pathname = user_data_folder + L"\\" + ffd.cFileName;
 				files.push_back(pathname);
 			} while (::FindNextFileW(hFind, &ffd) != 0);
 			::FindClose(hFind);

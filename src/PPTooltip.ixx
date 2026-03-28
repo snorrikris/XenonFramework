@@ -314,6 +314,7 @@ protected:
 			Pop();
 			break;
 		case WM_NCMOUSEMOVE:
+			::ScreenToClient(m_hParentWnd, &pt_msg);
 		case WM_MOUSEMOVE:
 			_OnRelayMsg_MouseMove(pt_msg);
 			break;
@@ -338,7 +339,8 @@ protected:
 		std::wstring strTemp;
 
 		m_ptOriginal = pt = pt_msg;
-		::ScreenToClient(m_hParentWnd, &pt);
+		CPPTOOLTIP_TRACE("On mouse move. orig=%d,%d\n", m_ptOriginal.x, m_ptOriginal.y);
+
 		if (IsCursorOverTooltip() /*&& !(m_tiDisplayed.nBehaviour & PPTOOLTIP_TRACKING_MOUSE)*/)
 		{
 			MM_CPPTOOLTIP_TRACE("over tooltip ==========\n");
@@ -483,11 +485,12 @@ protected:
 			//ENG: Get current mouse coordinates
 			//RUS: Получить текущее положение тултипа
 			GetCursorPos(&pt);
+			::ScreenToClient(m_hParentWnd, &pt);
 			if ((pt.x != m_ptOriginal.x) || (pt.y != m_ptOriginal.y))
 			{
 				//ENG: If mouse coordinates was changed
 				//RUS: Если курсор сдвинулся, то уничтожить тултип
-				CPPTOOLTIP_TRACE("OnTimerShow(HideTooltip) mouse has moved\n");
+				CPPTOOLTIP_TRACE("OnTimerShow(HideTooltip) mouse has moved. pt=%d,%d orig=%d,%d\n", pt.x, pt.y, m_ptOriginal.x, m_ptOriginal.y);
 				_HideTooltip();
 			}
 			else if (PPTOOLTIP_STATE_HIDDEN == m_nTooltipState)

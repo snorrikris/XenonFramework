@@ -656,6 +656,53 @@ export struct SYSTEMTIMEX : public SYSTEMTIME
 		return true;
 	}
 
+	inline bool TryParseISO8601_OFFSET_DATE_TIME_HHCMM3format(const char* pS, size_t sourceLen,
+			FILETIMESPAN& timezone)
+	{
+		if (sourceLen < 32)
+		{
+			return false;
+		}
+		// Format:                     +/- timezone
+		// YYYY MM DD HH MM SS NANOSEC+HH MM
+		// 2025-09-23T07:38:03.8224727-07:00
+		// 000000000011111111112222222222333
+		// 012345678901234567890123456789012
+		int16_t d[33];	// array for individual digits.
+		bool isTzPositive = false;
+		for (size_t i = 0; i < 33; ++i)
+		{
+			int16_t& n = d[i];
+			n = pS[i] - '0';
+			if (i == 27)
+			{
+				isTzPositive = pS[i] == '+';
+				continue;
+			}
+			if (!(i == 4 || i == 7 || i == 10 || i == 13 || i == 16 || i == 19 || i == 30)
+					&& (n < 0 || n > 9))
+			{
+				return false;
+			}
+		}
+		wYear = d[0] * 1000 + d[1] * 100 + d[2] * 10 + d[3];
+		wMonth = d[5] * 10 + d[6];
+		wDay = d[8] * 10 + d[9];
+		wHour = d[11] * 10 + d[12];
+		wMinute = d[14] * 10 + d[15];
+		wSecond = d[17] * 10 + d[18];
+		wMilliseconds = d[20] * 100 + d[21] * 10 + d[22];
+
+		int tzMul = pS[27] == '-' ? -1 : 1;
+		int tzHours = (d[28] * 10 + d[29]);
+		int tzMinutes = (d[31] * 10 + d[32]);
+		timezone.Set(0, tzHours, tzMinutes, 0, 0);
+		timezone *= tzMul;
+
+		// Note - the last three digits of nanoseconds are ignored because SYSTEMTIME only supports milli seconds.
+		return true;
+	}
+
 	inline bool IsLeapYear() const
 	{
 		return (wYear % 400 == 0 || wYear % 100 != 0) && (wYear % 4 == 0);
@@ -840,6 +887,19 @@ export struct FILETIMEX
 		FILETIMESPAN tz;
 		FILETIMEX ft;
 		bool isOk = st.TryParseISO8601_OFFSET_DATE_TIME_HHCMM2format(pS, sourceLen, tz)
+			&& SystemTimeToFileTime(&st, (FILETIME*)&ft);
+		ft += tz;
+		this->Set(ft.m_u64);
+		MKDBGSTR;
+		return isOk;
+	}
+
+	bool TryParseISO8601_OFFSET_DATE_TIME_HHCMM3format(const char* pS, size_t sourceLen)
+	{
+		SYSTEMTIMEX st;
+		FILETIMESPAN tz;
+		FILETIMEX ft;
+		bool isOk = st.TryParseISO8601_OFFSET_DATE_TIME_HHCMM3format(pS, sourceLen, tz)
 			&& SystemTimeToFileTime(&st, (FILETIME*)&ft);
 		ft += tz;
 		this->Set(ft.m_u64);

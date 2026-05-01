@@ -6,6 +6,7 @@ module;
 #include <shobjidl.h> 
 #include <atlbase.h>
 #include <algorithm>
+#include <chrono>
 #include <cwctype>
 #include <map>
 #include "logging.h"
@@ -216,6 +217,19 @@ export bool IsFileExtension(const std::wstring& extension, const std::wstring& p
 	return extL == fileExt;
 }
 
+// Is file extension supported by GDI+ Bitmap load. 
+export bool IsImageFileExtension(const std::wstring& pathname)
+{
+	std::wstring fileExt = GetFileExtension(pathname);
+	return xet::compare_no_case(fileExt, L"jpg") == 0
+		|| xet::compare_no_case(fileExt, L"png") == 0
+		|| xet::compare_no_case(fileExt, L"gif") == 0
+		|| xet::compare_no_case(fileExt, L"jpeg") == 0
+		|| xet::compare_no_case(fileExt, L"tiff") == 0
+		|| xet::compare_no_case(fileExt, L"jfif") == 0
+		|| xet::compare_no_case(fileExt, L"bmp") == 0;
+}
+
 // Is file extension ".log" or ".log.xx" (where xx is a number).
 export bool IsLogFileExtension(const std::wstring& pathname)
 {
@@ -256,17 +270,71 @@ export std::wstring GetLogFileExtension(const std::wstring& pathname)
 	return L"";
 }
 
-// Is file extension supported by GDI+ Bitmap load. 
-export bool IsImageFileExtension(const std::wstring& pathname)
+export bool IsFile_LogFile(const std::wstring& pathname, const std::wstring& ext)
 {
-	std::wstring fileExt = GetFileExtension(pathname);
-	return xet::compare_no_case(fileExt, L"jpg") == 0
-		|| xet::compare_no_case(fileExt, L"png") == 0
-		|| xet::compare_no_case(fileExt, L"gif") == 0
-		|| xet::compare_no_case(fileExt, L"jpeg") == 0
-		|| xet::compare_no_case(fileExt, L"tiff") == 0
-		|| xet::compare_no_case(fileExt, L"jfif") == 0
-		|| xet::compare_no_case(fileExt, L"bmp") == 0;
+	auto parse = [&](const std::wstring& str, const std::wstring& fmt, auto& o)
+		{
+			std::wistringstream is{ str };
+			//is.imbue(std::locale("en_US.utf-8"));
+			is >> std::chrono::parse(fmt, o);
+		};
+
+	bool isLogFile = IsLogFileExtension(pathname);
+	if (!isLogFile)
+	{
+		std::wstring fn = GetFilenameWithExt(pathname);
+
+		// Detect if filename ends with "-YYYYmmdd" rolling linux log format.
+		if (fn.size() > 8)
+		{
+			std::chrono::year_month_day ymd{};
+			parse(fn.substr(fn.size() - 8), L"%Y%2m%2d", ymd);
+			if (ymd.ok())
+			{
+				fn = fn.substr(0, fn.size() - 8);
+				wchar_t last = fn[fn.size() - 1];
+				if (last == L'-')
+				{
+					fn = fn.substr(0, fn.size() - 1);
+				}
+			}
+		}
+
+		// Is any of "known" Linux log files?
+		if (fn == L"syslog" || fn == L"messages" || fn == L"debug" || fn == L"dmsg")
+		{
+			isLogFile = true;
+		}
+		else if (fn == L"lastlog" || fn == L"faillog")	// Linux binary files in the /var/log folder.
+		{
+			isLogFile = false;
+		}
+		else
+		{	// We consider any filename extension that starts with "log" a log file.
+			std::wstring ext = xet::to_lower(GetFileExtension(fn));
+			if (ext.starts_with(L"log"))
+			{
+				isLogFile = true;
+			}
+		}
+	}
+	return isLogFile;
+}
+export bool IsFile_TextFile(const std::wstring& pathname, const std::wstring& ext)
+{
+	return xet::compare_no_case(ext, L"txt") == 0;
+}
+export bool IsFile_ImageFile(const std::wstring& pathname, const std::wstring& ext)
+{
+	return IsImageFileExtension(pathname);
+}
+export bool IsFile_ZipFile(const std::wstring& pathname, const std::wstring& ext)
+{
+	return xet::compare_no_case(ext, L"zip") == 0;
+}
+export bool IsFile_JsonFile(const std::wstring& pathname, const std::wstring& ext)
+{
+	return xet::compare_no_case(ext, L"json") == 0;
 }
 
 export bool IsValidFilename(const std::wstring& fn)

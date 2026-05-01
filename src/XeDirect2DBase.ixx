@@ -1274,7 +1274,7 @@ public:
 	}
 
 private:
-	void _CreateClientDCRenderTargetAndBeginDraw(HDC dc, const CRect& rc)
+	bool _CreateClientDCRenderTargetAndBeginDraw(HDC dc, const CRect& rc)
 	{
 		XeASSERT(dc);
 		HRESULT hr = S_OK;
@@ -1283,17 +1283,22 @@ private:
 			hr = m_xeUI->D2D_CreateDCRenderTarget(m_renderTargetClientDC.GetAddressOf());
 			XeASSERT(hr == S_OK);
 		}
-		hr = m_renderTargetClientDC->BindDC(dc, &rc);
-		XeASSERT(hr == S_OK);
 		if (SUCCEEDED(hr))
 		{
-			m_renderTargetClientDC->BeginDraw();
-			if (!m_uiResourcesCreatedDC)
+			hr = m_renderTargetClientDC->BindDC(dc, &rc);
+			XeASSERT(hr == S_OK);
+			if (SUCCEEDED(hr))
 			{
-				_CreatePaintResources(m_renderTargetClientDC.Get());
-				m_uiResourcesCreatedDC = true;
+				m_renderTargetClientDC->BeginDraw();
+				if (!m_uiResourcesCreatedDC)
+				{
+					_CreatePaintResources(m_renderTargetClientDC.Get());
+					m_uiResourcesCreatedDC = true;
+				}
+				return true;
 			}
 		}
+		return false;
 	}
 
 	void _EndDCRenderTargetDraw()
@@ -1318,9 +1323,11 @@ protected:
 		XeASSERT(m_hClientDC);
 		if (m_hClientDC)
 		{
-			_CreateClientDCRenderTargetAndBeginDraw(m_hClientDC, rc);
-			_OnPrepareForPainting(m_renderTargetClientDC.Get());
-			return m_renderTargetClientDC.Get();
+			if (_CreateClientDCRenderTargetAndBeginDraw(m_hClientDC, rc))
+			{
+				_OnPrepareForPainting(m_renderTargetClientDC.Get());
+				return m_renderTargetClientDC.Get();
+			}
 		}
 		return nullptr;
 	}
@@ -1351,9 +1358,11 @@ protected:
 			XeASSERT(dc);
 			if (dc)
 			{
-				_CreateClientDCRenderTargetAndBeginDraw(dc, rc);
-				_PaintU(m_renderTargetClientDC.Get(), rc);
-				_EndDCRenderTargetDraw();
+				if (_CreateClientDCRenderTargetAndBeginDraw(dc, rc))
+				{
+					_PaintU(m_renderTargetClientDC.Get(), rc);
+					_EndDCRenderTargetDraw();
+				}
 				::ReleaseDC(m_hWnd, dc);
 			}
 		}
@@ -1365,9 +1374,11 @@ protected:
 	{
 		CRect rc;
 		::GetClientRect(hh, &rc);
-		_CreateClientDCRenderTargetAndBeginDraw(hDC, rc);
-		_PaintU(m_renderTargetClientDC.Get(), rc);
-		_EndDCRenderTargetDraw();
+		if (_CreateClientDCRenderTargetAndBeginDraw(hDC, rc))
+		{
+			_PaintU(m_renderTargetClientDC.Get(), rc);
+			_EndDCRenderTargetDraw();
+		}
 		return 0;
 	}
 
@@ -1401,6 +1412,12 @@ public:
 	CXeD2DCtrlBase(CXeUIcolorsIF* pUIcolors) : CXeD2DWndBase(pUIcolors) {}
 
 #pragma region Tooltip
+public:
+	void SetTooltipString(const wchar_t* szToolTip)
+	{
+		m_tooltip_string = szToolTip;
+	}
+
 protected:
 	virtual LRESULT _OnNotify_NeedTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT) override
 	{

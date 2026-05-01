@@ -648,7 +648,7 @@ export struct SYSTEMTIMEX : public SYSTEMTIME
 
 		int tzMul = pS[26] == '-' ? -1 : 1;
 		int tzHours = (d[27] * 10 + d[28]);
-		int tzMinutes = (d[30] * 10 + d[30]);
+		int tzMinutes = (d[30] * 10 + d[31]);
 		timezone.Set(0, tzHours, tzMinutes, 0, 0);
 		timezone *= tzMul;
 

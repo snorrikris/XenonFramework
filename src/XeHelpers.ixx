@@ -6,7 +6,6 @@ module;
 #include <random>
 #include <string>
 #include <format>
-//#include "ipp.h"
 #include "logging.h"
 
 #include <bcrypt.h>
@@ -16,7 +15,6 @@ export module Xe.Helpers;
 export import Xe.FileVersionInfo;
 export import Xe.FileHelpers;
 import Xe.mfc_types;
-//import Xe.LogDefs;
 import Xe.DefData;
 import Xe.StringTools;
 import Xe.FileTimeX;

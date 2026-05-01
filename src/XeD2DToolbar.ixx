@@ -373,8 +373,7 @@ public:
 		XeASSERT(pItem);
 		if (pItem)
 		{
-			pItem->m_sToolTip = szToolTip;
-			pItem->m_cxTooltip = cxTooltip;
+			pItem->SetTooltip(szToolTip, cxTooltip);
 		}
 	}
 

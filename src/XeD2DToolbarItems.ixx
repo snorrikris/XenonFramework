@@ -163,6 +163,12 @@ export struct XETBItem
 	virtual void SetFlags(uint8_t flags) { m_flags = flags; }
 	virtual uint8_t GetFlags() const { return m_flags; }
 
+	virtual void SetTooltip(const wchar_t* szToolTip, int cxTooltip = 0)
+	{
+		m_sToolTip = szToolTip;
+		m_cxTooltip = cxTooltip;
+	}
+
 	virtual void OnChangedUIsettings(bool isFontsChanged, bool isColorsChanged) = 0;
 
 	virtual void _Paint(CXeD2DRenderContext* pRctx, const D2D1_POINT_2F& ptOfs, bool isLbtnDownItem, bool isHotItem) = 0;
@@ -472,6 +478,15 @@ export struct XETBItem_Button : public XETBItem
 		{
 			CID bg = (flags & XETB_ST_BG_GREEN) ? CID::LogFilterHdrBg : (flags & XETB_ST_BG_RED) ? CID::ErrorBg : CID::Invalid;
 			m_button_object->SetButtonBgColor(bg);
+		}
+	}
+
+	virtual void SetTooltip(const wchar_t* szToolTip, int cxTooltip = 0) override
+	{
+		XETBItem::SetTooltip(szToolTip, cxTooltip);
+		if (m_button_object.get())
+		{
+			m_button_object->SetTooltipString(szToolTip);
 		}
 	}
 

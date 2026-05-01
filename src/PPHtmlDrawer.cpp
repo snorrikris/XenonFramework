@@ -2285,7 +2285,7 @@ SIZE CPPHtmlDrawer::DrawHtmlString (TT_Render& rndr, CPPString & sHtml, LPCRECT 
 							else if (MODE_DRAW == m_nNumPass)
 							{
 								ptOutput.y += 2;	//+++hd
-								XeASSERT(FALSE); // FIXME
+								//XeASSERT(FALSE); // FIXME
 								//m_drawmanager.DrawLine(m_hDC, ptOutput.x, ptOutput.y + m_hline.nHeightLine / 2, 
 								//	ptOutput.x + nWidth, ptOutput.y + m_hline.nHeightLine / 2, 
 								//	csTemp.crText, CPPDrawManager::PEN_SOLID, csTemp.nBorderWidth);
@@ -2947,7 +2947,13 @@ SIZE CPPHtmlDrawer::DrawHtmlString (TT_Render& rndr, CPPString & sHtml, LPCRECT 
 void CPPHtmlDrawer::SelectNewHtmlStyle(LPCTSTR lpszNameStyle, STRUCT_CHANGESTYLE & cs)
 {
 	//Unpack a new styles
-	UnpackTextStyle(GetTextStyle(lpszNameStyle), cs);
+	LPCTSTR pStyle = GetTextStyle(lpszNameStyle);
+	CPPString style;
+	if (pStyle)
+	{
+		style = pStyle;
+	}
+	UnpackTextStyle(style, cs);
 }
 
 BOOL CPPHtmlDrawer::StoreRestoreStyle(BOOL bRestore)

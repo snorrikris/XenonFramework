@@ -4,7 +4,6 @@ module;
 #include <memory>
 #include <string>
 #include <vector>
-//#include "ipp.h"
 #include "..\vsrollinglog\VSRL.h"
 #include "XeResource.h"
 

@@ -14,6 +14,8 @@ import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
 import Xe.Helpers;
 import Xe.StringTools;
+import Xe.Menu;
+import Xe.ChronoTimer;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,6 +24,10 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 typedef std::function<bool(UINT, UINT, UINT)> KeyDownFilterCallback;
+
+typedef std::function<void(std::vector<ListBoxExItem>&)> ExtendContextMenuCallback;
+
+typedef std::function<bool(UINT)> ProcessSelectedContextMenuItemCallback;
 
 // Helper class (enum) - state of H/V scroll bars visibility.
 // Also helps calculate client area rects.
@@ -168,6 +174,13 @@ public:
 	}
 };
 
+export struct SelectedTextPositions
+{
+	int64_t m_begin = 0, m_end = 0;
+
+	bool HasSelectedText() { return (m_end - m_begin) > 0; }
+};
+
 constexpr wchar_t XESCINTILLAEDITCONTROLWND_CLASSNAME[] = L"XeScintillaEditControlWndClass";  // Window class name
 
 export class CXeScintillaEditControl : public CXeD2DCtrlBase
@@ -182,9 +195,15 @@ protected:
 
 	KeyDownFilterCallback m_comboBoxKeydownFilterFunc = nullptr;
 
+	ExtendContextMenuCallback m_extendContextMenuFunc = nullptr;
+
+	ProcessSelectedContextMenuItemCallback m_processSelectedContextMenuItemFunc = nullptr;
+
 	bool m_isSuppressEnChangeNotify = false;
 
 	XeWindowStyle m_editStyle;
+
+	ChronoTimer m_contextMenuTimestamp;
 
 #pragma region Create
 public:
@@ -230,6 +249,9 @@ public:
 			m_xeUI->RegisterScintillaKeyboardFilterCallback(m_hSciEdWnd,
 					[this](const MSG& msg) { return _OnKeyboardFilter(msg); });
 
+			// Disable the Scintilla context menu.
+			::SendMessage(m_hSciEdWnd, SCI_USEPOPUP, SC_POPUP_NEVER, 0);
+
 			// Note - uncomment following line to enable DirectWrite. (select not painted correctly, more flickering)
 			//::SendMessage(m_hSciEdWnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE, 0);
 
@@ -248,6 +270,13 @@ public:
 	void SetComboBoxKeyDownFilterCallback(KeyDownFilterCallback keyDownFilterFunc)
 	{
 		m_comboBoxKeydownFilterFunc = keyDownFilterFunc;
+	}
+
+	void SetContextMenuCallbacks(ExtendContextMenuCallback extendCtxMenuCallback,
+			ProcessSelectedContextMenuItemCallback processSelectedCtxMenuItem)
+	{
+		m_extendContextMenuFunc = extendCtxMenuCallback;
+		m_processSelectedContextMenuItemFunc = processSelectedCtxMenuItem;
 	}
 
 	virtual void OnChangedUIsettings(bool isFontsChanged, bool isColorsChanged) override
@@ -288,6 +317,16 @@ protected:
 			{
 				return true;	// Suppress key.
 			}
+		}
+		if ((uKey == VK_F10 && sca.IsOnlyShiftDown())	// Is Shift+F10 (Context menu keyboard shortcut).
+				|| uKey == VK_RWIN)
+		{
+			if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
+			{
+				WPARAM wp = ((WPARAM)(UINT32)-1) | (((WPARAM)(UINT32)-1) << 32);
+				::PostMessageW(Hwnd(), WM_CONTEXTMENU, wp, 0);
+			}
+			return true;	// Suppress key.
 		}
 		return false;	// Process message normally
 	}
@@ -365,9 +404,84 @@ protected:
 			::SendMessage(::GetParent(Hwnd()), WM_COMMAND,
 					MAKEWPARAM(GetDlgCtrlID(), EN_CHANGE), reinterpret_cast<LPARAM>(Hwnd()));
 		}
+		else if (pNMhdr->code == SCN_FOCUSIN		// Scintilla got focus.
+				|| pNMhdr->code == SCN_FOCUSOUT)	// Scintilla lost focus.
+		{
+			::SendMessage(::GetParent(Hwnd()), WM_NOTIFY, wParam, lParam);
+		}
 		return CXeD2DCtrlBase::_OnNotify(wParam, lParam);
 	}
 #pragma endregion Create
+
+#pragma region ContextMenu
+protected:
+	virtual LRESULT _OnContextMenu(WPARAM wParam, LPARAM lParam)
+	{
+		CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		_ShowContextMenu(point);
+		return 0;
+	}
+
+	void _ShowContextMenu(CPoint point)
+	{
+		if (m_contextMenuTimestamp.Elapsed_mS() < 50)
+		{
+			return;	// Suppress second WM_CONTEXTMENU - needed because ScintillaWin::ShowContextMenu
+					// calls DefWindowProc - that results in a second WM_CONTEXT message.
+		}
+		std::vector<ListBoxExItem> items;
+
+		bool isWritable = !IsReadOnly();
+		SelectedTextPositions sel = GetSelectedTextPositions();
+
+		bool isUndoPossible = isWritable && CanUndo();
+		IsEnabled canUndo = isUndoPossible ? IsEnabled::yes : IsEnabled::no;
+		items.push_back(ListBoxExItem(SCI_UNDO, L"Undo", IsSeparator::no, IsChecked::no, canUndo));
+
+		bool isRedoPossible = isWritable && CanRedo();
+		IsEnabled canRedo = isRedoPossible ? IsEnabled::yes : IsEnabled::no;
+		items.push_back(ListBoxExItem(SCI_REDO, L"Redo", IsSeparator::no, IsChecked::no, canRedo));
+
+		IsEnabled canCut = isWritable && sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
+		items.push_back(ListBoxExItem(SCI_CUT, L"Cut", IsSeparator::yes, IsChecked::no, canCut));
+
+		IsEnabled canCopy = sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
+		items.push_back(ListBoxExItem(SCI_COPY, L"Copy", IsSeparator::no, IsChecked::no, canCopy));
+
+		bool isPastePossible = isWritable && CanPaste();
+		IsEnabled canPaste = isPastePossible ? IsEnabled::yes : IsEnabled::no;
+		items.push_back(ListBoxExItem(SCI_PASTE, L"Paste", IsSeparator::no, IsChecked::no, canPaste));
+
+		IsEnabled canDelete = isWritable && sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
+		items.push_back(ListBoxExItem(SCI_CLEAR, L"Delete", IsSeparator::no, IsChecked::no, canDelete));
+		items.push_back(ListBoxExItem(SCI_SELECTALL, L"Select All", IsSeparator::yes));
+
+		if (m_extendContextMenuFunc)
+		{
+			m_extendContextMenuFunc(items);
+		}
+
+		if ((point.x == 0 && point.y == 0) || (point.x == -1 && point.y == -1))
+		{
+			point = GetScreenCoordinatesFromTextPosition(sel.m_begin);
+		}
+		point.y += 20;
+		CXeMenu menu(m_xeUI, items);
+		UINT uSelectedID = menu.ShowMenu(Hwnd(), point, 0);
+		m_contextMenuTimestamp.Reset();
+		if (uSelectedID != 0)
+		{
+			if (m_processSelectedContextMenuItemFunc)
+			{
+				if (m_processSelectedContextMenuItemFunc(uSelectedID))
+				{
+					return;
+				}
+			}
+			::SendMessageW(m_hSciEdWnd, uSelectedID, 0, 0);
+		}
+	}
+#pragma endregion ContextMenu
 
 #pragma region MFC_Functions_Replacements
 public:
@@ -388,8 +502,42 @@ public:
 	}
 #pragma endregion MFC_Functions_Replacements
 
+#pragma region Helpers
+public:
+	bool IsReadOnly() const { return (bool)::SendMessageW(m_hSciEdWnd, SCI_GETREADONLY, 0, 0); }
+
+	SelectedTextPositions GetSelectedTextPositions() const
+	{
+		SelectedTextPositions pos;
+		pos.m_begin = ::SendMessageW(m_hSciEdWnd, SCI_GETSELECTIONSTART, 0, 0);
+		pos.m_end   = ::SendMessageW(m_hSciEdWnd, SCI_GETSELECTIONEND, 0, 0);
+		return pos;
+	}
+
+	bool CanUndo() const { return (bool)::SendMessageW(m_hSciEdWnd, SCI_CANUNDO, 0, 0); }
+
+	bool CanRedo() const { return (bool)::SendMessageW(m_hSciEdWnd, SCI_CANREDO, 0, 0); }
+
+	bool CanPaste() const { return (bool)::SendMessageW(m_hSciEdWnd, SCI_CANPASTE, 0, 0); }
+
+	CPoint GetScreenCoordinatesFromTextPosition(int64_t text_pos) const
+	{
+		int64_t x = ::SendMessageW(m_hSciEdWnd, SCI_POINTXFROMPOSITION, 0, text_pos);
+		int64_t y = ::SendMessageW(m_hSciEdWnd, SCI_POINTYFROMPOSITION, 0, text_pos);
+		CPoint pt((int)x, (int)y);
+		::ClientToScreen(m_hSciEdWnd, &pt);
+		return pt;
+	}
+#pragma endregion Helpers
+
 #pragma region SetText
 public:
+	HWND GetScintillaHwnd()
+	{
+		XeASSERT(::IsWindow(m_hSciEdWnd));
+		return m_hSciEdWnd;
+	}
+
 	void SetTextSuppressEnChangeNotify(const std::wstring& txt)
 	{
 		m_isSuppressEnChangeNotify = true;

@@ -212,7 +212,7 @@ public:
 		m_menu.m_menu_items.clear();
 	}
 
-	UINT ShowMenu(HWND hParentWnd, CPoint ptScreenPos, size_t topLevelSubMenuIndex)
+	UINT ShowMenu(HWND hParentWnd, CPoint ptScreenPos, size_t topLevelSubMenuIndex, bool isSend_WM_COMMAND_wanted = true)
 	{
 		m_hParentWnd = hParentWnd;
 		XeASSERT(topLevelSubMenuIndex < m_menu.m_menu_items.size());
@@ -241,7 +241,8 @@ public:
 		m_uSubmenuSelectedID = 0;
 		m_cmn->OnSetCurSelMsg((WPARAM)-1, 0);
 		m_cmn->m_uSelectedItemCommandID = 0;
-		if (uSelectedID && uSelectedID != ID__APP_EXIT)	// ID__APP_EXIT is handled by toolbar.
+		if (isSend_WM_COMMAND_wanted
+				&& uSelectedID && uSelectedID != ID__APP_EXIT)	// ID__APP_EXIT is handled by toolbar.
 		{
 			//TRACE("Menu WM_COMMAND - cmdid: %u\n", uSelectedID);
 			::SendMessage(m_hParentWnd, WM_COMMAND, uSelectedID, 0);

@@ -790,10 +790,8 @@ protected:
 
 	virtual LRESULT _OnRightUp(UINT nFlags, CPoint point)
 	{
-		::ClientToScreen(Hwnd(), &point);
 		LPARAM lParam = MAKELPARAM(point.x, point.y);
-		SendMessage(WM_CONTEXTMENU, (WPARAM)Hwnd(), lParam);
-		return 0;
+		return ::DefWindowProc(m_hWnd, WM_RBUTTONUP, nFlags, lParam);	// WM_CONTEXTMENU message will be dispached.
 	}
 
 	virtual LRESULT _OnRightDoubleClick(UINT nFlags, CPoint point)
@@ -919,6 +917,11 @@ protected:
 		{
 			m_xtooltip->HideTooltip();
 		}
+	}
+public:
+	void HideTooltip()
+	{
+		_HideTooltip();
 	}
 #pragma endregion Helpers
 

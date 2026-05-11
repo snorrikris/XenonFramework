@@ -418,42 +418,49 @@ protected:
 	virtual LRESULT _OnContextMenu(WPARAM wParam, LPARAM lParam)
 	{
 		CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		if (m_contextMenuTimestamp.Elapsed_mS() < 300)
+		{
+			return 0;	// Suppress second WM_CONTEXTMENU - needed because ScintillaWin::ShowContextMenu
+			// calls DefWindowProc - that results in a second WM_CONTEXT message.
+		}
 		_ShowContextMenu(point);
 		return 0;
 	}
 
 	void _ShowContextMenu(CPoint point)
 	{
-		if (m_contextMenuTimestamp.Elapsed_mS() < 50)
-		{
-			return;	// Suppress second WM_CONTEXTMENU - needed because ScintillaWin::ShowContextMenu
-					// calls DefWindowProc - that results in a second WM_CONTEXT message.
-		}
 		std::vector<ListBoxExItem> items;
 
 		bool isWritable = !IsReadOnly();
 		SelectedTextPositions sel = GetSelectedTextPositions();
 
-		bool isUndoPossible = isWritable && CanUndo();
-		IsEnabled canUndo = isUndoPossible ? IsEnabled::yes : IsEnabled::no;
-		items.push_back(ListBoxExItem(SCI_UNDO, L"Undo", IsSeparator::no, IsChecked::no, canUndo));
+		if (isWritable)
+		{
+			bool isUndoPossible = isWritable && CanUndo();
+			IsEnabled canUndo = isUndoPossible ? IsEnabled::yes : IsEnabled::no;
+			items.push_back(ListBoxExItem(SCI_UNDO, L"Undo", IsSeparator::no, IsChecked::no, canUndo));
 
-		bool isRedoPossible = isWritable && CanRedo();
-		IsEnabled canRedo = isRedoPossible ? IsEnabled::yes : IsEnabled::no;
-		items.push_back(ListBoxExItem(SCI_REDO, L"Redo", IsSeparator::no, IsChecked::no, canRedo));
+			bool isRedoPossible = isWritable && CanRedo();
+			IsEnabled canRedo = isRedoPossible ? IsEnabled::yes : IsEnabled::no;
+			items.push_back(ListBoxExItem(SCI_REDO, L"Redo", IsSeparator::no, IsChecked::no, canRedo));
 
-		IsEnabled canCut = isWritable && sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
-		items.push_back(ListBoxExItem(SCI_CUT, L"Cut", IsSeparator::yes, IsChecked::no, canCut));
+			IsEnabled canCut = isWritable && sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
+			items.push_back(ListBoxExItem(SCI_CUT, L"Cut", IsSeparator::yes, IsChecked::no, canCut));
+		}
 
 		IsEnabled canCopy = sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
 		items.push_back(ListBoxExItem(SCI_COPY, L"Copy", IsSeparator::no, IsChecked::no, canCopy));
 
-		bool isPastePossible = isWritable && CanPaste();
-		IsEnabled canPaste = isPastePossible ? IsEnabled::yes : IsEnabled::no;
-		items.push_back(ListBoxExItem(SCI_PASTE, L"Paste", IsSeparator::no, IsChecked::no, canPaste));
+		if (isWritable)
+		{
+			bool isPastePossible = isWritable && CanPaste();
+			IsEnabled canPaste = isPastePossible ? IsEnabled::yes : IsEnabled::no;
+			items.push_back(ListBoxExItem(SCI_PASTE, L"Paste", IsSeparator::no, IsChecked::no, canPaste));
 
-		IsEnabled canDelete = isWritable && sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
-		items.push_back(ListBoxExItem(SCI_CLEAR, L"Delete", IsSeparator::no, IsChecked::no, canDelete));
+			IsEnabled canDelete = isWritable && sel.HasSelectedText() ? IsEnabled::yes : IsEnabled::no;
+			items.push_back(ListBoxExItem(SCI_CLEAR, L"Delete", IsSeparator::no, IsChecked::no, canDelete));
+		}
+
 		items.push_back(ListBoxExItem(SCI_SELECTALL, L"Select All", IsSeparator::yes));
 
 		if (m_extendContextMenuFunc)
@@ -512,6 +519,18 @@ public:
 		pos.m_begin = ::SendMessageW(m_hSciEdWnd, SCI_GETSELECTIONSTART, 0, 0);
 		pos.m_end   = ::SendMessageW(m_hSciEdWnd, SCI_GETSELECTIONEND, 0, 0);
 		return pos;
+	}
+
+	std::string GetSelectedText() const
+	{
+		int length = ::SendMessageW(m_hSciEdWnd, SCI_GETSELTEXT, 0, 0);
+
+		std::string sel_text;
+		sel_text.resize(length, ' ');
+
+		::SendMessageW(m_hSciEdWnd, SCI_GETSELTEXT, 0, reinterpret_cast<LPARAM>(sel_text.data()));
+
+		return sel_text;
 	}
 
 	bool CanUndo() const { return (bool)::SendMessageW(m_hSciEdWnd, SCI_CANUNDO, 0, 0); }

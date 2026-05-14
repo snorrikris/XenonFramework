@@ -1096,6 +1096,16 @@ protected:
 	///////////////////////////////////////////////////////////////////////////
 	// Mouse messages
 
+	virtual LRESULT _OnSetCursor(WPARAM wParam, LPARAM lParam) override
+	{
+		//HWND hWnd = (HWND)wParam;
+		//UINT nHitTest = LOWORD(lParam);
+		//UINT message = HIWORD(lParam);
+		//return ::DefWindowProc(m_hWnd, WM_SETCURSOR, wParam, lParam);
+		SetCursor(m_xeUI->GetAppCursor(false));
+		return TRUE;
+	}
+
 	// WM_LBUTTONDOWN message handler.
 	virtual LRESULT _OnLeftDown(UINT nFlags, CPoint point) override
 	{	// WM_LBUTTONDOWN message handler.

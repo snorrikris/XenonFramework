@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <string>
 #include <map>
+#include <format>
 #define NOMINMAX
 #include <d2d1.h>
 #include <dwrite.h>
@@ -1927,9 +1928,6 @@ SIZE CPPHtmlDrawer::DrawHtmlString (TT_Render& rndr, CPPString & sHtml, LPCRECT 
 						//RUS: Вывод текста
 						xet::ltrim(sTemp);	//+++hd
 
-						// Note - there is a problem with ExTextOut and TextOut - it sometimes fails to draw with very long strings.
-						// See: https://stackoverflow.com/questions/1367130/exttextout-fails-with-very-long-strings-unless-lower-font-quality-specified
-
 						int stringLen = (int)sTemp.size();
 						XeASSERT(rndr.m_pRT);
 						if (rndr.m_pRT)
@@ -1937,12 +1935,20 @@ SIZE CPPHtmlDrawer::DrawHtmlString (TT_Render& rndr, CPPString & sHtml, LPCRECT 
 							D2D1_RECT_F rcF{ (float)lpRect->left, (float)lpRect->top, (float)lpRect->right, (float)lpRect->bottom };
 							std::wstring sd(sTemp.c_str());
 
-							//rndr.m_font->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
-							//rndr.m_font->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-							//rndr.m_pRT->DrawText(sd.c_str(), (UINT32)sd.size(), rndr.m_font, rcF, rndr.m_text_brush);
+//#define GetRValue(rgb)      (LOBYTE(rgb))
+//#define GetGValue(rgb)      (LOBYTE(((WORD)(rgb)) >> 8))
+//#define GetBValue(rgb)      (LOBYTE((rgb)>>16))
+							COLORREF rgb = m_defStyle.crText;
+							D2D1_COLOR_F fgColor;
+							fgColor.r = (float)((LOBYTE(rgb))) / 255.0f;
+							fgColor.g = (float)((LOBYTE(((WORD)(rgb)) >> 8))) / 255.0f;
+							fgColor.b = (float)((LOBYTE((rgb) >> 16))) / 255.0f;
+							fgColor.a = 1.0f;
+							
+							Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> fgBrush = 0;
+							rndr.m_pRT->CreateSolidColorBrush(fgColor, &fgBrush);
 
 							Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
-							//IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(EXE_FONT::eUI_Font);
 							HRESULT hr = m_xeUI->D2D_GetWriteFactory()->CreateTextLayout(sd.c_str(), (UINT32)sd.size(),
 								rndr.m_font, rcF.right - rcF.left, rcF.bottom - rcF.top, textLayout.GetAddressOf());
 							XeASSERT(hr == S_OK);
@@ -1952,9 +1958,12 @@ SIZE CPPHtmlDrawer::DrawHtmlString (TT_Render& rndr, CPPString & sHtml, LPCRECT 
 								textLayout->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
 								textLayout->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 								rndr.m_pRT->DrawTextLayout({ (float)ptOutput.x, (float)y },
-										textLayout.Get(), rndr.m_text_brush);
+										textLayout.Get(), fgBrush.Get() /*rndr.m_text_brush*/);
 							}
 						}
+						// Note - there is a problem with ExTextOut and TextOut - it sometimes fails to draw with very long strings.
+						// See: https://stackoverflow.com/questions/1367130/exttextout-fails-with-very-long-strings-unless-lower-font-quality-specified
+
 						//BOOL bDrawOk = ::TextOut(m_hDC, ptOutput.x, y, sTemp, stringLen > 5000 ? 5000 : stringLen);
 						//if (!bDrawOk)
 						//{
@@ -3538,16 +3547,18 @@ void CPPHtmlDrawer::EnableEscapeSequences(BOOL bEnable /* = TRUE */)
 void CPPHtmlDrawer::SetDefaultCssStyles()
 {
 	CPPString str = _T("");
-	str += _T("body {font-size: 10pt; color:black; font-family:Verdana}\r\n");
-	str += _T("p {font-size: 10pt; color:black; font-family:Verdana; font-weight:bold}\r\n");
-	str += _T("h1 {font-size: 14pt; color:black; font-family:Verdana; font-weight:bold}\r\n");
-	str += _T("h2 {font-size: 13pt; color:#ff9900; font-family:Verdana; font-weight:bold}\r\n");
-	str += _T("h3 {font-size: 12pt; color:#ff9900; font-family:Arial; font-weight:bold}\r\n");
-	str += _T("h4 {font-size: 10pt; color:black; font-family:Verdana; font-weight:bold}\r\n");
-	str += _T("h5 {font-size: 9pt; color:#ff9900; font-family:Verdana; font-weight:bold}\r\n");
-	str += _T("h6 {font-size: 65%; color:#626262; font-family:Verdana; font-weight:normal}\r\n");
-	str += _T("pre {font-size: 9pt; font-family:\"Courier\"; background-color:#fbedbb}\r\n");
-	str += _T("code {color:#990000; font-family:Arial}\r\n");
+	COLORREF fgText = m_xeUI->GetColor(CID::TT_Text);
+	std::wstring fgClr = std::format(L"#{:06x}", fgText);
+	str += L"body {font-size: 10pt; color:" + fgClr + L"; font - family:Verdana }\r\n";
+	str += L"p {font-size: 10pt; color:" + fgClr + L"; font-family:Verdana; font-weight:bold}\r\n";
+	str += L"h1 {font-size: 14pt; color:" + fgClr + L"; font-family:Verdana; font-weight:bold}\r\n";
+	str += L"h2 {font-size: 13pt; color:" + fgClr + L"; font-family:Verdana; font-weight:bold}\r\n";
+	str += L"h3 {font-size: 12pt; color:" + fgClr + L"; font-family:Arial; font-weight:bold}\r\n";
+	str += L"h4 {font-size: 10pt; color:" + fgClr + L"; font-family:Verdana; font-weight:bold}\r\n";
+	str += L"h5 {font-size: 9pt; color:" + fgClr + L"; font-family:Verdana; font-weight:bold}\r\n";
+	str += L"h6 {font-size: 65%; color:" + fgClr + L"; font-family:Verdana; font-weight:normal}\r\n";
+	str += L"pre {font-size: 9pt; font-family:\"Courier\"; background-color:#fbedbb}\r\n";
+	str += L"code {color:" + fgClr + L"; font-family:Arial}\r\n";
 	//str += _T("a:link {text-decoration:none; color:blue}\r\n");	//+++hd
 	//str += _T("a:link {text-decoration:none; color:black}\r\n");
 	str += _T("a:hover {text-decoration:underline; color:blue}\r\n");
@@ -4087,8 +4098,13 @@ void CPPHtmlDrawer::SetDefaultStyles(_STRUCT_CHANGESTYLE & /*cs*/)
 
 	CPPTOOLTIP_TRACE("SetDefaultStyles:  m_defStyle.sFaceFont=%s =========\n", m_defStyle.sFaceFont);
 
-	//Color		
+	//Color
 	m_defStyle.crText = RGB (0, 0, 0);	//The foreground color 
+	XeASSERT(m_xeUI);
+	if (m_xeUI)
+	{
+		m_defStyle.crText = m_xeUI->GetColor(CID::TT_Text);
+	}
 	m_defStyle.crBkgnd = RGB (255, 255, 255);	//The background color (also begin for the gradient)
 	m_defStyle.crBorderLight = RGB (0, 0, 0);	//The border color
 	m_defStyle.crBorderDark = RGB (0, 0, 0);	//The border color

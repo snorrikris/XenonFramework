@@ -8,6 +8,7 @@ module;
 #include "XeAssert.h"
 #include <d2d1.h>
 #include <dwrite.h>
+#include <wincodec.h>
 
 export module Xe.TreeCtrlEx;
 
@@ -180,6 +181,236 @@ typedef CXeNaryTreeNode<TreeCtrlExItem> CXeTreeNode;
 typedef std::function<std::vector<ListBoxExItem>(TVITEMW*)> GetContextMenuCallbackFunc;
 typedef std::function<void(UINT, TVITEMW*)> SelectedContextMenuItemCallbackFunc;
 
+struct TreeUIparams
+{
+	int m_cyItem = 15;
+	int m_x_start = 2, m_y_start = 0;
+
+	int m_cxLevelMargin = 20, m_cxyBox = 9, m_cxyBoxSign = 5, m_cxBoxMargin = 4, m_cyBoxMargin = 5;
+	int m_cxyBoxSignMargin = 0, m_cxyBoxMiddle = m_cxyBox / 2;
+	int m_cxCurItemBgMargin = 2;
+	int m_cxyImgDec = 2, m_cxImgMargin = 2;
+
+	void Initialize(CXeUIcolorsIF* pUI)
+	{
+		const XeFontMetrics& tm = pUI->GetFontMetric(EXE_FONT::eUI_Font);
+		m_cyItem = tm.GetLineHeight();
+		if (m_cyItem == 0) { m_cyItem = 15; }
+		if (!(m_cyItem & 1)) { ++m_cyItem; }
+		UIScaleFactor sf = pUI->GetUIScaleFactor();
+		m_cxyBox = sf.ScaleX(m_cxyBox);
+		if (!(m_cxyBox & 1)) { ++m_cxyBox; }			// Must be odd number
+		m_cxyBoxSign = sf.ScaleX(m_cxyBoxSign);
+		if (!(m_cxyBoxSign & 1)) { ++m_cxyBoxSign; }	// Must be odd number
+		m_cyBoxMargin = (int)((double)(m_cyItem - m_cxyBox) / 2 + 0.5);
+		if (m_cyBoxMargin & 1) { ++m_cyBoxMargin; }
+		m_cxBoxMargin = sf.ScaleX(m_cxBoxMargin);
+		m_cxLevelMargin = sf.ScaleX(m_cxLevelMargin);
+		m_cxyBoxSignMargin = (m_cxyBox - m_cxyBoxSign) / 2;
+		m_cxyBoxMiddle = m_cxyBox / 2;
+	}
+};
+
+struct TreeItemPaintData
+{
+	const CXeTreeNode*		m_pNode = nullptr;
+	size_t					m_index = (size_t)-1;
+	std::wstring			m_text;
+	CRect					m_rcItem;				// Absolute client coords. (regardless of scrollbars position).
+	bool					m_hasExpandButton = false;
+	CRect					m_rcExpandButton;
+	CRect					m_rcTxt;
+	CRect					m_rcImage;
+	PID						m_pid = PID::None;
+	IWICFormatConverter*	m_pImg = nullptr;
+	CSize					m_sizeImg;
+	bool					m_isSelected = false;
+
+	void CalculateRects(const CXeTreeNode* pNode, size_t idx,
+			CXeUIcolorsIF* pUI, const TreeUIparams& uiParams, bool isCurSelItem)
+	{
+		m_pNode = pNode;
+		m_index = idx;
+		XeASSERT(m_pNode != nullptr && m_index >= 0);
+		m_isSelected = isCurSelItem;
+		if (m_pNode == nullptr)
+		{
+			return;
+		}
+
+		int level = m_pNode->GetLevel();
+		int yTop = uiParams.m_y_start + (uiParams.m_cyItem * (int)idx);
+		m_rcItem.SetRect(0, yTop, 0, yTop + uiParams.m_cyItem);
+
+		m_hasExpandButton = m_pNode->m_data.m_hasChildren || m_pNode->HasChildren();
+
+		// Note - expand button box is always calculated - even when item does not have it.
+		m_rcExpandButton = m_rcItem;
+		m_rcExpandButton.left += uiParams.m_cxBoxMargin + (level * uiParams.m_cxLevelMargin);
+		m_rcExpandButton.right = m_rcExpandButton.left + uiParams.m_cxyBox;
+		m_rcExpandButton.top += uiParams.m_cyBoxMargin;
+		m_rcExpandButton.bottom = m_rcExpandButton.top + uiParams.m_cxyBox;
+
+		m_rcTxt = m_rcItem;
+		m_rcTxt.left = uiParams.m_x_start + ((level + 1) * uiParams.m_cxLevelMargin); // _CalculateTextLeftEdge(m_pNode->GetLevel());
+
+		m_rcImage = m_rcTxt;
+		m_rcImage.right = m_rcImage.left;
+		m_rcImage.top += uiParams.m_cxyImgDec;
+		m_rcImage.bottom -= uiParams.m_cxyImgDec;
+		m_pid = PID::None;
+		if (m_pNode->m_data.m_data.HasImagePID())
+		{
+			m_pid = m_pNode->m_data.m_data.GetImagePID();
+		}
+		if (m_pNode->IsExpanded() && m_pNode->m_data.m_data.HasExpandedImagePID())
+		{
+			m_pid = m_pNode->m_data.m_data.GetExpandedImagePID();
+		}
+
+		if (isCurSelItem && m_pNode->m_data.m_data.HasSelectedImagePID())
+		{
+			m_pid = m_pNode->m_data.m_data.GetSelectedImagePID();
+		}
+
+		m_pImg = m_pid == PID::None ? nullptr : pUI->D2D_GetImage(m_pid, &m_sizeImg);
+		if (m_pImg)
+		{
+			m_rcImage.right = m_rcImage.left + m_sizeImg.cx;
+			int x = m_rcImage.left, y = m_rcImage.top, cx = m_rcImage.Width(), cy = m_rcImage.Height();
+			int cxPng = m_sizeImg.cx;
+			int cyPng = m_sizeImg.cy;
+			if (cx > cxPng)
+			{
+				cx = cyPng;
+			}
+			if (cy > cyPng)
+			{
+				y = y + (cy - cyPng) / 2;
+				cy = cyPng;
+			}
+			if (cx < cy)
+			{
+				cy = cx;
+			}
+			if (cx > cy)
+			{
+				cx = cy;
+			}
+			m_rcImage.SetRect(x, y, x + cx, y + cy);
+
+			m_rcTxt.left += m_rcImage.Width() + uiParams.m_cxImgMargin;
+		}
+
+		CSize sizeText = pUI->GetTextSizeW(EXE_FONT::eUI_Font, m_text.c_str());
+		m_rcTxt.right = m_rcTxt.left + sizeText.cx;
+		m_rcItem.right = m_rcTxt.right;
+	}
+
+	// Note - during paint - 'this' object is copied - and then rects are offset by scroll pos H/V.
+	void CalculateOffsetRects(int xHscrollPos, int yScrollPos)
+	{
+		m_rcItem.OffsetRect(-xHscrollPos, -yScrollPos);
+		m_rcExpandButton.OffsetRect(-xHscrollPos, -yScrollPos);
+		m_rcTxt.OffsetRect(-xHscrollPos, -yScrollPos);
+		m_rcImage.OffsetRect(-xHscrollPos, -yScrollPos);
+	}
+
+	CRect GetTextAreaRect() const
+	{
+		CRect rc = m_rcTxt;
+		rc.left = m_rcImage.left;
+		return rc;
+	}
+
+	D2D1_RECT_F GetSelectedItemRect(const TreeUIparams& uiParams) const
+	{
+		CRect selRect(m_rcTxt);
+		selRect.left = m_rcImage.left - uiParams.m_cxCurItemBgMargin;
+		selRect.right += uiParams.m_cxCurItemBgMargin;
+		D2D1_RECT_F selRectF = OffsetRectF(RectFfromRect(selRect), 0.5f, 0.5f);
+		return selRectF;
+	}
+
+	COLORREF GetTextFgColor(CXeUIcolorsIF* pUI) const
+	{
+		COLORREF rgbFg = pUI->GetColor(m_isSelected ? CID::CtrlTxt : CID::CtrlCurItemTxt);
+		if (m_pNode->m_data.m_data.m_isColorIdColor)
+		{
+			rgbFg = pUI->GetColor(m_pNode->m_data.m_data.GetColorID());
+		}
+		else if (m_pNode->m_data.m_data.m_hasColor)
+		{
+			rgbFg = m_pNode->m_data.m_data.m_rgbColor;
+		}
+		return rgbFg;
+	}
+};
+
+struct TreePaintData
+{
+	// All visible nodes (i.e. nodes that are a child of expanded parent).
+	std::vector<const CXeTreeNode*> m_visible_nodes;
+
+	// Paint data for each visible node.
+	// Note - m_visible_nodes and m_visible_nodes_paint_data have the same item count;
+	std::vector<TreeItemPaintData> m_visible_nodes_paint_data;
+
+	int m_cxMaxItemWidth = 0;
+
+	size_t size() const
+	{
+		XeASSERT(m_visible_nodes.size() == m_visible_nodes_paint_data.size());
+		return m_visible_nodes.size();
+	}
+
+	void clear()
+	{
+		m_visible_nodes.clear();
+		m_visible_nodes_paint_data.clear();
+		m_cxMaxItemWidth = 0;
+	}
+
+	size_t GetIndexOfFirstVisibleItem(int yClientTopWithScrollBarOffset)
+	{
+		size_t idx = 0;
+		for (; idx < m_visible_nodes_paint_data.size(); ++idx)
+		{
+			const TreeItemPaintData& pdata = m_visible_nodes_paint_data[idx];
+			if (pdata.m_rcItem.top >= yClientTopWithScrollBarOffset
+					|| pdata.m_rcItem.bottom > yClientTopWithScrollBarOffset)
+			{
+				return idx;
+			}
+		}
+		return (size_t)-1;
+	}
+
+	CSize GetViewSize() const
+	{
+		if (m_visible_nodes_paint_data.size() > 0)
+		{
+			size_t lastIdx = m_visible_nodes_paint_data.size() - 1;
+			return CSize(m_cxMaxItemWidth, m_visible_nodes_paint_data[lastIdx].m_rcItem.bottom);
+		}
+		return CSize();
+	}
+
+	const TreeItemPaintData* GetItemFromYposition(int yPos, int yScrollPos)
+	{
+		for (const TreeItemPaintData& item : m_visible_nodes_paint_data)
+		{
+			CRect rcItem = item.m_rcItem;
+			rcItem.OffsetRect(0, -yScrollPos);
+			if (yPos >= rcItem.top && yPos < rcItem.bottom)
+			{
+				return &item;
+			}
+		}
+		return nullptr;
+	}
+};
+
 export class CXeTreeCtrlEx : public CXeD2DCtrlBase
 {
 protected:
@@ -192,16 +423,11 @@ protected:
 
 	CXeNaryTree<TreeCtrlExItem> m_tree;
 
-	size_t m_curIdx = 0xFFFFFFFF, m_topIdx = 0, m_itemCount = 0;
+	TreePaintData m_paint_data;
 
-	int m_cxMaxStringWidth = 0;
-	int m_cyItem = 15;
-	int m_x_start = 2, m_y_start = 0;
+	size_t m_curIdx = 0xFFFFFFFF;
 
-	int m_cxLevelMargin = 20, m_cxyBox = 9, m_cxyBoxSign = 5, m_cxBoxMargin = 4, m_cyBoxMargin = 5;
-	int m_cxyBoxSignMargin = 0, m_cxyBoxMiddle = m_cxyBox / 2;
-	int m_cxCurItemBgMargin = 2;
-	int m_cxyImgDec = 2, m_cxImgMargin = 2;
+	TreeUIparams m_uiParams;
 	CID m_dotsColorId = CID::CtrlTxtDis;
 	CID m_boxOutlineColorId = m_dotsColorId, m_boxSignColorId = CID::CtrlTxt;
 
@@ -215,21 +441,7 @@ public:
 	CXeTreeCtrlEx(CXeUIcolorsIF* pUIcolors) : CXeD2DCtrlBase(pUIcolors)
 	{
 		m_xeUI->RegisterWindowClass(XETREECTRLEXWND_CLASSNAME, D2DCtrl_WndProc);
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
-		m_cyItem = tm.GetLineHeight();
-		if (m_cyItem == 0) { m_cyItem = 15; }
-		if (m_cyItem & 1) { ++m_cyItem; }
-		UIScaleFactor sf = m_xeUI->GetUIScaleFactor();
-		m_cxyBox = sf.ScaleX(m_cxyBox);
-		if (!(m_cxyBox & 1)) { ++m_cxyBox; }			// Must be odd number
-		m_cxyBoxSign = sf.ScaleX(m_cxyBoxSign);
-		if (!(m_cxyBoxSign & 1)) { ++m_cxyBoxSign; }	// Must be odd number
-		m_cyBoxMargin = (int)((double)(m_cyItem - m_cxyBox) / 2 + 0.5);
-		if (m_cyBoxMargin & 1) { ++m_cyBoxMargin; }
-		m_cxBoxMargin = sf.ScaleX(m_cxBoxMargin);
-		m_cxLevelMargin = sf.ScaleX(m_cxLevelMargin);
-		m_cxyBoxSignMargin = (m_cxyBox - m_cxyBoxSign) / 2;
-		m_cxyBoxMiddle = m_cxyBox / 2;
+		m_uiParams.Initialize(m_xeUI);
 		m_cxSysSbV = ::GetSystemMetrics(SM_CXVSCROLL);
 		m_cySysSbH = ::GetSystemMetrics(SM_CYHSCROLL);
 	}
@@ -317,32 +529,25 @@ protected:
 
 #pragma region Painting
 protected:
-	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
+	void _CalculatePaintDataAndRedraw()
 	{
-		CRect rcReal = _GetRealClientRect();	// Client rect minus scrollbars (if any).
-		int xOffset = _GetHscrollInfo().nPos;
-		CRect rcPaint(rcReal);
-		pRT->FillRectangle(RectFfromRect(rcPaint), GetBrush(CID::CtrlBg)); // Fill background
+		_CalculatePaintData();
+		_AdjustScrollBars();
+		_RedrawDirectly();
+	}
 
+	void _CalculatePaintData()
+	{
+		m_paint_data.clear();
 		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
 
-		int x = m_x_start, y = m_y_start;
-		int cxMax = m_cxMaxStringWidth;
-		size_t itemCount = m_tree.GetVisibleNodeCount();
-		size_t itemsInViewCount = rcPaint.Height() / m_cyItem;
-		std::vector<const CXeTreeNode*> nodes
-			= m_tree.GetVisibleNodesIdxRange(m_topIdx, itemsInViewCount + 1);
-		BoolFlags64 drawVlines;
-		if (nodes.size() > 0)
-		{
-			drawVlines = _InitializeDrawVlinesForFirstNodeInView(nodes[0]);
-		}
+		m_paint_data.m_visible_nodes = m_tree.GetVisibleNodesIdxRange(0, ((size_t)-1));
+		m_paint_data.m_visible_nodes_paint_data.resize(m_paint_data.m_visible_nodes.size());
 		HWND hParentWnd = ::GetParent(Hwnd());
-		size_t i = m_topIdx;
-		for (const CXeTreeNode* pNode : nodes)
+		size_t idx = 0;
+		for (const CXeTreeNode* pNode : m_paint_data.m_visible_nodes)
 		{
-			std::wstring tmp_str;
-			const std::wstring* pItemStr = &tmp_str;
+			TreeItemPaintData& pdata = m_paint_data.m_visible_nodes_paint_data[idx];
 			if (pNode->m_data.m_isGetTextCallback)
 			{
 				NMTVDISPINFOW di{ 0 };
@@ -357,119 +562,75 @@ protected:
 				::SendMessage(hParentWnd, WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&di);
 				if (di.item.pszText)
 				{
-					tmp_str = di.item.pszText;
+					pdata.m_text = di.item.pszText;
 				}
 			}
 			else
 			{
-				pItemStr = &(pNode->m_data.m_string);
-			}
-			CRect rcItem(rcPaint);
-			rcItem.top = m_y_start + (m_cyItem * (int)(i - m_topIdx));
-			rcItem.bottom = rcItem.top + m_cyItem;
-			rcItem.left -= xOffset;
-			CRect rcTxt(rcItem);
-			rcTxt.left += _CalculateTextLeftEdge(pNode->GetLevel());
-
-			PID pid = PID::None;
-			if (pNode->m_data.m_data.HasImagePID())
-			{
-				pid = pNode->m_data.m_data.GetImagePID();
-			}
-			if (pNode->IsExpanded() && pNode->m_data.m_data.HasExpandedImagePID())
-			{
-				pid = pNode->m_data.m_data.GetExpandedImagePID();
+				pdata.m_text = pNode->m_data.m_string;
 			}
 
-			bool isCurSelItem = i == m_curIdx;
-			if (isCurSelItem && pNode->m_data.m_data.HasSelectedImagePID())
+			pdata.CalculateRects(pNode, idx, m_xeUI, m_uiParams, (idx == m_curIdx));
+
+			if (pdata.m_rcTxt.right > m_paint_data.m_cxMaxItemWidth)
 			{
-				pid = pNode->m_data.m_data.GetSelectedImagePID();
+				m_paint_data.m_cxMaxItemWidth = pdata.m_rcTxt.right;
 			}
-			CRect rcImage(rcTxt);
-			rcImage.top += m_cxyImgDec;
-			rcImage.bottom -= m_cxyImgDec;
-			int cxImage = 0;
-			CSize sizeImg;
-			IWICFormatConverter* pImg = pid == PID::None ? nullptr : m_xeUI->D2D_GetImage(pid, &sizeImg);
-			if (pImg)
+			++idx;
+		}
+	}
+
+	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
+	{
+		int xOffset = _GetHscrollInfo().nPos;
+		int yOffset = _GetVscrollInfo().nPos;
+		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg)); // Fill background
+		BoolFlags64 drawVlines;
+		size_t idx = m_paint_data.GetIndexOfFirstVisibleItem(yOffset);
+		for (; idx < m_paint_data.size(); ++idx)
+		{
+			// Copy item (we need to apply scroll offsets).
+			TreeItemPaintData pdata = m_paint_data.m_visible_nodes_paint_data[idx];
+			pdata.CalculateOffsetRects(xOffset, yOffset);
+
+			if (!drawVlines.GetFlag(0))
 			{
-				int x = rcImage.left, y = rcImage.top, cx = rcImage.Width(), cy = rcImage.Height();
-				int cxPng = sizeImg.cx;
-				int cyPng = sizeImg.cy;
-				if (cx > cxPng)
-				{
-					cx = cyPng;
-				}
-				if (cy > cyPng)
-				{
-					y = y + (cy - cyPng) / 2;
-					cy = cyPng;
-				}
-				if (cx < cy)
-				{
-					cy = cx;
-				}
-				if (cx > cy)
-				{
-					cx = cy;
-				}
-				CRect rcCalcImage(x, y, x + cx, y + cy);
-
-
-				cxImage = rcCalcImage.Width();
+				drawVlines = _InitializeDrawVlinesForFirstNodeInView(pdata.m_pNode);
 			}
 
-			CSize sizeText = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, pItemStr->c_str());
-			if (isCurSelItem && m_isEnabled)
+			if (pdata.m_isSelected && m_isEnabled)
 			{
-				CRect selRect(rcTxt);
-				selRect.left -= m_cxCurItemBgMargin;
-				int cxImageBg = cxImage > 0 ? cxImage + m_cxImgMargin : 0;
-				selRect.right = selRect.left + cxImageBg + sizeText.cx + m_cxCurItemBgMargin;
-				pRT->FillRectangle(RectFfromRect(selRect), GetBrush(CID::CtrlCurItemBg));
+				D2D1_RECT_F selRectF = pdata.GetSelectedItemRect(m_uiParams);
+				pRT->FillRectangle(selRectF, GetBrush(CID::CtrlCurItemBg));
 				if (m_hasFocus)
 				{
-					_DrawFocusRect(pRT, RectFfromRect(selRect));
+					_DrawFocusRect(pRT, selRectF);
 				}
 			}
 
-			_DrawExpandButtonAndVlines(pRT, pNode, rcItem, drawVlines);
+			_DrawExpandButtonAndVlines(pRT, pdata, drawVlines);
 
-			if (pImg)
+			if (pdata.m_pImg)
 			{
-				_DrawImage(pRT, pImg, RectFfromRect(rcImage), true, m_isEnabled, false);
-				rcTxt.left += cxImage + m_cxImgMargin;
+				_DrawImage(pRT, pdata.m_pImg, RectFfromRect(pdata.m_rcImage), true, m_isEnabled, false);
 			}
 
-			COLORREF rgbFg = m_xeUI->GetColor(isCurSelItem ? CID::CtrlTxt : CID::CtrlCurItemTxt);
-			if (pNode->m_data.m_data.m_isColorIdColor)
+			COLORREF rgbFg = m_isEnabled ? pdata.GetTextFgColor(m_xeUI) : m_xeUI->GetColor(CID::CtrlTxtDis);
+			_CreateAndDrawTextLayout(pRT, pdata.m_text, RectFfromRect(pdata.m_rcTxt), rgbFg);
+
+			if (pdata.m_rcItem.bottom > rcClient.bottom)
 			{
-				rgbFg = m_xeUI->GetColor(pNode->m_data.m_data.GetColorID());
+				break;	// No more visible items.
 			}
-			else if (pNode->m_data.m_data.m_hasColor)
-			{
-				rgbFg = pNode->m_data.m_data.m_rgbColor;
-			}
-			if (!m_isEnabled)
-			{
-				rgbFg = m_xeUI->GetColor(CID::CtrlTxtDis);
-			}
-			_CreateAndDrawTextLayout(pRT, *pItemStr, RectFfromRect(rcTxt), rgbFg);
-			sizeText.cx += (rcTxt.left + 15);
-			if (sizeText.cx > cxMax)
-			{
-				cxMax = sizeText.cx;
-			}
-			y += m_cyItem;
-			if (y > rcPaint.bottom)
-			{
-				break;
-			}
-			++i;
 		}
-
-		_UpdateHVsizeAndAdjustScrollBars(itemCount, cxMax);
+		if (m_control_has_border)
+		{
+			rcClient.left += 0.5f;
+			rcClient.right -= 0.5f;
+			rcClient.top += 0.5f;
+			rcClient.bottom -= 0.5f;
+			pRT->DrawRectangle(rcClient, GetBrush(CID::CtrlBorder));
+		}
 	}
 
 	BoolFlags64 _InitializeDrawVlinesForFirstNodeInView(const CXeTreeNode* pNode)
@@ -489,21 +650,22 @@ protected:
 		return drawVlines;
 	}
 
-	void _DrawExpandButtonAndVlines(
-		ID2D1RenderTarget* pRT, const CXeTreeNode* pNode, const CRect& rcItem, BoolFlags64 &drawVlines)
+	void _DrawExpandButtonAndVlines(ID2D1RenderTarget* pRT, const TreeItemPaintData& pdata, BoolFlags64& drawVlines)
 	{
-		bool isRootNode = pNode->IsRootNode();
+		const CXeTreeNode* pNode = pdata.m_pNode;
+		D2D1_RECT_F rcItem = OffsetRectF(RectFfromRect(pdata.m_rcItem), 0.5f, 0.5f);
+		D2D1_RECT_F rcBox = OffsetRectF(RectFfromRect(pdata.m_rcExpandButton), 0.5f, 0.5f);
+		D2D1_RECT_F rcImage = OffsetRectF(RectFfromRect(pdata.m_rcImage), 0.5f, 0.5f);
 		bool isLastChild = pNode->IsLastChild();
 		int level = pNode->GetLevel();
-		CRect rcBox = _GetButtonBox(rcItem, level);
-		int xMiddleLine = rcBox.left + m_cxyBoxMiddle;
-		int yMiddleLine = rcBox.top + m_cxyBoxMiddle;
-		int xTxtLeft = _CalculateTextLeftEdge(level);
-		int x1 = rcBox.left, x2 = rcBox.right - 1, y1 = rcBox.top, y2 = rcBox.bottom - 1;
+		float xMiddleLine = rcBox.left + m_uiParams.m_cxyBoxMiddle;
+		float yMiddleLine = rcBox.top + m_uiParams.m_cxyBoxMiddle;
+		float xTxtLeft = rcImage.left;
+		float x1 = rcBox.left, x2 = rcBox.right - 1, y1 = rcBox.top, y2 = rcBox.bottom - 1;
 		if (_hasNodeChildren(pNode))	// Draw expand box button?
 		{
-			pRT->DrawRectangle(RectFfromRect(rcBox), GetBrush(m_boxOutlineColorId));
-			if (!isRootNode)
+			pRT->DrawRectangle(rcBox, GetBrush(m_boxOutlineColorId));
+			if (!pNode->IsRootNode())
 			{	// Draw dots above (V)
 				_DrawDots(pRT, xMiddleLine, rcItem.top, rcBox.top - rcItem.top, true);
 			}
@@ -514,14 +676,14 @@ protected:
 				y2 += 2;
 				_DrawDots(pRT, xMiddleLine, y2, rcItem.bottom - y2, true);// Draw dots below (V)
 			}
-			x1 += m_cxyBoxSignMargin;
-			pRT->DrawLine({ (float)x1, (float)yMiddleLine }, { (float)(x1 + m_cxyBoxSign), (float)yMiddleLine},
+			x1 += m_uiParams.m_cxyBoxSignMargin;
+			pRT->DrawLine({ (float)x1, (float)yMiddleLine }, { (float)(x1 + m_uiParams.m_cxyBoxSign), (float)yMiddleLine },
 					GetBrush(m_boxSignColorId));			// Draw the '-'.
 			if (!pNode->IsExpanded())
 			{
 				x2 = xMiddleLine;
-				y2 = rcBox.top + m_cxyBoxSignMargin;
-				pRT->DrawLine({ (float)x2, (float)y2 }, { (float)x2, (float)(y2 + m_cxyBoxSign) },
+				y2 = rcBox.top + m_uiParams.m_cxyBoxSignMargin;
+				pRT->DrawLine({ (float)x2, (float)y2 }, { (float)x2, (float)(y2 + m_uiParams.m_cxyBoxSign) },
 						GetBrush(m_boxSignColorId));		// Draw the '|'.
 			}
 		}
@@ -533,7 +695,7 @@ protected:
 			}
 			else
 			{	// Draw vertial dots line.
-				_DrawDots(pRT, xMiddleLine, rcItem.top, rcItem.Height(), true);
+				_DrawDots(pRT, xMiddleLine, rcItem.top, HeightOf(rcItem), true);
 			}
 			// Draw horizontal line from the middle until text begin.
 			x2 = xMiddleLine + (isLastChild ? 0 : 2);
@@ -541,10 +703,10 @@ protected:
 		}
 		for (int lower_level = level - 1; lower_level > 0; --lower_level)
 		{
-			xMiddleLine -= m_cxLevelMargin;	// Draw vertial dots line.
+			xMiddleLine -= m_uiParams.m_cxLevelMargin;	// Draw vertial dots line.
 			if (drawVlines.GetFlag((uint8_t)lower_level))
 			{
-				_DrawDots(pRT, xMiddleLine, rcItem.top, rcItem.Height(), true);
+				_DrawDots(pRT, xMiddleLine, rcItem.top, HeightOf(rcItem), true);
 			}
 		}
 		if (level > 0)
@@ -553,13 +715,13 @@ protected:
 		}
 	}
 
-	void _DrawDots(ID2D1RenderTarget* pRT, int x, int y, int len, bool isVertical)
+	void _DrawDots(ID2D1RenderTarget* pRT, float x, float y, float len, bool isVertical)
 	{
-		D2D1_POINT_2F pt1{ (float)x, (float)y }, pt2{ (float)x, (float)(y + len) };
+		D2D1_POINT_2F pt1{ x, y }, pt2{ x, (y + len) };
 		if (!isVertical)
 		{
-			pt2.x = (float)(x + len);
-			pt2.y = (float)y;
+			pt2.x = (x + len);
+			pt2.y = y;
 		}
 		pRT->DrawLine(pt1, pt2, GetBrush(m_dotsColorId), 1.0f, m_strokeStyleDots.Get());
 	}
@@ -625,20 +787,9 @@ protected:
 #pragma endregion Focus
 
 #pragma region Helpers
-	void _UpdateHVsizeAndAdjustScrollBars(size_t item_count, int cxMax)
-	{
-		if (m_itemCount != item_count || m_cxMaxStringWidth != cxMax)
-		{
-			m_itemCount = item_count;
-			m_cxMaxStringWidth = cxMax;
-			_AdjustScrollBars();
-			_RedrawDirectly();
-		}
-	}
-
 	bool _SetSelectedPosition(size_t idx, UINT action)
 	{
-		if (idx < m_itemCount && idx != m_curIdx)
+		if (idx < m_paint_data.size() /*&& idx != m_curIdx*/)
 		{
 			HWND hParentWnd = ::GetParent(Hwnd());
 			NMTREEVIEWW nmt = _InitializeNMTREEVIEW(action, TVN_SELCHANGING, m_curIdx, idx);
@@ -647,14 +798,11 @@ protected:
 			{
 				return false;
 			}
-			if (!_IsVisible(idx))
-			{
-				_EnsureIsVisible(idx);
-			}
+			_EnsureIsVisible(idx);
 			m_curIdx = idx;
 			nmt.hdr.code = TVN_SELCHANGED;
 			::SendMessage(hParentWnd, WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&nmt);
-			_RedrawDirectly();
+			_CalculatePaintDataAndRedraw();
 			return true;
 		}
 		return false;
@@ -668,13 +816,6 @@ protected:
 		return ::SendMessage(hParentWnd, WM_NOTIFY, hdr.idFrom, (LPARAM)&hdr);
 	}
 
-	bool _IsVisible(size_t idx) const
-	{
-		CRect rcClient = _GetRealClientRect();
-		CRect rcItem = _GetItemRect(idx);
-		return rcItem.top >= rcClient.top && rcItem.bottom <= rcClient.bottom;
-	}
-
 	CRect _GetRealClientRect() const
 	{
 		CRect rcClient;
@@ -684,56 +825,31 @@ protected:
 		return rcClient;
 	}
 
-	int _GetClientRightEdge() const
-	{
-		CRect rcClient;
-		GetClientRect(&rcClient);
-		int xClientRight = m_hasVscroll ? rcClient.right - m_cxSysSbV : rcClient.right;
-		return xClientRight;
-	}
-
 	void _EnsureIsVisible(size_t idx)
 	{
-		if (idx < m_topIdx)
+		if (idx >= m_paint_data.size() || !m_hasVscroll)
 		{
-			m_topIdx = idx;
+			return;
 		}
-		else
+		const TreeItemPaintData& pdata = m_paint_data.m_visible_nodes_paint_data[idx];
+		CRect rcItem = pdata.m_rcItem;
+		int nPos = _GetVscrollInfo().nPos;
+		rcItem.OffsetRect(0, -nPos);
+		CRect rcClient = _GetRealClientRect();
+		int yOffsetTop = rcClient.top + rcItem.top;				// positive when item top is inside client rect.
+		int yOffsetBottom = rcClient.bottom - rcItem.bottom;	// positive when item bottom is inside client rect.
+		if (yOffsetTop < 0)
 		{
-			while (m_topIdx < m_itemCount)
-			{
-				if (_IsVisible(idx))
-				{
-					break;
-				}
-				++m_topIdx;
-			}
+			nPos += yOffsetTop;
 		}
-		if (m_vScollBar)
+		else if (yOffsetBottom < 0)
 		{
-			m_vScollBar->SetScrollPos((int)m_topIdx, TRUE);
+			nPos += std::abs(yOffsetBottom);
 		}
-	}
-
-	CRect _GetButtonBox(const CRect& rcTxt, int level)
-	{
-		CRect rcBox = rcTxt;
-		rcBox.left += m_cxBoxMargin + (level * m_cxLevelMargin);
-		rcBox.right = rcBox.left + m_cxyBox;
-		rcBox.top += m_cyBoxMargin;
-		rcBox.bottom = rcBox.top + m_cxyBox;
-		return rcBox;
-	}
-
-	CRect _GetItemRect(size_t idx) const
-	{
-		int y = m_y_start + (m_cyItem * (int)(idx - m_topIdx));
-		return CRect(0, y, _GetClientRightEdge(), y + m_cyItem);
-	}
-
-	int _CalculateTextLeftEdge(int level)
-	{
-		return m_x_start + ((level + 1) * m_cxLevelMargin);
+		if (nPos != _GetVscrollInfo().nPos)
+		{
+			m_vScollBar->SetScrollPos(nPos, TRUE);
+		}
 	}
 
 	void _InitializeNMHDR(NMHDR* pNMHDR, UINT code)
@@ -804,7 +920,7 @@ protected:
 		m_hScollBar.reset();
 		m_hasVscroll = m_hasHscroll = false;
 		m_curIdx = 0xFFFFFFFF;
-		m_topIdx = m_itemCount = 0;
+		m_paint_data.clear();
 	}
 #pragma endregion Helpers
 
@@ -848,58 +964,55 @@ protected:
 	{
 		UINT nfCode = mmsg == MMsg::LDown ? NM_CLICK : mmsg == MMsg::LDblClick ? NM_DBLCLK :
 				mmsg == MMsg::RDown ? NM_RCLICK : mmsg == MMsg::RDblClick ? NM_RDBLCLK : 0;
-		size_t idx = m_cyItem > 0 ? m_topIdx + (point.y / m_cyItem) : (size_t)-1;
-		const CXeTreeNode* pNode = m_tree.GetNodeAtIdx(idx);
-		CRect rcItem;
-		bool isClickInExpandBox = false, isClickInItemTextArea = false;
-		if (pNode)
+		int yScrollPos = _GetVscrollInfo().nPos, xScrollPos = _GetHscrollInfo().nPos;
+		const TreeItemPaintData* pItem = m_paint_data.GetItemFromYposition(point.y, yScrollPos);
+		if (pItem)
 		{
-			rcItem = _GetItemRect(idx);
-			int xOffset = _GetHscrollInfo().nPos;
-			if (_hasNodeChildren(pNode))
+			CRect rcTxt = pItem->GetTextAreaRect();
+			rcTxt.OffsetRect(-xScrollPos, -yScrollPos);
+			bool isClickInItemTextArea = rcTxt.PtInRect(point);
+			CRect rcButton = pItem->m_rcExpandButton;
+			rcButton.OffsetRect(-xScrollPos, -yScrollPos);
+			bool isClickInExpandBox = pItem->m_hasExpandButton && rcButton.PtInRect(point);
+
+			if ((mmsg == MMsg::LUp && isClickInExpandBox)
+					|| (mmsg == MMsg::LDblClick && isClickInItemTextArea))
 			{
-				CRect rcBox = _GetButtonBox(rcItem, pNode->GetLevel());
-				rcBox.OffsetRect(-xOffset, 0);
-				isClickInExpandBox = rcBox.PtInRect(point);
-			}
-			rcItem.left = _CalculateTextLeftEdge(pNode->GetLevel()) - xOffset;
-			isClickInItemTextArea = rcItem.PtInRect(point);
-			if ((mmsg == MMsg::LDown && isClickInExpandBox)
-				|| (mmsg == MMsg::LDblClick && isClickInItemTextArea))
-			{
-				if (_SendItemExpandingNotify(pNode, !pNode->IsExpanded()) == 0)
+				if (_SendItemExpandingNotify(pItem->m_pNode, !pItem->m_pNode->IsExpanded()) == 0)
 				{
-					m_tree.SetExpandedFlag(pNode, !pNode->IsExpanded());
-					_UpdateHVsizeAndAdjustScrollBars(m_tree.GetVisibleNodeCount(), 0);
-					_SetSelectedPosition(idx, TVC_BYMOUSE);
-				}
-				else
-				{
-					idx = (size_t)-1;
+					m_tree.SetExpandedFlag(pItem->m_pNode, !pItem->m_pNode->IsExpanded());
+					_SetSelectedPosition(pItem->m_index, TVC_BYMOUSE);
 				}
 			}
-		}
-		if (idx != (size_t)-1)
-		{
-			_SetSelectedPosition(idx, TVC_BYMOUSE);
-			_RedrawDirectly();
-			SetFocus();
-		}
-		if (isClickInItemTextArea && pNode && nfCode == NM_RCLICK
-				&& m_getContextMenu && m_selectedContextMenuItem)
-		{
-			TVITEMW tvItem;
-			_InitializeTVITEM(&tvItem, m_tree.GetNodeHandle(pNode));
-			std::vector<ListBoxExItem> menuItems = m_getContextMenu(&tvItem);
-			if (menuItems.size())
+
+			if (mmsg == MMsg::LDown)
 			{
-				CXeMenu menu(m_xeUI, menuItems);
-				CPoint ptMenu(point);
-				ClientToScreen(&ptMenu);
-				UINT selectedID = menu.ShowMenu(Hwnd(), ptMenu, 0);
-				if (selectedID)
+				if (::GetFocus() != Hwnd())
 				{
-					m_selectedContextMenuItem(selectedID, &tvItem);
+					SetFocus();
+				}
+				if (isClickInItemTextArea)
+				{
+					_SetSelectedPosition(pItem->m_index, TVC_BYMOUSE);
+				}
+			}
+
+			if (isClickInItemTextArea && nfCode == NM_RCLICK
+					&& m_getContextMenu && m_selectedContextMenuItem)
+			{
+				TVITEMW tvItem;
+				_InitializeTVITEM(&tvItem, m_tree.GetNodeHandle(pItem->m_pNode));
+				std::vector<ListBoxExItem> menuItems = m_getContextMenu(&tvItem);
+				if (menuItems.size())
+				{
+					CXeMenu menu(m_xeUI, menuItems);
+					CPoint ptMenu(point);
+					ClientToScreen(&ptMenu);
+					UINT selectedID = menu.ShowMenu(Hwnd(), ptMenu, 0);
+					if (selectedID)
+					{
+						m_selectedContextMenuItem(selectedID, &tvItem);
+					}
 				}
 			}
 		}
@@ -954,12 +1067,10 @@ protected:
 	virtual LRESULT _OnKeyDown(WPARAM wParam, LPARAM lParam) override
 	{
 		XeASSERT(::IsWindow(Hwnd()));
-		size_t newIdx = 0xFFFFFFFF;
+		size_t newIdx = 0xFFFFFFFF, itemCount = m_paint_data.size();
 		SCROLLINFO si = _GetVscrollInfo();
-		bool fCtrlKeyDown = (::GetKeyState(VK_CONTROL) & 0x8000) ? true : false;
-		bool fShiftKeyDown = (::GetKeyState(VK_SHIFT) & 0x8000) ? true : false;
-		bool fMenuKeyDown = (::GetKeyState(VK_MENU) & 0x8000) ? true : false;
-		bool isNoShiftCtrlMenuKeyDown = !(fCtrlKeyDown || fShiftKeyDown || fMenuKeyDown);
+		CXeShiftCtrlAltKeyHelper sca;
+		size_t itemsInView = _GetRealClientRect().Height() / m_uiParams.m_cyItem;
 		const CXeTreeNode* pNode = m_tree.GetNodeAtIdx(m_curIdx);
 		bool isCurNodeExpanded = pNode ? pNode->IsExpanded() : false;
 		bool hasCurNodeChildren = pNode ? _hasNodeChildren(pNode) : false;
@@ -967,11 +1078,11 @@ protected:
 		switch (wParam)
 		{
 		case VK_PRIOR:
-			newIdx = m_curIdx < si.nPage ? 0 : m_curIdx - si.nPage;
+			newIdx = m_curIdx < itemsInView ? 0 : m_curIdx - itemsInView;
 			break;
 
 		case VK_NEXT:
-			newIdx = m_curIdx + si.nPage > m_itemCount - 1 ? m_itemCount - 1 : m_curIdx + si.nPage;
+			newIdx = (m_curIdx + itemsInView) > (itemCount - 1) ? (itemCount - 1) : (m_curIdx + itemsInView);
 			break;
 
 		case VK_HOME:
@@ -979,12 +1090,12 @@ protected:
 			break;
 
 		case VK_END:
-			newIdx = m_itemCount - 1;
+			newIdx = (itemCount - 1);
 			break;
 
 		case VK_LEFT:
 		case VK_RIGHT:
-			if (pNode && isNoShiftCtrlMenuKeyDown)
+			if (pNode && !sca.IsShiftOrCtrlOrAltDown())
 			{
 				bool isLeft = wParam == VK_LEFT;
 				if (hasCurNodeChildren)
@@ -1031,14 +1142,18 @@ protected:
 			break;
 		}
 
-		if (isExpandContractNode
-			&& _SendItemExpandingNotify(pNode, !pNode->IsExpanded()) == 0)
+		if (isExpandContractNode)
 		{
-			m_tree.SetExpandedFlag(pNode, !pNode->IsExpanded());
-			_UpdateHVsizeAndAdjustScrollBars(m_tree.GetVisibleNodeCount(), 0);
+			if (_SendItemExpandingNotify(pNode, !pNode->IsExpanded()) == 0)
+			{
+				m_tree.SetExpandedFlag(pNode, !pNode->IsExpanded());
+				_CalculatePaintDataAndRedraw();
+			}
 		}
-
-		_SetSelectedPosition(newIdx, TVC_BYKEYBOARD);
+		else if (newIdx != 0xFFFFFFFF)
+		{
+			_SetSelectedPosition(newIdx, TVC_BYKEYBOARD);
+		}
 
 		return 0;	// Indicate we processed this message (eat all key msgs).
 		// Note - testing shows that windows looks for another child control to process
@@ -1058,54 +1173,48 @@ protected:
 	{
 		CRect rcClient;
 		GetClientRect(&rcClient);
-		CRect rcCopy(rcClient);
-		size_t itemsInViewCount = rcCopy.Height() / m_cyItem;
-		m_hasVscroll = m_itemCount > itemsInViewCount;
+		CRect rcActualClient(rcClient);
+		CSize sizeView = m_paint_data.GetViewSize();
+		m_hasVscroll = sizeView.cy > rcActualClient.Height();
 		if (m_hasVscroll)
 		{
-			rcCopy.right -= m_cxSysSbV;
+			rcActualClient.right -= m_cxSysSbV;
 		}
-		m_hasHscroll = m_cxMaxStringWidth > rcCopy.Width();
+		m_hasHscroll = sizeView.cx > rcActualClient.Width();
 		if (m_hasHscroll)
 		{
-			rcCopy.bottom -= m_cySysSbH;
-			itemsInViewCount = rcCopy.Height() / m_cyItem;
+			rcActualClient.bottom -= m_cySysSbH;
 			if (!m_hasVscroll)
 			{
-				m_hasVscroll = m_itemCount > itemsInViewCount;
+				m_hasVscroll = sizeView.cy > rcActualClient.Height();
 			}
 		}
 
-		_AdjustVscroll(rcClient, (int)itemsInViewCount);
-		_AdjustHscroll(rcClient, rcCopy.Width());
-	}
-
-	void _AdjustVscroll(const CRect& rcClient, int nPage)
-	{
 		if (m_hasVscroll)
 		{
 			CRect rcVSB(rcClient);
 			rcVSB.bottom = m_hasHscroll ? rcClient.bottom - m_cySysSbH : rcClient.bottom;
 			rcVSB.left = rcVSB.right - m_cxSysSbV;
+			SCROLLINFO si{ 0 };
+			si.cbSize = sizeof(SCROLLINFO);
 			if (m_vScollBar)
 			{
 				m_vScollBar->ShowWindow(SW_SHOW);
 				m_vScollBar->SetWindowPos(nullptr, rcVSB.left, rcVSB.top, rcVSB.Width(), rcVSB.Height(),
 					SWP_NOCOPYBITS | SWP_NOZORDER);
+				si.fMask = SIF_RANGE;
 			}
 			else
 			{
 				m_vScollBar = std::make_unique<CXeScrollBar>(m_xeUI);
 				m_vScollBar->Create(WS_CHILD | WS_VISIBLE | SBS_VERT, rcVSB, Hwnd(), c_VSB_ID, nullptr);
+				si.fMask = SIF_ALL;
+				si.nPage = rcActualClient.Height();
+				si.nPos = (int)m_curIdx * m_uiParams.m_cyItem;
+				si.nTrackPos = 0;
 			}
-			SCROLLINFO si{ 0 };
-			si.cbSize = sizeof(SCROLLINFO);
-			si.fMask = SIF_ALL;
 			si.nMin = 0;
-			si.nMax = (int)m_itemCount - 1;
-			si.nPage = nPage;
-			si.nPos = (int)m_topIdx;
-			si.nTrackPos = 0;
+			si.nMax = sizeView.cy;
 			m_vScollBar->SetScrollInfo(&si, TRUE);
 		}
 		else
@@ -1113,6 +1222,41 @@ protected:
 			if (m_vScollBar)
 			{
 				m_vScollBar->ShowWindow(SW_HIDE);
+			}
+		}
+
+		if (m_hasHscroll)
+		{
+			CRect rcHSB(rcClient);
+			rcHSB.top = rcHSB.bottom - m_cySysSbH;
+			rcHSB.right = m_hasVscroll ? rcClient.right - m_cxSysSbV : rcClient.right;
+			SCROLLINFO si{ 0 };
+			si.cbSize = sizeof(SCROLLINFO);
+			if (m_hScollBar)
+			{
+				m_hScollBar->ShowWindow(SW_SHOW);
+				m_hScollBar->SetWindowPos(nullptr, rcHSB.left, rcHSB.top, rcHSB.Width(), rcHSB.Height(),
+					SWP_NOCOPYBITS | SWP_NOZORDER);
+				si.fMask = SIF_RANGE;
+			}
+			else
+			{
+				m_hScollBar = std::make_unique<CXeScrollBar>(m_xeUI);
+				m_hScollBar->Create(WS_CHILD | WS_VISIBLE | SBS_HORZ, rcHSB, Hwnd(), c_HSB_ID, nullptr);
+				si.fMask = SIF_ALL;
+				si.nPage = rcActualClient.Width();
+				si.nPos = (int)0;
+				si.nTrackPos = 0;
+			}
+			si.nMin = 0;
+			si.nMax = sizeView.cx;
+			m_hScollBar->SetScrollInfo(&si, TRUE);
+		}
+		else
+		{
+			if (m_hScollBar)
+			{
+				m_hScollBar->ShowWindow(SW_HIDE);
 			}
 		}
 	}
@@ -1133,82 +1277,42 @@ protected:
 	virtual LRESULT _OnVScroll(WPARAM wParam, LPARAM lParam) override
 	{
 		UINT nSBCode = LOWORD(wParam);
-		UINT nPos = HIWORD(wParam);
 		HWND hSBwnd = (HWND)lParam;
 		UINT uSB_ID = ::GetDlgCtrlID(hSBwnd);
 		if (m_vScollBar && uSB_ID == m_vScollBar->GetDlgCtrlID())	// our scrollbar?
 		{
 			SCROLLINFO si = _GetVscrollInfo();
+			UINT nPos = si.nPos;
 
-			size_t topIdx = 0xFFFFFFFF;
 			switch (nSBCode)
 			{
 			case SB_LINELEFT:
-				topIdx = m_topIdx > 0 ? m_topIdx - 1 : 0;
+				nPos = nPos > (UINT)m_uiParams.m_cyItem ? nPos - m_uiParams.m_cyItem : 0;
 				break;
 
 			case SB_LINERIGHT:
-				topIdx = m_topIdx + 1;
+				nPos += m_uiParams.m_cyItem;
 				break;
 
 			case SB_PAGELEFT:
-				topIdx = m_topIdx >= si.nPage ? m_topIdx - si.nPage : 0;
+				nPos = nPos >= si.nPage ? nPos - si.nPage : 0;
 				break;
 
 			case SB_PAGERIGHT:
-				topIdx = m_topIdx + si.nPage;
+				nPos += si.nPage;
 				break;
 
 			case SB_THUMBTRACK:
-				topIdx = si.nTrackPos;
+				nPos = si.nTrackPos;
 				break;
 			}
-			if (topIdx < m_itemCount)
+			if (nPos != si.nPos)
 			{
-				size_t topIdxMax = m_itemCount - si.nPage;
-				m_topIdx = topIdx > topIdxMax ? topIdxMax : topIdx;
-				m_vScollBar->SetScrollPos((int)m_topIdx, TRUE);
+				m_vScollBar->SetScrollPos(nPos, TRUE);
 				_RedrawDirectly();
 			}
 		}
 		return 0;
-	}
-
-	void _AdjustHscroll(const CRect& rcClient, int nPage)
-	{
-		if (m_hasHscroll)
-		{
-			CRect rcHSB(rcClient);
-			rcHSB.top = rcHSB.bottom - m_cySysSbH;
-			rcHSB.right = m_hasVscroll ? rcClient.right - m_cxSysSbV : rcClient.right;
-			if (m_hScollBar)
-			{
-				m_hScollBar->ShowWindow(SW_SHOW);
-				m_hScollBar->SetWindowPos(nullptr, rcHSB.left, rcHSB.top, rcHSB.Width(), rcHSB.Height(),
-					SWP_NOCOPYBITS | SWP_NOZORDER);
-			}
-			else
-			{
-				m_hScollBar = std::make_unique<CXeScrollBar>(m_xeUI);
-				m_hScollBar->Create(WS_CHILD | WS_VISIBLE | SBS_HORZ, rcHSB, Hwnd(), c_HSB_ID, nullptr);
-			}
-			SCROLLINFO si{ 0 };
-			si.cbSize = sizeof(SCROLLINFO);
-			si.fMask = SIF_ALL;
-			si.nMin = 0;
-			si.nMax = m_cxMaxStringWidth;
-			si.nPage = nPage;
-			si.nPos = (int)0;
-			si.nTrackPos = 0;
-			m_hScollBar->SetScrollInfo(&si, TRUE);
-		}
-		else
-		{
-			if (m_hScollBar)
-			{
-				m_hScollBar->ShowWindow(SW_HIDE);
-			}
-		}
 	}
 
 	SCROLLINFO _GetHscrollInfo() const
@@ -1227,47 +1331,40 @@ protected:
 	virtual LRESULT _OnHScroll(WPARAM wParam, LPARAM lParam) override
 	{
 		UINT nSBCode = LOWORD(wParam);
-		UINT nPos = HIWORD(wParam);
 		HWND hSBwnd = (HWND)lParam;
 		UINT uSB_ID = ::GetDlgCtrlID(hSBwnd);
 		if (m_hScollBar && uSB_ID == m_hScollBar->GetDlgCtrlID())	// our scrollbar?
 		{
 			SCROLLINFO si = _GetHscrollInfo();
+			UINT nPos = si.nPos;
 
-			int newX = si.nPos;
 			switch (nSBCode)
 			{
 			case SB_LINELEFT:
-				newX -= 10;
+				nPos -= 10;
 				break;
 
 			case SB_LINERIGHT:
-				newX += 10;
+				nPos += 10;
 				break;
 
 			case SB_PAGELEFT:
-				newX -= si.nPage;
+				nPos -= si.nPage;
 				break;
 
 			case SB_PAGERIGHT:
-				newX += si.nPage;
+				nPos += si.nPage;
 				break;
 
 			case SB_THUMBTRACK:
-				newX = si.nTrackPos;
+				nPos = si.nTrackPos;
 				break;
 			}
-			int maxX = m_cxMaxStringWidth - (int)si.nPage;
-			if (newX < 0)
+			if (nPos != si.nPos)
 			{
-				newX = 0;
+				m_hScollBar->SetScrollPos(nPos, TRUE);
+				_RedrawDirectly();
 			}
-			else if (newX > maxX)
-			{
-				newX = maxX;
-			}
-			m_hScollBar->SetScrollPos(newX, TRUE);
-			_RedrawDirectly();
 		}
 		return 0;
 	}
@@ -1376,21 +1473,28 @@ protected:
 			}
 		}
 		TreeCtrlExItem item(pText, pTVI->item.cchTextMax, param, item_data);
+		LRESULT result = 0;
 		if (isRoot)
 		{
 			if (m_tree.CreateRoot(item))
 			{
-				return reinterpret_cast<LPARAM>(m_tree.GetRoot());
+				result = reinterpret_cast<LRESULT>(m_tree.GetRoot());
 			}
-			return 0;
 		}
 		else if (pTVI->hParent)
 		{
 			item.m_hasChildren = mask.isTVIF_CHILDREN() ? pTVI->item.cChildren > 0 : false;
 			CXeTreeNode* pParent = reinterpret_cast<CXeTreeNode*>(pTVI->hParent);
-			return reinterpret_cast<LPARAM>(m_tree.AddNode(pParent, item));
+			result = reinterpret_cast<LPARAM>(m_tree.AddNode(pParent, item));
 		}
-		return 0;
+		if (result != 0)
+		{
+			if (IsWindowVisible())
+			{
+				_CalculatePaintDataAndRedraw();
+			}
+		}
+		return result;
 	}
 
 	/* Removes an item and all its children from a tree-view control.
@@ -1411,6 +1515,7 @@ protected:
 		if (lParam == 0 || lParam == (LPARAM)TVI_ROOT)
 		{
 			_DeleteAllItems();
+			_CalculatePaintDataAndRedraw();
 		}
 		else
 		{
@@ -1459,6 +1564,7 @@ protected:
 		m_tree.SetExpandedFlag(pNode, IsExpand ? true : isCollapse ? false
 			: isToggle ? !pNode->IsExpanded() : pNode->IsExpanded());
 		_SendItemExpandingNotify(pNode, pNode->IsExpanded());
+		_CalculatePaintDataAndRedraw();
 		return TRUE;
 	}
 

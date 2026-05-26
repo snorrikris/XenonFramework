@@ -916,8 +916,14 @@ protected:
 	void _DeleteAllItems()
 	{
 		m_tree.DeleteRoot();	// Delete all
-		m_vScollBar.reset();
-		m_hScollBar.reset();
+		if (m_vScollBar->GetSafeHwnd())
+		{
+			m_vScollBar->ShowWindow(SW_HIDE);
+		}
+		if (m_hScollBar->GetSafeHwnd())
+		{
+			m_hScollBar->ShowWindow(SW_HIDE);
+		}
 		m_hasVscroll = m_hasHscroll = false;
 		m_curIdx = 0xFFFFFFFF;
 		m_paint_data.clear();

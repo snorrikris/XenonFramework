@@ -227,12 +227,11 @@ struct TreeItemPaintData
 	bool					m_isSelected = false;
 
 	void CalculateRects(const CXeTreeNode* pNode, size_t idx,
-			CXeUIcolorsIF* pUI, const TreeUIparams& uiParams, bool isCurSelItem)
+			CXeUIcolorsIF* pUI, const TreeUIparams& uiParams)
 	{
 		m_pNode = pNode;
 		m_index = idx;
 		XeASSERT(m_pNode != nullptr && m_index >= 0);
-		m_isSelected = isCurSelItem;
 		if (m_pNode == nullptr)
 		{
 			return;
@@ -252,12 +251,24 @@ struct TreeItemPaintData
 		m_rcExpandButton.bottom = m_rcExpandButton.top + uiParams.m_cxyBox;
 
 		m_rcTxt = m_rcItem;
-		m_rcTxt.left = uiParams.m_x_start + ((level + 1) * uiParams.m_cxLevelMargin); // _CalculateTextLeftEdge(m_pNode->GetLevel());
-
+		m_rcTxt.left = uiParams.m_x_start + ((level + 1) * uiParams.m_cxLevelMargin);
 		m_rcImage = m_rcTxt;
 		m_rcImage.right = m_rcImage.left;
-		m_rcImage.top += uiParams.m_cxyImgDec;
-		m_rcImage.bottom -= uiParams.m_cxyImgDec;
+		CalculateImageRect(pUI, uiParams, false);
+
+		m_rcTxt.right = m_rcTxt.left;
+		m_rcItem.right = m_rcTxt.right;
+	}
+
+	void CalculateImageRect(CXeUIcolorsIF* pUI, const TreeUIparams& uiParams, bool isCurSelItem)
+	{
+		m_isSelected = isCurSelItem;
+		int cxText = m_rcTxt.Width() > 0 ? m_rcTxt.Width() : 0;
+		int xLeft = m_rcImage.left < m_rcTxt.left ? m_rcImage.left : m_rcTxt.left;
+		m_rcImage.left = xLeft;
+		m_rcImage.right = m_rcImage.left;
+		m_rcImage.top = m_rcTxt.top + uiParams.m_cxyImgDec;
+		m_rcImage.bottom = m_rcTxt.bottom - uiParams.m_cxyImgDec;
 		m_pid = PID::None;
 		if (m_pNode->m_data.m_data.HasImagePID())
 		{
@@ -299,9 +310,13 @@ struct TreeItemPaintData
 			}
 			m_rcImage.SetRect(x, y, x + cx, y + cy);
 
-			m_rcTxt.left += m_rcImage.Width() + uiParams.m_cxImgMargin;
+			m_rcTxt.left = m_rcImage.left + m_rcImage.Width() + uiParams.m_cxImgMargin;
+			m_rcTxt.right = m_rcTxt.left + cxText;
 		}
+	}
 
+	void CalculateTextRect(CXeUIcolorsIF* pUI)
+	{
 		CSize sizeText = pUI->GetTextSizeW(EXE_FONT::eUI_Font, m_text.c_str());
 		m_rcTxt.right = m_rcTxt.left + sizeText.cx;
 		m_rcItem.right = m_rcTxt.right;
@@ -314,6 +329,20 @@ struct TreeItemPaintData
 		m_rcExpandButton.OffsetRect(-xHscrollPos, -yScrollPos);
 		m_rcTxt.OffsetRect(-xHscrollPos, -yScrollPos);
 		m_rcImage.OffsetRect(-xHscrollPos, -yScrollPos);
+	}
+
+	bool IsPointInTextArea(const CPoint& point, int yScrollPos, int xScrollPos) const
+	{
+		CRect rcTxt = GetTextAreaRect();
+		rcTxt.OffsetRect(-xScrollPos, -yScrollPos);
+		return rcTxt.PtInRect(point);
+	}
+
+	bool IsPointInExpandButton(const CPoint& point, int yScrollPos, int xScrollPos) const
+	{
+		CRect rcButton = m_rcExpandButton;
+		rcButton.OffsetRect(-xScrollPos, -yScrollPos);
+		return m_hasExpandButton && rcButton.PtInRect(point);
 	}
 
 	CRect GetTextAreaRect() const
@@ -371,7 +400,7 @@ struct TreePaintData
 		m_cxMaxItemWidth = 0;
 	}
 
-	size_t GetIndexOfFirstVisibleItem(int yClientTopWithScrollBarOffset)
+	size_t GetIndexOfFirstVisibleItem(int yClientTopWithScrollBarOffset) const
 	{
 		size_t idx = 0;
 		for (; idx < m_visible_nodes_paint_data.size(); ++idx)
@@ -391,12 +420,13 @@ struct TreePaintData
 		if (m_visible_nodes_paint_data.size() > 0)
 		{
 			size_t lastIdx = m_visible_nodes_paint_data.size() - 1;
-			return CSize(m_cxMaxItemWidth, m_visible_nodes_paint_data[lastIdx].m_rcItem.bottom);
+			int yLast = m_visible_nodes_paint_data[lastIdx].m_rcItem.bottom;
+			return CSize(m_cxMaxItemWidth, yLast);
 		}
 		return CSize();
 	}
 
-	const TreeItemPaintData* GetItemFromYposition(int yPos, int yScrollPos)
+	const TreeItemPaintData* GetItemFromYposition(int yPos, int yScrollPos) const
 	{
 		for (const TreeItemPaintData& item : m_visible_nodes_paint_data)
 		{
@@ -409,7 +439,30 @@ struct TreePaintData
 		}
 		return nullptr;
 	}
+
+	const TreeItemPaintData* GetItemAt(size_t idx) const
+	{
+		if (idx < m_visible_nodes_paint_data.size())
+		{
+			return &(m_visible_nodes_paint_data[idx]);
+		}
+		return nullptr;
+	}
+
+	const TreeItemPaintData* FindNode(const CXeTreeNode* pNode) const
+	{
+		for (const TreeItemPaintData& item : m_visible_nodes_paint_data)
+		{
+			if (item.m_pNode == pNode)
+			{
+				return &item;
+			}
+		}
+		return nullptr;
+	}
 };
+
+enum class NodeExpand { None = 0, Expand, Collapse, Toggle };
 
 export class CXeTreeCtrlEx : public CXeD2DCtrlBase
 {
@@ -420,6 +473,7 @@ protected:
 	std::unique_ptr<CXeScrollBar> m_hScollBar;
 	bool m_hasVscroll = false, m_hasHscroll = false;
 	int m_cxSysSbV = 10, m_cySysSbH = 10;
+	CRect m_rcHSB, m_rcVSB;
 
 	CXeNaryTree<TreeCtrlExItem> m_tree;
 
@@ -548,40 +602,48 @@ protected:
 		for (const CXeTreeNode* pNode : m_paint_data.m_visible_nodes)
 		{
 			TreeItemPaintData& pdata = m_paint_data.m_visible_nodes_paint_data[idx];
-			if (pNode->m_data.m_isGetTextCallback)
-			{
-				NMTVDISPINFOW di{ 0 };
-				di.hdr.hwndFrom = Hwnd();
-				di.hdr.idFrom = GetDlgCtrlID();
-				di.hdr.code = TVN_GETDISPINFO;
-				di.item.mask = TVIF_HANDLE | TVIF_PARAM | TVIF_STATE | TVIF_TEXT;
-				di.item.hItem = reinterpret_cast<HTREEITEM>(m_tree.GetNodeHandle(pNode));
-				di.item.state = pNode->IsExpanded() ? TVIS_EXPANDED : 0;
-				di.item.stateMask = TVIS_EXPANDED;
-				di.item.lParam = pNode->m_data.m_lParam;
-				::SendMessage(hParentWnd, WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&di);
-				if (di.item.pszText)
-				{
-					pdata.m_text = di.item.pszText;
-				}
-			}
-			else
-			{
-				pdata.m_text = pNode->m_data.m_string;
-			}
 
-			pdata.CalculateRects(pNode, idx, m_xeUI, m_uiParams, (idx == m_curIdx));
+			pdata.CalculateRects(pNode, idx, m_xeUI, m_uiParams);
 
-			if (pdata.m_rcTxt.right > m_paint_data.m_cxMaxItemWidth)
-			{
-				m_paint_data.m_cxMaxItemWidth = pdata.m_rcTxt.right;
-			}
 			++idx;
+		}
+	}
+
+	void _GetTextAndCalculateRect(HWND hParentWnd, TreeItemPaintData& pdata)
+	{
+		if (pdata.m_pNode->m_data.m_isGetTextCallback)
+		{
+			NMTVDISPINFOW di{ 0 };
+			di.hdr.hwndFrom = Hwnd();
+			di.hdr.idFrom = GetDlgCtrlID();
+			di.hdr.code = TVN_GETDISPINFO;
+			di.item.mask = TVIF_HANDLE | TVIF_PARAM | TVIF_STATE | TVIF_TEXT;
+			di.item.hItem = reinterpret_cast<HTREEITEM>(m_tree.GetNodeHandle(pdata.m_pNode));
+			di.item.state = pdata.m_pNode->IsExpanded() ? TVIS_EXPANDED : 0;
+			di.item.stateMask = TVIS_EXPANDED;
+			di.item.lParam = pdata.m_pNode->m_data.m_lParam;
+			::SendMessage(hParentWnd, WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&di);
+			if (di.item.pszText)
+			{
+				pdata.m_text = di.item.pszText;
+			}
+		}
+		else
+		{
+			pdata.m_text = pdata.m_pNode->m_data.m_string;
+		}
+		pdata.CalculateTextRect(m_xeUI);
+
+		if (pdata.m_rcTxt.right > m_paint_data.m_cxMaxItemWidth)
+		{
+			m_paint_data.m_cxMaxItemWidth = pdata.m_rcTxt.right;
 		}
 	}
 
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 	{
+		HWND hParentWnd = ::GetParent(Hwnd());
+		int cxMaxItemWidthBeforePaint = m_paint_data.m_cxMaxItemWidth;
 		int xOffset = _GetHscrollInfo().nPos;
 		int yOffset = _GetVscrollInfo().nPos;
 		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg)); // Fill background
@@ -589,8 +651,11 @@ protected:
 		size_t idx = m_paint_data.GetIndexOfFirstVisibleItem(yOffset);
 		for (; idx < m_paint_data.size(); ++idx)
 		{
+			TreeItemPaintData& pdata_unchanged = m_paint_data.m_visible_nodes_paint_data[idx];
+			_GetTextAndCalculateRect(hParentWnd, pdata_unchanged);
+
 			// Copy item (we need to apply scroll offsets).
-			TreeItemPaintData pdata = m_paint_data.m_visible_nodes_paint_data[idx];
+			TreeItemPaintData pdata = pdata_unchanged;
 			pdata.CalculateOffsetRects(xOffset, yOffset);
 
 			if (!drawVlines.GetFlag(0))
@@ -623,13 +688,24 @@ protected:
 				break;	// No more visible items.
 			}
 		}
+		if (m_hasHscroll && m_hasVscroll)
+		{
+			CRect rcCorner = m_rcHSB;
+			rcCorner.left = rcCorner.right;
+			rcCorner.right = m_rcVSB.right;
+			pRT->FillRectangle(RectFfromRect(rcCorner), GetBrush(CID::CtrlBg));
+		}
 		if (m_control_has_border)
 		{
 			rcClient.left += 0.5f;
 			rcClient.right -= 0.5f;
 			rcClient.top += 0.5f;
 			rcClient.bottom -= 0.5f;
-			pRT->DrawRectangle(rcClient, GetBrush(CID::CtrlBorder));
+			pRT->DrawRectangle(rcClient, GetBrush(CID::CtrlTxtDis));
+		}
+		if (cxMaxItemWidthBeforePaint != m_paint_data.m_cxMaxItemWidth)
+		{
+			_AdjustScrollBars();
 		}
 	}
 
@@ -789,7 +865,7 @@ protected:
 #pragma region Helpers
 	bool _SetSelectedPosition(size_t idx, UINT action)
 	{
-		if (idx < m_paint_data.size() /*&& idx != m_curIdx*/)
+		if (idx < m_paint_data.size())
 		{
 			HWND hParentWnd = ::GetParent(Hwnd());
 			NMTREEVIEWW nmt = _InitializeNMTREEVIEW(action, TVN_SELCHANGING, m_curIdx, idx);
@@ -799,30 +875,57 @@ protected:
 				return false;
 			}
 			_EnsureIsVisible(idx);
+			if (m_curIdx >= 0 && m_curIdx < m_paint_data.size())
+			{
+				TreeItemPaintData& pdata_unselected = m_paint_data.m_visible_nodes_paint_data[m_curIdx];
+				pdata_unselected.CalculateImageRect(m_xeUI, m_uiParams, false);
+			}
+			TreeItemPaintData& pdata_selected = m_paint_data.m_visible_nodes_paint_data[idx];
+			pdata_selected.CalculateImageRect(m_xeUI, m_uiParams, true);
 			m_curIdx = idx;
 			nmt.hdr.code = TVN_SELCHANGED;
 			::SendMessage(hParentWnd, WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&nmt);
-			_CalculatePaintDataAndRedraw();
+			_RedrawDirectly();
 			return true;
 		}
 		return false;
 	}
 
-	LRESULT _NotifyParent(UINT nfCode)
+	void _ExpandOrCollapseNode(const CXeTreeNode* pNode, NodeExpand expand, bool isSetAsSelected, UINT selected_action)
 	{
-		NMHDR hdr{ 0 };
-		_InitializeNMHDR(&hdr, nfCode);
-		HWND hParentWnd = ::GetParent(Hwnd());
-		return ::SendMessage(hParentWnd, WM_NOTIFY, hdr.idFrom, (LPARAM)&hdr);
+		XeASSERT(pNode != nullptr && expand != NodeExpand::None);
+		bool isExpandNode = expand == NodeExpand::Expand ? true : expand == NodeExpand::Collapse ? false
+				: expand == NodeExpand::Toggle ? !pNode->IsExpanded() : false;
+		if (_SendItemExpandingNotify(pNode, isExpandNode) == 0)
+		{
+			m_tree.SetExpandedFlag(pNode, isExpandNode);
+			_CalculatePaintData();
+			if (isSetAsSelected)
+			{
+				const TreeItemPaintData* pPData = m_paint_data.FindNode(pNode);
+				XeASSERT(pPData);
+				if (pNode)
+				{
+					_SetSelectedPosition(pPData->m_index, selected_action);
+				}
+			}
+			else
+			{
+				_RedrawDirectly();
+			}
+		}
 	}
 
-	CRect _GetRealClientRect() const
+	LRESULT _SendItemExpandingNotify(const CXeTreeNode* pNode, bool isExpanded)
 	{
-		CRect rcClient;
-		GetClientRect(&rcClient);
-		rcClient.right = m_hasVscroll ? rcClient.right - m_cxSysSbV : rcClient.right;
-		rcClient.bottom = m_hasHscroll ? rcClient.bottom - m_cySysSbH : rcClient.bottom;
-		return rcClient;
+		HXETREEITEM hItem = m_tree.GetNodeHandle(pNode);
+		NMTREEVIEWW nmt{ 0 };
+		_InitializeNMHDR(&nmt.hdr, TVN_ITEMEXPANDING);
+		nmt.action = isExpanded ? TVE_EXPAND : TVE_COLLAPSE;
+		_InitializeTVITEM(&nmt.itemNew, hItem);
+		nmt.itemNew.state = isExpanded ? TVIS_EXPANDED : 0;
+		HWND hParentWnd = ::GetParent(Hwnd());
+		return ::SendMessage(hParentWnd, WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&nmt);
 	}
 
 	void _EnsureIsVisible(size_t idx)
@@ -850,6 +953,23 @@ protected:
 		{
 			m_vScollBar->SetScrollPos(nPos, TRUE);
 		}
+	}
+
+	LRESULT _NotifyParent(UINT nfCode)
+	{
+		NMHDR hdr{ 0 };
+		_InitializeNMHDR(&hdr, nfCode);
+		HWND hParentWnd = ::GetParent(Hwnd());
+		return ::SendMessage(hParentWnd, WM_NOTIFY, hdr.idFrom, (LPARAM)&hdr);
+	}
+
+	CRect _GetRealClientRect() const
+	{
+		CRect rcClient;
+		GetClientRect(&rcClient);
+		rcClient.right = m_hasVscroll ? rcClient.right - m_cxSysSbV : rcClient.right;
+		rcClient.bottom = m_hasHscroll ? rcClient.bottom - m_cySysSbH : rcClient.bottom;
+		return rcClient;
 	}
 
 	void _InitializeNMHDR(NMHDR* pNMHDR, UINT code)
@@ -894,18 +1014,6 @@ protected:
 		_InitializeTVITEM(&nmt.itemOld, oldIdx);
 		_InitializeTVITEM(&nmt.itemNew, newIdx);
 		return nmt;
-	}
-
-	LRESULT _SendItemExpandingNotify(const CXeTreeNode* pNode, bool isExpanded)
-	{
-		HXETREEITEM hItem = m_tree.GetNodeHandle(pNode);
-		NMTREEVIEWW nmt{ 0 };
-		_InitializeNMHDR(&nmt.hdr, TVN_ITEMEXPANDING);
-		nmt.action = isExpanded ? TVE_EXPAND : TVE_COLLAPSE;
-		_InitializeTVITEM(&nmt.itemNew, hItem);
-		nmt.itemNew.state = isExpanded ? TVIS_EXPANDED : 0;
-		HWND hParentWnd = ::GetParent(Hwnd());
-		return ::SendMessage(hParentWnd, WM_NOTIFY, GetDlgCtrlID(), (LPARAM)&nmt);
 	}
 
 	bool _hasNodeChildren(const CXeTreeNode* pNode) const
@@ -974,24 +1082,15 @@ protected:
 		const TreeItemPaintData* pItem = m_paint_data.GetItemFromYposition(point.y, yScrollPos);
 		if (pItem)
 		{
-			CRect rcTxt = pItem->GetTextAreaRect();
-			rcTxt.OffsetRect(-xScrollPos, -yScrollPos);
-			bool isClickInItemTextArea = rcTxt.PtInRect(point);
-			CRect rcButton = pItem->m_rcExpandButton;
-			rcButton.OffsetRect(-xScrollPos, -yScrollPos);
-			bool isClickInExpandBox = pItem->m_hasExpandButton && rcButton.PtInRect(point);
+			bool isClickInItemTextArea = pItem->IsPointInTextArea(point, yScrollPos, xScrollPos);
+			bool isClickInExpandBox = pItem->IsPointInExpandButton(point, yScrollPos, xScrollPos);
 
 			if ((mmsg == MMsg::LUp && isClickInExpandBox)
 					|| (mmsg == MMsg::LDblClick && isClickInItemTextArea))
 			{
-				if (_SendItemExpandingNotify(pItem->m_pNode, !pItem->m_pNode->IsExpanded()) == 0)
-				{
-					m_tree.SetExpandedFlag(pItem->m_pNode, !pItem->m_pNode->IsExpanded());
-					_SetSelectedPosition(pItem->m_index, TVC_BYMOUSE);
-				}
+				_ExpandOrCollapseNode(pItem->m_pNode, NodeExpand::Toggle, true, TVC_BYMOUSE);
 			}
-
-			if (mmsg == MMsg::LDown)
+			else if (mmsg == MMsg::LDown)
 			{
 				if (::GetFocus() != Hwnd())
 				{
@@ -1002,8 +1101,7 @@ protected:
 					_SetSelectedPosition(pItem->m_index, TVC_BYMOUSE);
 				}
 			}
-
-			if (isClickInItemTextArea && nfCode == NM_RCLICK
+			else if (isClickInItemTextArea && nfCode == NM_RCLICK
 					&& m_getContextMenu && m_selectedContextMenuItem)
 			{
 				TVITEMW tvItem;
@@ -1150,11 +1248,7 @@ protected:
 
 		if (isExpandContractNode)
 		{
-			if (_SendItemExpandingNotify(pNode, !pNode->IsExpanded()) == 0)
-			{
-				m_tree.SetExpandedFlag(pNode, !pNode->IsExpanded());
-				_CalculatePaintDataAndRedraw();
-			}
+			_ExpandOrCollapseNode(pNode, NodeExpand::Toggle, true, TVC_BYKEYBOARD);
 		}
 		else if (newIdx != 0xFFFFFFFF)
 		{
@@ -1181,6 +1275,7 @@ protected:
 		GetClientRect(&rcClient);
 		CRect rcActualClient(rcClient);
 		CSize sizeView = m_paint_data.GetViewSize();
+		sizeView.cy += m_uiParams.m_cyItem;
 		m_hasVscroll = sizeView.cy > rcActualClient.Height();
 		if (m_hasVscroll)
 		{
@@ -1198,24 +1293,34 @@ protected:
 
 		if (m_hasVscroll)
 		{
-			CRect rcVSB(rcClient);
-			rcVSB.bottom = m_hasHscroll ? rcClient.bottom - m_cySysSbH : rcClient.bottom;
-			rcVSB.left = rcVSB.right - m_cxSysSbV;
+			m_rcVSB = rcClient;
+			m_rcVSB.bottom = m_hasHscroll ? rcClient.bottom - m_cySysSbH : rcClient.bottom;
+			m_rcVSB.left = m_rcVSB.right - m_cxSysSbV;
+			if (m_control_has_border)
+			{
+				++m_rcVSB.top;
+				if (!m_hasHscroll)
+				{
+					--m_rcVSB.bottom;
+				}
+				--m_rcVSB.left;
+				--m_rcVSB.right;
+			}
 			SCROLLINFO si{ 0 };
 			si.cbSize = sizeof(SCROLLINFO);
 			if (m_vScollBar)
 			{
 				m_vScollBar->ShowWindow(SW_SHOW);
-				m_vScollBar->SetWindowPos(nullptr, rcVSB.left, rcVSB.top, rcVSB.Width(), rcVSB.Height(),
-					SWP_NOCOPYBITS | SWP_NOZORDER);
+				m_vScollBar->SetWindowPos(nullptr, m_rcVSB.left, m_rcVSB.top, m_rcVSB.Width(), m_rcVSB.Height(),
+						SWP_NOCOPYBITS | SWP_NOZORDER);
 				si.fMask = SIF_RANGE;
 			}
 			else
 			{
 				m_vScollBar = std::make_unique<CXeScrollBar>(m_xeUI);
-				m_vScollBar->Create(WS_CHILD | WS_VISIBLE | SBS_VERT, rcVSB, Hwnd(), c_VSB_ID, nullptr);
+				m_vScollBar->Create(WS_CHILD | WS_VISIBLE | SBS_VERT, m_rcVSB, Hwnd(), c_VSB_ID, nullptr);
 				si.fMask = SIF_ALL;
-				si.nPage = rcActualClient.Height();
+				si.nPage = (rcActualClient.Height() - (m_control_has_border ? 2 : 0));
 				si.nPos = (int)m_curIdx * m_uiParams.m_cyItem;
 				si.nTrackPos = 0;
 			}
@@ -1225,6 +1330,7 @@ protected:
 		}
 		else
 		{
+			m_rcVSB.SetRectEmpty();
 			if (m_vScollBar)
 			{
 				m_vScollBar->ShowWindow(SW_HIDE);
@@ -1233,24 +1339,31 @@ protected:
 
 		if (m_hasHscroll)
 		{
-			CRect rcHSB(rcClient);
-			rcHSB.top = rcHSB.bottom - m_cySysSbH;
-			rcHSB.right = m_hasVscroll ? rcClient.right - m_cxSysSbV : rcClient.right;
+			m_rcHSB = rcClient;
+			m_rcHSB.top = m_rcHSB.bottom - m_cySysSbH;
+			m_rcHSB.right = m_hasVscroll ? rcClient.right - m_cxSysSbV : rcClient.right;
+			if (m_control_has_border)
+			{
+				++m_rcHSB.left;
+				--m_rcHSB.right;
+				--m_rcHSB.top;
+				--m_rcHSB.bottom;
+			}
 			SCROLLINFO si{ 0 };
 			si.cbSize = sizeof(SCROLLINFO);
 			if (m_hScollBar)
 			{
 				m_hScollBar->ShowWindow(SW_SHOW);
-				m_hScollBar->SetWindowPos(nullptr, rcHSB.left, rcHSB.top, rcHSB.Width(), rcHSB.Height(),
+				m_hScollBar->SetWindowPos(nullptr, m_rcHSB.left, m_rcHSB.top, m_rcHSB.Width(), m_rcHSB.Height(),
 					SWP_NOCOPYBITS | SWP_NOZORDER);
 				si.fMask = SIF_RANGE;
 			}
 			else
 			{
 				m_hScollBar = std::make_unique<CXeScrollBar>(m_xeUI);
-				m_hScollBar->Create(WS_CHILD | WS_VISIBLE | SBS_HORZ, rcHSB, Hwnd(), c_HSB_ID, nullptr);
+				m_hScollBar->Create(WS_CHILD | WS_VISIBLE | SBS_HORZ, m_rcHSB, Hwnd(), c_HSB_ID, nullptr);
 				si.fMask = SIF_ALL;
-				si.nPage = rcActualClient.Width();
+				si.nPage = (rcActualClient.Width() - (m_control_has_border ? 2 : 0));
 				si.nPos = (int)0;
 				si.nTrackPos = 0;
 			}
@@ -1260,6 +1373,7 @@ protected:
 		}
 		else
 		{
+			m_rcHSB.SetRectEmpty();
 			if (m_hScollBar)
 			{
 				m_hScollBar->ShowWindow(SW_HIDE);
@@ -1562,15 +1676,12 @@ protected:
 	LRESULT OnExpandMsg(WPARAM wParam, LPARAM lParam)
 	{
 		CXeTreeNode* pNode = reinterpret_cast<CXeTreeNode*>(lParam);
-		bool IsExpand = wParam & TVE_EXPAND;
-		bool isCollapse = wParam & TVE_COLLAPSE;
-		bool isToggle = wParam & TVE_TOGGLE;
+		NodeExpand expand =   ((wParam & TVE_EXPAND)   != 0) ? NodeExpand::Expand
+							: ((wParam & TVE_COLLAPSE) != 0) ? NodeExpand::Collapse
+							: ((wParam & TVE_TOGGLE)   != 0) ? NodeExpand::Toggle   : NodeExpand::Collapse;
 		bool isNotSupported = (wParam & TVE_COLLAPSERESET) || (wParam & TVE_EXPANDPARTIAL);
 		XeASSERT(!isNotSupported);
-		m_tree.SetExpandedFlag(pNode, IsExpand ? true : isCollapse ? false
-			: isToggle ? !pNode->IsExpanded() : pNode->IsExpanded());
-		_SendItemExpandingNotify(pNode, pNode->IsExpanded());
-		_CalculatePaintDataAndRedraw();
+		_ExpandOrCollapseNode(pNode, expand, false, 0);
 		return TRUE;
 	}
 

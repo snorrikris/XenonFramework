@@ -801,7 +801,7 @@ protected:
 			rc.right -= 0.5f;
 			rc.top += 0.5f;
 			rc.bottom -= 0.5f;
-			pRT->DrawRectangle(rc, GetBrush(CID::CtrlBorder));
+			pRT->DrawRectangle(rc, GetBrush(CID::CtrlTxtDis));
 		}
 	}
 #pragma endregion Paint

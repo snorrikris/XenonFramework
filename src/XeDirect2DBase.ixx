@@ -42,9 +42,9 @@ export class CXeD2DWndBase : public CXeD2DRenderContext
 private:
 	HWND m_hWnd = 0;
 
-	HDC m_hWindowDC = 0;
-
 	HDC m_hClientDC = 0;
+
+	bool m_isPainting = false;
 
 public:
 	void SetHwnd(HWND hWnd)
@@ -1114,6 +1114,12 @@ protected:
 private:
 	void _DoNcPaint()
 	{
+		XeASSERT(m_isPainting == false);
+		if (m_isPainting)
+		{
+			return;
+		}
+		m_isPainting = true;
 		HDC hDC = ::GetWindowDC(m_hWnd);
 		HRESULT hr = S_OK;
 		Microsoft::WRL::ComPtr<ID2D1DCRenderTarget> renderTargetDC;
@@ -1135,6 +1141,7 @@ private:
 			}
 		}
 		::ReleaseDC(m_hWnd, hDC);
+		m_isPainting = false;
 	}
 
 protected:
@@ -1298,6 +1305,7 @@ private:
 					_CreatePaintResources(m_renderTargetClientDC.Get());
 					m_uiResourcesCreatedDC = true;
 				}
+				m_isPainting = true;
 				return true;
 			}
 		}
@@ -1306,12 +1314,14 @@ private:
 
 	void _EndDCRenderTargetDraw()
 	{
+		XeASSERT(m_isPainting);
 		HRESULT hr = m_renderTargetClientDC->EndDraw();
 		XeASSERT(hr == S_OK || hr == D2DERR_RECREATE_TARGET);
 		if (D2DERR_RECREATE_TARGET == hr)
 		{
 			m_renderTargetClientDC.Reset();
 		}
+		m_isPainting = false;
 	}
 
 protected:
@@ -1319,7 +1329,6 @@ protected:
 	// Note - caller MUST call _EndWndDC_Draw when finished drawing.
 	ID2D1RenderTarget* _GetClientDCandBeginDraw()
 	{
-		XeASSERT(m_hWindowDC == 0);
 		CRect rc;
 		::GetClientRect(m_hWnd, &rc);
 		m_hClientDC = ::GetDC(m_hWnd);
@@ -1353,6 +1362,11 @@ protected:
 	// See: https://www.codeproject.com/articles/Guide-to-WIN32-Paint-for-Intermediates
 	void _RedrawDirectly()
 	{
+		XeASSERT(m_isPainting == false);
+		if (m_isPainting)
+		{
+			return;
+		}
 		if (::IsWindow(m_hWnd))
 		{
 			CRect rc;

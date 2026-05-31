@@ -804,6 +804,10 @@
         {
             "CIDname": "GrdCellAltBg",
             "ColorDef": "RGB(55,55,57)"
+        },
+        {
+          "CIDname": "CtrlBorderThin",
+          "ColorDef": "UI_TXT_DIS2"
         }
   ]
 }

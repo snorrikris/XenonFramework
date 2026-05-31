@@ -102,4 +102,5 @@ enum class CID : UINT
 	CtrlTxtUrl             = 133, // Controls :: text color - url button
 	CtrlTxtUrlHot          = 134, // Controls :: text color hot - url button
 	GrdCellAltBg           = 135, // CXeGrid :: alternate bg color for data cells
+	CtrlBorderThin         = 136, // Controls :: thin border color
 };

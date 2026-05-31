@@ -748,7 +748,7 @@ protected:
 			}
 			if (item.m_item_data.m_isSectionStart)
 			{
-				pRT->DrawRectangle(rcTxtF, GetBrush(CID::CtrlTxtDis));
+				pRT->DrawRectangle(rcTxtF, GetBrush(CID::CtrlBorderThin));
 			}
 			else
 			{
@@ -928,7 +928,7 @@ protected:
 
 		if (m_control_has_border)
 		{
-			pRT->DrawRectangle(rcWnd, GetBrush(CID::CtrlTxtDis));
+			pRT->DrawRectangle(rcWnd, GetBrush(CID::CtrlBorderThin));
 		}
 	}
 

@@ -701,7 +701,7 @@ protected:
 			rcClient.right -= 0.5f;
 			rcClient.top += 0.5f;
 			rcClient.bottom -= 0.5f;
-			pRT->DrawRectangle(rcClient, GetBrush(CID::CtrlTxtDis));
+			pRT->DrawRectangle(rcClient, GetBrush(CID::CtrlBorderThin));
 		}
 		if (cxMaxItemWidthBeforePaint != m_paint_data.m_cxMaxItemWidth)
 		{

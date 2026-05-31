@@ -210,7 +210,7 @@ protected:
 		D2D1_RECT_F rcClient = rc;
 		if (m_control_has_border)
 		{
-			pRT->DrawRectangle(rc, GetBrush(CID::CtrlTxtDis));
+			pRT->DrawRectangle(rc, GetBrush(CID::CtrlBorderThin));
 
 			// NOTE - client area includes border - meaning all painting must be offset by the border size.
 			rcClient = DeflateRectF(rc, m_cxyBorder);

@@ -114,7 +114,7 @@ protected:
 
 		if (m_control_has_border)
 		{
-			pRT->DrawRectangle(rcClient, GetBrush(CID::CtrlTxtDis));
+			pRT->DrawRectangle(rcClient, GetBrush(CID::CtrlBorderThin));
 		}
 	}
 

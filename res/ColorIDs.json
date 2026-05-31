@@ -539,6 +539,11 @@
             "CID": 135,
             "CIDname": "GrdCellAltBg",
             "comment": "CXeGrid :: alternate bg color for data cells"
+        },
+        {
+            "CID": 136,
+            "CIDname": "CtrlBorderThin",
+            "comment": "Controls :: thin border color"
         }
     ]
 }

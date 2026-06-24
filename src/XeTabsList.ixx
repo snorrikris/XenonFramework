@@ -8,9 +8,10 @@ module;
 
 export module Xe.TabsList;
 
+import Xe.UIcolorsIF;
 import Xe.FileVwIF;
 import Xe.mfc_types;
-//import Xe.LogDefs;
+import Xe.Helpers;
 import Xe.DefData;
 
 #ifdef _DEBUG
@@ -25,15 +26,40 @@ export enum class ETABVISBL { eNOT_VISIBLE = 0, eVISIBLE, ePARTIALLY_VISIBLE };
 
 export enum class ECLOSETABS { eCLOSEOTHERS = 0, eCLOSETOLEFT, eCLOSETORIGHT, eCLOSEALLBUTPINNED };
 
+constexpr int c_cxTAB_X_MARGIN = 2;		// X margin between tabs and buttons
+constexpr int c_cxTEXT_X_MARGIN = 4;	// Text margin from icon left edge
+constexpr int c_cyTEXT_Y_MARGIN = 9;	// Text Y margin from view bottom edge
+constexpr int c_cxTEXT_R_MARGIN = 6;	// Text margin from text end to tab right edge
+constexpr int c_cxCLOSE_R_MARGIN = 4;	// Close button right margin to tab right edge
+constexpr int c_cxICON_SPACE = 18;		// Reserved space for icon (when needed).
+
 export class CXeTabsList
 {
 private:
 	VSRL::Logger& logger() const { return VSRL::s_pVSRL->GetInstance("CXeTabsList"); }
 
-public:
-	CVwInfoList m_list;
+protected:
+	CXeUIcolorsIF* m_xeUI = nullptr;
 
-	int m_nFirstVisibleUnpinnedTab = -1;	// Index of first unpinned visible tab, = -1 when no unpinned tabs.
+	// Handle to parent window of TabView.
+	HWND m_hParent = NULL;
+
+	// Dialog control Id of the currently visible file view in the splitter window.
+	UINT m_uViewDlgCtrlId = 0;
+
+public:
+	std::vector<CVwInfo> m_list;
+
+	/* ----- X offset -----
+	* X offset is measured from the left edge of the tabs space in the UI.
+	* The left edge of tabs space starts on the right hand side of the Tabs list drop down button.
+	* The right edge of the tabs space is the left edge of the right hand side button (X scroll buttons).
+	* A X offset of 0 means that the first (unpinned) tab in the list is painted at start of tabs space.
+	* X offset is a positive number in the range 0 to m_xOffsetLimit.
+	*/
+	bool m_isOneRowUI = false;	// Is "simple" UI?
+	int m_xOffset = 0;			// H scroll position. Not used when m_isOneRowUI = true.
+	int m_xOffsetLimit = 0;		// (negative) limit for m_xOffset. (= cxTotalTabs - cxForTabs)
 
 	// DataSourceId of view that has focus.
 	// Note - the view with focus could be in the 'other' tab view.
@@ -45,41 +71,45 @@ public:
 	dsid_t m_curVwId;	// Updated every time UI is painted.
 
 	CRect m_rcLeftTabListDropDownBtn;	// Client coords. of left tab list drop down button.
-	CRect m_rcRightTabListDropDownBtn;	// Client coords. of right tab list drop down button.
 	bool m_isMouseOverLeftTabListDropDownBtn = false;
-	bool m_isMouseOverRightTabListDropDownBtn = false;
 
-	CXeTabsList() {}
+	CRect m_rcLeftXscrollBtn;	// Client coords. (in right hand side of UI) Left X scroll button.
+	CRect m_rcRightXscrollBtn;	// Client coords. (in right hand side of UI) Right X scroll button.
+	bool m_isMouseOverLeftXscrollButton = false, m_isMouseOverRightXscrollButton = false;
+
+	// UI vars.
+	int m_cxVw = 0, m_cyTabRow = 0;
+
+	CXeTabsList(CXeUIcolorsIF* pUIcolors) : m_xeUI(pUIcolors) {}
 	//~CXeTabsList(void) {}
+
+	void OnTabViewCreated(HWND hParent, UINT uViewDlgCtrlId)
+	{
+		m_hParent = hParent;
+		m_uViewDlgCtrlId = uViewDlgCtrlId;
+		XeASSERT(m_hParent != NULL && m_uViewDlgCtrlId != 0);
+	}
 
 #pragma region Tab_Management
 	void AddTab(const CVwInfo& tabinfo, dsid_t insertBeforeDataSourceId)
 	{
+		std::vector<CVwInfo>::iterator it = m_list.end();
 		if (insertBeforeDataSourceId.is_valid())
 		{
-			auto it = std::find_if(m_list.begin(), m_list.end(),
-				[&](CVwInfo& tabinfo)
-				{
-					return tabinfo.m_dsid == insertBeforeDataSourceId;
-				});
-			if (it != m_list.end())
-			{
-				m_list.insert(it, tabinfo);
-			}
-			else
-			{
-				XeASSERT(FALSE);	// insertBeforeDataSourceId should have been found.
-				m_list.push_back(tabinfo);
-			}
+			it = std::find_if(m_list.begin(), m_list.end(),
+					[&](CVwInfo& tabinfo) { return tabinfo.m_dsid == insertBeforeDataSourceId; });
+			XeASSERT(it != m_list.end());	// insertBeforeDataSourceId should have been found.
 		}
-		else if (insertBeforeDataSourceId.is_max())
+		else if (!insertBeforeDataSourceId.is_max())
 		{
-			m_list.push_back(tabinfo);
+			it = m_list.begin();
 		}
-		else
+		// Ensure list is in "sane" order - all pinned tabs are before unpinned tabs in list.
+		while (it != m_list.end() && it->m_isPinned == true)
 		{
-			m_list.push_front(tabinfo);
+			++it;
 		}
+		m_list.insert(it, tabinfo);
 	}
 
 	// Remove CVwInfo structure from list.
@@ -91,35 +121,23 @@ public:
 	{
 		dsid_t dsid = pView->GetDataSourceId();
 		auto it = std::find_if(m_list.begin(), m_list.end(),
-			[&](CVwInfo& tabinfo) { return tabinfo.m_dsid == dsid; });
-		auto it2 = it;
-		bool notFound = it == m_list.end();
-		bool isLast = notFound ? false : ++it2 == m_list.end();
-		if (notFound)
+				[&](CVwInfo& tabinfo) { return tabinfo.m_dsid == dsid; });
+		if (it == m_list.end())
 		{
 			return nullptr;
 		}
-		CXeFileVwIF* pNext = nullptr;
-		if (m_list.size() > 1)
+		it = m_list.erase(it);
+		if (it == m_list.end() && m_list.size() > 0)
 		{
-			if (isLast)
-			{
-				it--;
-			}
-			else
-			{
-				it++;
-			}
-			pNext = it->m_pView;
+			--it;
 		}
-		m_list.remove_if([&](CVwInfo& tabinfo) { return tabinfo.m_dsid == dsid; });
-		return pNext;
+		return it != m_list.end() ? it->m_pView : nullptr;
 	}
 
-	CVwInfoList RemoveAllTabs()
+	std::vector<CVwInfo> RemoveAllTabs()
 	{
-		CVwInfoList tabList;
-		tabList.splice(tabList.end(), m_list);
+		std::vector<CVwInfo> tabList = m_list;
+		m_list.clear();
 		return tabList;
 	}
 #pragma endregion Tab_Management
@@ -206,6 +224,11 @@ public:
 		return tabList;
 	}
 
+	const std::vector<CVwInfo>& GetTabList() const
+	{
+		return m_list;
+	}
+
 	std::vector<CVwInfo> GetTabsToClose(ECLOSETABS eCloseOp, CXeFileVwIF* pSelView) const
 	{
 		std::vector<CVwInfo> tabList;
@@ -232,40 +255,6 @@ public:
 		}
 		return tabList;
 	}
-
-	//std::vector<CVwInfo> GetTabsWithListId(UINT uListId) const
-	//{
-	//	std::vector<CVwInfo> tabList;
-	//	for (const CVwInfo& tabinfo : m_list)
-	//	{
-	//		UINT tabListId = tabinfo.m_pView
-	//			? tabinfo.m_pView->GetConstFileContainerUI_IF()->GetMetadata().m_uListId : 0;
-	//		if (tabListId == uListId)
-	//		{
-	//			tabList.push_back(tabinfo);
-	//		}
-	//	}
-	//	return tabList;
-	//}
-
-	//std::vector<CVwInfo> GetTabsOfType(const std::vector<DSType>& list) const
-	//{
-	//	std::vector<CVwInfo> tabList;
-	//	for (const CVwInfo& tabinfo : m_list)
-	//	{
-	//		if (tabinfo.m_pView)
-	//		{
-	//			DSType dsType
-	//				= tabinfo.m_pView->GetConstFileContainerUI_IF()->GetDataSourceType();
-	//			if (std::find(list.cbegin(), list.cend(), dsType) != list.cend())
-	//			{
-	//				tabList.push_back(tabinfo);
-	//			}
-
-	//		}
-	//	}
-	//	return tabList;
-	//}
 
 	bool CanCloseTabs(ECLOSETABS eCloseOp, CXeFileVwIF* pSelView) const
 	{
@@ -327,6 +316,16 @@ public:
 			++u;
 		}
 		return 0xFFFF;
+	}
+
+	bool IsTabPinned(dsid_t dataSourceId) const
+	{
+		const CVwInfo* pVwNfo = GetTab(dataSourceId);
+		if (pVwNfo)
+		{
+			return pVwNfo->m_isPinned;
+		}
+		return false;
 	}
 #pragma endregion Tab_Info
 
@@ -390,23 +389,26 @@ public:
 		{
 			if (!CanMoveTab(eMove, pViewToMove)) { return false; }
 			auto it = _FindTab(pViewToMove);
+			if (it == m_list.end())
+			{
+				XeASSERT(false);
+				return false;
+			}
 			CVwInfo tabToMove = *it;	// Copy item before erase
-			std::list<CVwInfo>::iterator it_ins_pos;
+			it = m_list.erase(it);
 			if (eMove == EMOVETAB::eFIRST)
 			{
-				it_ins_pos = tabToMove.m_isPinned ? m_list.begin() : _FindFirstUnpinnedTab();
+				it = tabToMove.m_isPinned ? m_list.begin() : _FindFirstUnpinnedTab();
 			}
 			else if (eMove == EMOVETAB::eLAST)
 			{
-				it_ins_pos = tabToMove.m_isPinned ? _FindFirstUnpinnedTab() : m_list.end();
+				it = tabToMove.m_isPinned ? _FindFirstUnpinnedTab() : m_list.end();
 			}
 			else
 			{
-				it_ins_pos = std::next(it, (eMove == EMOVETAB::eLEFT ? -1 : 2));
+				it= std::next(it, (eMove == EMOVETAB::eLEFT ? -1 : 1));
 			}
-			if (it == it_ins_pos) { std::advance(it_ins_pos, 1); }
-			m_list.erase(it);
-			m_list.insert(it_ins_pos, tabToMove);
+			m_list.insert(it, tabToMove);
 			return true;
 		}
 		catch (const std::exception& ex)
@@ -528,15 +530,18 @@ public:
 	bool DoMouseOverProcessing(CPoint point, bool& isMouseOverTabIdxChanged)
 	{
 		bool isRedrawNeeded = isMouseOverTabIdxChanged = false;
-		bool bfL = m_isMouseOverLeftTabListDropDownBtn, bfR = m_isMouseOverRightTabListDropDownBtn;
+		bool bfL = m_isMouseOverLeftTabListDropDownBtn;
+		bool bfXL = m_isMouseOverLeftXscrollButton, bfXR = m_isMouseOverRightXscrollButton;
 		m_isMouseOverLeftTabListDropDownBtn = m_rcLeftTabListDropDownBtn.PtInRect(point);
-		m_isMouseOverRightTabListDropDownBtn = m_rcRightTabListDropDownBtn.PtInRect(point);
+		m_isMouseOverLeftXscrollButton = m_rcLeftXscrollBtn.PtInRect(point);
+		m_isMouseOverRightXscrollButton = m_rcRightXscrollBtn.PtInRect(point);
 		isRedrawNeeded = m_isMouseOverLeftTabListDropDownBtn != bfL
-			|| m_isMouseOverRightTabListDropDownBtn != bfR;
-		bool mouseIsOverTabArea = !(m_isMouseOverLeftTabListDropDownBtn || m_isMouseOverRightTabListDropDownBtn);
+				|| m_isMouseOverLeftXscrollButton != bfXL || m_isMouseOverRightXscrollButton != bfXR;
+		bool mouseIsOverTabArea = !(m_isMouseOverLeftTabListDropDownBtn || m_isMouseOverLeftXscrollButton || m_isMouseOverRightXscrollButton);
 		for (CVwInfo& tabinfo : m_list)
 		{
-			if (mouseIsOverTabArea && tabinfo.m_rcTab.PtInRect(point))
+			int xOffset = m_isOneRowUI || tabinfo.m_isPinned ? 0 : GetXoffsetForPaint();
+			if (mouseIsOverTabArea && tabinfo.m_rcTab.HitTestWithOffset(point, -xOffset, 0))
 			{
 				if (!tabinfo.m_bIsMouseOver)
 				{
@@ -552,7 +557,7 @@ public:
 				}
 			}
 
-			if (mouseIsOverTabArea && tabinfo.m_rcCloseBtn.PtInRect(point))
+			if (mouseIsOverTabArea && tabinfo.m_rcCloseBtn.HitTestWithOffset(point, -xOffset, 0))
 			{
 				if (!tabinfo.m_bIsMouseOverCloseBtn)
 				{
@@ -567,7 +572,7 @@ public:
 					isRedrawNeeded = true;
 				}
 			}
-			if (mouseIsOverTabArea && tabinfo.m_rcPinBtn.PtInRect(point))
+			if (mouseIsOverTabArea && tabinfo.m_rcPinBtn.HitTestWithOffset(point, -xOffset, 0))
 			{
 				if (!tabinfo.m_bIsMouseOverPinBtn)
 				{
@@ -586,118 +591,67 @@ public:
 		return isRedrawNeeded;
 	}
 
-	CVwInfo* GetTabAtPoint(CPoint point)
+	CVwInfo* GetTabAtPoint(CPoint point, bool* pIsOverCloseBtn = nullptr, bool* pIsOverPinBtn = nullptr)
 	{
-		if (IsPointInDropListButtons(point))
+		if (IsPointInTabListUIbuttons(point))
 		{
 			return nullptr;
 		}
 		auto it = std::find_if(m_list.begin(), m_list.end(),
-			[&](CVwInfo& tabinfo) { return tabinfo.m_rcTab.PtInRect(point); });
-		return (it != m_list.end()) ? &(*it) : nullptr;
+				[&](CVwInfo& tabinfo)
+				{
+					int xOffset = m_isOneRowUI || tabinfo.m_isPinned ? 0 : GetXoffsetForPaint();
+					return tabinfo.m_rcTab.HitTestWithOffset(point, -xOffset, 0);
+				});
+		if (it == m_list.end())
+		{
+			return nullptr;
+		}
+		int xOffset = m_isOneRowUI || it->m_isPinned ? 0 : GetXoffsetForPaint();
+		if (pIsOverCloseBtn)
+		{
+			*pIsOverCloseBtn = it->m_rcCloseBtn.HitTestWithOffset(point, -xOffset, 0);
+		}
+		if (pIsOverPinBtn)
+		{
+			*pIsOverPinBtn = it->m_rcPinBtn.HitTestWithOffset(point, -xOffset, 0);
+		}
+		return &(*it);
 	}
 
-	ETABVISBL IsTabVisible(CXeFileVwIF* pView, const CRect& rcCli)
+	ETABVISBL IsTabVisible(CXeFileVwIF* pView)
 	{
 		const CVwInfo* pTabInfo = GetTab(pView->GetDataSourceId());
 		XeASSERT(pTabInfo);
-		if (!pTabInfo || pTabInfo->m_rcTab.IsRectEmpty())
+		if (!pTabInfo)
+		{
 			return ETABVISBL::eNOT_VISIBLE;
-		ETABVISBL eVisible = ETABVISBL::eNOT_VISIBLE;
-		int xL = pTabInfo->m_rcTab.left, xR = pTabInfo->m_rcTab.right - 1;
-		if (xL >= rcCli.left && xL < rcCli.right)
-			eVisible = ETABVISBL::ePARTIALLY_VISIBLE;
-		if (xR < rcCli.right)
-			eVisible = ETABVISBL::eVISIBLE;
-		return eVisible;
+		}
+		if (m_isOneRowUI || pTabInfo->m_isPinned)	// All tabs are visible when "simple UI", pinned tabs are all visible.
+		{
+			return ETABVISBL::eVISIBLE;
+		}
+		CRect rcTab = pTabInfo->m_rcTab;
+		rcTab.OffsetRect(-GetXoffsetForPaint(), 0);
+		int left = m_rcLeftTabListDropDownBtn.right, right = m_rcLeftXscrollBtn.left;
+		int xL = rcTab.left, xR = rcTab.right - 1;
+		return xL >= left && xL < right && xR < right ? ETABVISBL::eVISIBLE
+				: (xL >= left && xL < right) || (xR > left && xR < right) ? ETABVISBL::ePARTIALLY_VISIBLE
+				: ETABVISBL::eNOT_VISIBLE;
 	}
 
-	void MakeCurrentTabVisible(CXeFileVwIF* pCurrentView, const CRect& rcCli)
-	{
-		dsid_t dsid = pCurrentView ? pCurrentView->GetDataSourceId() : dsid_t();
-		auto it = std::find_if(m_list.begin(), m_list.end(),
-			[&](CVwInfo& tabinfo) { return tabinfo.m_dsid == dsid; });
-		int tabIdx = _GetTabIdxOfItem(dsid);
-		if (it == m_list.end() || tabIdx == -1)
-		{
-			XeASSERT(FALSE);
-			return;
-		}
-		if (GetUnPinnedTabCount() == 0)
-		{
-			m_nFirstVisibleUnpinnedTab = -1;
-			return;
-		}
-		CVwInfo& tabinfo = *it;
-		if (tabinfo.m_isPinned || IsTabVisible(pCurrentView, rcCli) == ETABVISBL::eVISIBLE)
-		{
-			return;
-		}
-		auto itCandidate = it;
-		if (tabIdx > m_nFirstVisibleUnpinnedTab)	// Is current tab after first visible tab?
-		{
-			int cxTabs = tabinfo.m_cxTabNeeded;
-			while (it != m_list.begin() && !it->m_isPinned && cxTabs < rcCli.Width())
-			{
-				--it;
-				if ((cxTabs + it->m_cxTabNeeded) < rcCli.Width())
-				{
-					cxTabs += it->m_cxTabNeeded;
-					itCandidate = it;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-		m_nFirstVisibleUnpinnedTab = _GetTabIdxOfItem(itCandidate->m_dsid);
-	}
-
-	// Decrement first visible tab index when:
-	//		Number of unpinned tabs > 1
-	//		Last tab is fully visible and not pinned
-	//		cx unused space after last tab is wide enough for more tabs
-	void DecrementFirstVisibleTabWhenNeeded(const CRect& rcCli)
-	{
-		if (GetUnPinnedTabCount() <= 1)
-		{
-			return;
-		}
-		auto it = m_list.rbegin();	// it is last tab.
-		if (it == m_list.rend() || it->m_rcTab.IsRectEmpty())
-		{
-			return;
-		}
-		int cxEmptySpace = rcCli.right - it->m_rcTab.right;	// How much empty space after last tab.
-		auto it_candidate = it;
-		++it;	// it is second to last tab.
-		while (it != m_list.rend() && !it->m_isPinned)
-		{
-			if (it->m_cxTabNeeded > cxEmptySpace)
-			{
-				break;
-			}
-			cxEmptySpace -= it->m_cxTabNeeded;
-			it_candidate = it;
-			++it;
-		}
-		int idx_candidate = _GetTabIdxOfItem(it_candidate->m_dsid);
-		if (idx_candidate < m_nFirstVisibleUnpinnedTab)
-		{
-			m_nFirstVisibleUnpinnedTab = idx_candidate;
-		}
-	}
-
-	bool IsPointInDropListButtons(const CPoint& point) const
+	bool IsPointInTabListUIbuttons(const CPoint& point) const
 	{
 		return m_rcLeftTabListDropDownBtn.PtInRect(point)
-			|| m_rcRightTabListDropDownBtn.PtInRect(point);
+				|| m_rcLeftXscrollBtn.PtInRect(point) || m_rcRightXscrollBtn.PtInRect(point);
 	}
-#pragma endregion UI_helpers
+
+	bool IsPointInXscrollButtons(const CPoint& point) const
+	{
+		return m_rcLeftXscrollBtn.PtInRect(point) || m_rcRightXscrollBtn.PtInRect(point);
+	}
 
 protected:
-
 	// Get tab index of view (0...x). returns -1 if not found.
 	int _GetTabIdxOfItem(dsid_t dsid) const 
 	{
@@ -713,25 +667,257 @@ protected:
 		return -1;
 	}
 
-	std::list<CVwInfo>::iterator _FindTab(const CXeFileVwIF* pView)
+	std::vector<CVwInfo>::iterator _FindTab(const CXeFileVwIF* pView)
 	{
 		return std::find_if(m_list.begin(), m_list.end(),
-			[pView](const CVwInfo& tabinfo) { return tabinfo.m_pView == pView; });
+				[pView](const CVwInfo& tabinfo) { return tabinfo.m_pView == pView; });
 	}
-	std::list<CVwInfo>::const_iterator _FindTabConst(const CXeFileVwIF* pView) const
+	std::vector<CVwInfo>::const_iterator _FindTabConst(const CXeFileVwIF* pView) const
 	{
 		return std::find_if(m_list.cbegin(), m_list.cend(),
-			[pView](const CVwInfo& tabinfo) { return tabinfo.m_pView == pView; });
+				[pView](const CVwInfo& tabinfo) { return tabinfo.m_pView == pView; });
 	}
-	std::list<CVwInfo>::iterator _FindFirstUnpinnedTab()
+	std::vector<CVwInfo>::iterator _FindFirstUnpinnedTab()
 	{
 		return std::find_if(m_list.begin(), m_list.end(),
-			[](const CVwInfo& tabinfo) { return !tabinfo.m_isPinned; });
+				[](const CVwInfo& tabinfo) { return !tabinfo.m_isPinned; });
 	}
-	std::list<CVwInfo>::const_iterator _FindFirstUnpinnedTabConst() const
+	std::vector<CVwInfo>::const_iterator _FindFirstUnpinnedTabConst() const
 	{
 		return std::find_if(m_list.cbegin(), m_list.cend(),
-			[](const CVwInfo& tabinfo) { return !tabinfo.m_isPinned; });
+				[](const CVwInfo& tabinfo) { return !tabinfo.m_isPinned; });
 	}
+#pragma endregion UI_helpers
+
+#pragma region CalculateUI
+public:
+	void CalculateUI(int cxVw)
+	{
+		m_cxVw = cxVw;
+		m_cyTabRow = _GetTabViewRowHeight();
+		_RecalculateTabsViewUI();
+	}
+
+	// Return true if height changed.
+	bool RecalculateUI()
+	{
+		int cyBefore = GetTabViewHeight();
+		_RecalculateTabsViewUI();
+		return cyBefore != GetTabViewHeight();
+	}
+
+	int GetTabViewRowHeight() const { return m_cyTabRow; }
+
+	int GetTabViewHeight() const { return m_cyTabRow * GetNumTabRows(); }
+
+	void MakeCurrentTabVisible(CXeFileVwIF* pCurrentView)
+	{
+		if (!pCurrentView)
+		{
+			XeASSERT(m_list.size() == 0);	// We have tabs but not current view - why?
+			return;
+		}
+		dsid_t dsid = pCurrentView->GetDataSourceId();
+		int cxUnpinnedTabsTotalBeforeCurrent = 0, cxCurrentTab = 0;;
+		for (CVwInfo& tabInfo : m_list)
+		{
+			if (tabInfo.m_dsid == dsid)
+			{
+				cxCurrentTab = _CXforTab(tabInfo);
+				break;
+			}
+			if (!tabInfo.m_isPinned)
+			{
+				cxUnpinnedTabsTotalBeforeCurrent += _CXforTab(tabInfo);
+			}
+		}
+		if (cxCurrentTab == 0)
+		{
+			XeASSERT(FALSE);
+			return;
+		}
+		if (IsTabVisible(pCurrentView) == ETABVISBL::eVISIBLE)
+		{
+			return;
+		}
+		int cxVw = m_rcLeftXscrollBtn.left - m_rcLeftTabListDropDownBtn.right;
+		int xWantedForTab = cxVw > cxCurrentTab ? (cxVw - cxCurrentTab) / 2 : 0;
+		m_xOffset = GetValueInValidRange(cxUnpinnedTabsTotalBeforeCurrent - xWantedForTab, 0, m_xOffsetLimit);
+	}
+
+	void Hscroll(int xScroll)
+	{
+		m_xOffset = GetValueInValidRange(m_xOffset + xScroll, 0, m_xOffsetLimit);
+	}
+
+	inline int GetXoffsetForPaint() const
+	{
+		return m_xOffset - m_rcLeftTabListDropDownBtn.right;
+	}
+
+protected:
+	static CSize _GetTabViewDropListButtonSize() { return CSize(20, 20); }
+	static CSize _GetTabViewXscrollButtonSize() { return CSize(15, 20); }
+	static CSize _GetTabViewCloseAndPinButtonSize() { return CSize(15, 15); }
+
+	int _GetTabViewRowHeight() const
+	{
+		return std::max((int)20, m_xeUI->GetFontMetric(EXE_FONT::eUI_Font).GetHeight()) + c_cyTEXT_Y_MARGIN;
+	}
+
+	void _RecalculateTabsViewUI()
+	{
+		/* *** Fitting model ***
+		* Pinned tabs and unpinned tabs will occupy one row if all pinned tabs + all unpinned tabs
+		* fit on the row (along with the UI buttons).
+		* If pinned tabs need more than one row - then unpinned tabs will not share a row with the
+		* pinned tabs. In this case all unpinned tabs occupy the bottom row.
+		*/
+
+		m_isOneRowUI = true;	// Assume that one row for UI is enough.
+		int x_firstTabAfterLB = _SetTabListUIbuttonRects(0 /*row*/);
+		int x_nextTab = x_firstTabAfterLB;
+
+		CSize listBtn = _GetTabViewDropListButtonSize();
+		CSize scrollBtn = _GetTabViewXscrollButtonSize();
+		CSize closeBtn = _GetTabViewCloseAndPinButtonSize();
+		int cxForOneRow = listBtn.cx;
+		int cxUnpinnedTabsTotal = 0;
+		int numPinnedTabs = 0, numUnpinnedTabs = 0;
+		for (CVwInfo& tabInfo : m_list)
+		{
+			XeASSERT(tabInfo.m_pView);
+			CSize sizeText = tabInfo.m_pView
+				? m_xeUI->GetTextSizeW(EXE_FONT::eUI_FontBold, tabInfo.m_pView->GetViewName().c_str())
+				: CSize();
+			bool hasIcon = tabInfo.m_pView->GetViewPID() != PID::None;
+			tabInfo.m_cxTabNeeded = c_cxTEXT_X_MARGIN
+				+ (hasIcon ? c_cxICON_SPACE : 0)	// Add space for icon
+				+ sizeText.cx
+				+ c_cxTEXT_R_MARGIN
+				+ (closeBtn.cx * 2)		// Pin button and Close button
+				+ c_cxCLOSE_R_MARGIN;	// add space for close button
+
+			x_nextTab = _SetTabRects(tabInfo, x_nextTab, 0 /*row*/);
+			cxForOneRow += _CXforTab(tabInfo);
+			if (tabInfo.m_isPinned)
+			{
+				++numPinnedTabs;
+			}
+			else
+			{
+				++numUnpinnedTabs;
+				cxUnpinnedTabsTotal += _CXforTab(tabInfo);
+			}
+		}
+		m_isOneRowUI = cxForOneRow < m_cxVw;
+		if (m_isOneRowUI)	// If one row is enough for all tabs - then no more work is needed.
+		{
+			m_xOffset = 0;
+			return;
+		}
+
+		/*
+		* When UI is more than one row or wider than view
+		* - m_xOffset is offset into calculated (unpinned) tabs horizontal position.
+		* Pinned tabs have calculated position in the view.
+		* Unpinned tabs position in the view depends on the value of m_xOffset.
+		* The first unpinned tab has X = 0.
+		*/
+
+		x_nextTab = 0;	// First tab x pos.
+		int row = 0;
+		bool isFittingPinnedTabs = numPinnedTabs > 0, isAnyPinnedTabFitted = false;
+		for (CVwInfo& tabInfo : m_list)
+		{
+			if (isFittingPinnedTabs && !tabInfo.m_isPinned)	// All pinned tabs fitted?
+			{
+				isFittingPinnedTabs = false;
+				++row;										// Place unpinned tabs on next row down.
+				x_nextTab = 0;
+			}
+			if (isFittingPinnedTabs)
+			{
+				if ((x_nextTab + _CXforTab(tabInfo)) > m_cxVw
+					&& isAnyPinnedTabFitted /* make sure row 0 has a tab */)
+				{
+					++row;
+					x_nextTab = 0;
+				}
+				x_nextTab = _SetTabRects(tabInfo, x_nextTab, row);
+				isAnyPinnedTabFitted = true;
+			}
+			else	// Fitting unpinned tabs
+			{
+				x_nextTab = _SetTabRects(tabInfo, x_nextTab, row);
+			}
+		}
+
+		int cxForTabs = m_cxVw - (listBtn.cx + scrollBtn.cx * 2);
+		m_xOffsetLimit = cxUnpinnedTabsTotal > cxForTabs ? cxUnpinnedTabsTotal - cxForTabs : 0;
+
+		int lastRow = GetNumTabRows() - 1;
+		if (numUnpinnedTabs == 0)	// No unpinned tabs?
+		{
+			// Need to reposition last row tabs to fit L drop down button.
+			for (CVwInfo& tabInfo : m_list)
+			{
+				if (tabInfo.m_nRow == lastRow)
+				{
+					_SetTabRects(tabInfo, tabInfo.m_rcTab.left + x_firstTabAfterLB, lastRow);
+				}
+			}
+		}
+		_SetTabListUIbuttonRects(lastRow);	// Put drop down buttons on last row
+		Hscroll(0);	// Ensure xOffset limit.
+	}
+
+	// Set Tab rect, pin button rect, close button rect. Return X pos of next tab.
+	int _SetTabRects(CVwInfo& tabInfo, int x, int row)
+	{
+		CSize closeBtn = _GetTabViewCloseAndPinButtonSize();
+		int yBtn = 2 + (int)((double)(m_cyTabRow - closeBtn.cy) / 2 + 0.5);
+		int xTabRightEdge = x + tabInfo.m_cxTabNeeded;
+		int y = row * m_cyTabRow;
+		int xBtn = xTabRightEdge - closeBtn.cx - c_cxCLOSE_R_MARGIN - 1;
+		tabInfo.m_rcCloseBtn.SetRect(xBtn, y + yBtn, xBtn + closeBtn.cx, y + yBtn + closeBtn.cy);
+		xBtn -= closeBtn.cx;
+		tabInfo.m_rcPinBtn.SetRect(xBtn, y + yBtn, xBtn + closeBtn.cx, y + yBtn + closeBtn.cy);
+		tabInfo.m_rcTab.SetRect(x, y, xTabRightEdge, y + m_cyTabRow - 1);
+		tabInfo.m_nRow = row;
+		return tabInfo.m_rcTab.right + c_cxTAB_X_MARGIN;
+	};
+
+	int _CXforTab(const CVwInfo& tabInfo) const { return tabInfo.m_cxTabNeeded + c_cxTAB_X_MARGIN; }
+
+	// Calculate left tab list drop down button and X scroll buttons coords. for row.
+	// Return X pos. for first tab after Left drop button.
+	int _SetTabListUIbuttonRects(int row)
+	{
+		CRect& rcLB = m_rcLeftTabListDropDownBtn;
+		CRect& rcXL = m_rcLeftXscrollBtn;
+		CRect& rcXR = m_rcRightXscrollBtn;
+		int xListBtnL = 0;
+		CSize listBtn = _GetTabViewDropListButtonSize();
+		CSize scrollBtn = _GetTabViewXscrollButtonSize();
+		int yListBtns = (int)((double)(m_cyTabRow - listBtn.cy) / 2 + 0.5);
+		yListBtns += (m_cyTabRow * row);
+		rcLB.SetRect(xListBtnL, yListBtns, xListBtnL + listBtn.cx, yListBtns + listBtn.cy);
+		int xListBtnR = m_cxVw - (scrollBtn.cx * 2);
+		if (xListBtnR < rcLB.right || m_isOneRowUI)
+		{
+			// No space for X scroll buttons OR one row UI - don't need X scroll buttons.
+			rcXL.SetRect(m_cxVw, yListBtns, m_cxVw, yListBtns + scrollBtn.cy);
+			rcXR.SetRect(m_cxVw, yListBtns, m_cxVw, yListBtns + scrollBtn.cy);
+		}
+		else
+		{
+			rcXL.SetRect(xListBtnR, yListBtns, xListBtnR + scrollBtn.cx, yListBtns + scrollBtn.cy);
+			xListBtnR = rcXL.right;
+			rcXR.SetRect(xListBtnR, yListBtns, xListBtnR + scrollBtn.cx, yListBtns + scrollBtn.cy);
+		}
+		return rcLB.right + c_cxTAB_X_MARGIN;	// First tab x pos. after L drop button.
+	}
+#pragma endregion CalculateUI
 };
 

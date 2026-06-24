@@ -53,6 +53,7 @@ private:
 	VSRL::Logger& logger() { return VSRL::s_pVSRL->GetInstance("CXeViewManager"); }
 
 protected:
+	CXeMainFrameIF* m_pMainFrm = nullptr;
 	HWND m_hMainWnd = nullptr;
 	CXeD2DToolbarIF* m_pMainWndToolbar = nullptr;
 
@@ -60,6 +61,8 @@ protected:
 	std::vector<std::unique_ptr<CXeTabsView>> m_tabViews;
 
 	std::map<dsid_t, std::unique_ptr<CXeFileVwIF>> m_views;
+
+	GetViewPropCallbackFunc m_getViewPropCallback = nullptr;
 
 	CXeUIWorkThread m_uiWorkThread;
 
@@ -97,11 +100,14 @@ public:
 	CXeViewManager(const CXeViewManager&) = delete;
 	CXeViewManager& operator=(const CXeViewManager&) = delete;
 
-	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar/*HWND hParentOfTabVw, UINT uLeftTabDlgCtrlId, UINT uRightTabDlgCtrlId,
+	virtual void CreateTabViews(CXeMainFrameIF* pMainFrm
+		/*HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar*//*HWND hParentOfTabVw, UINT uLeftTabDlgCtrlId, UINT uRightTabDlgCtrlId,
 			UINT uLeftViewDlgCtrlId, UINT uRightViewDlgCtrlId*/) override
 	{
-		m_hMainWnd = m_hParentOfTabVw = hMainWnd;
-		m_pMainWndToolbar = pMainWndToolBar;
+		m_pMainFrm = pMainFrm;
+		XeASSERT(m_pMainFrm);
+		m_hMainWnd = m_hParentOfTabVw = m_pMainFrm->GetMainFrameHandle(); // hMainWnd;
+		m_pMainWndToolbar = m_pMainFrm->GetToolbarIF(); // pMainWndToolBar;
 		XeASSERT(m_hMainWnd && m_pMainWndToolbar);
 
 		m_pMainWndToolbar->SetUpdateMenuCallback(
@@ -120,8 +126,8 @@ public:
 		m_uiWorkThread.StartThread();
 
 		XeASSERT(m_tabViews.size() == 0);
-		m_tabViews.push_back(std::make_unique<CXeTabsView>(this));
-		m_tabViews.push_back(std::make_unique<CXeTabsView>(this));
+		m_tabViews.push_back(std::make_unique<CXeTabsView>(m_pMainFrm, this));
+		m_tabViews.push_back(std::make_unique<CXeTabsView>(m_pMainFrm, this));
 		m_tabViews[0]->Create(m_hMainWnd, ETABVIEWID::ePrimaryTabVw, VW_ID_TABS_0, VW_ID_VIEW_0, m_tabViews[1].get());
 		m_tabViews[1]->Create(m_hMainWnd, ETABVIEWID::eSecondaryTabVw, VW_ID_TABS_1, VW_ID_VIEW_1, m_tabViews[0].get());
 		//return m_tabViews[0]->GetTabViewHeight();
@@ -241,7 +247,7 @@ public:
 	{
 		CXeTabsView* pTabVw = _GetTabViewContainingView(pView);
 		XeASSERT(pTabVw);
-		pTabVw->RenameTab(pView, strNewTitle);
+		pTabVw->OnViewRenamed(pView);
 	}
 
 	virtual void OnChangedSettings(const ChangedSettings& chg_settings) override
@@ -406,6 +412,17 @@ public:
 			pTabVw->GetWindowRect(&rcTabVw);
 		}
 		return rcTabVw;
+	}
+
+	virtual void SetGetViewPropCallback(GetViewPropCallbackFunc getViewPropCallback) override
+	{
+		m_getViewPropCallback = getViewPropCallback;
+	}
+
+	virtual int GetViewProp(int view_id, XeViewProp view_property_id, int param) override
+	{
+		XeASSERT(m_getViewPropCallback);
+		return m_getViewPropCallback ? m_getViewPropCallback(view_id, view_property_id, param) : 0;
 	}
 
 	virtual CXeCancelEvent* DoWorkThreadWork(WorkThreadWorkCallbackFunc wt_callback) override
@@ -751,8 +768,9 @@ public:
 
 	void _OnNotifyTabListWndDestroyed(dsid_t dwSelectedDataSourceId)
 	{
-		if (!SwitchToViewWithDataSourceId(dwSelectedDataSourceId, true)
-			&& m_hOldFocusWnd)
+		if (m_dwLastViewWithFocus != dwSelectedDataSourceId
+				&& !SwitchToViewWithDataSourceId(dwSelectedDataSourceId, true)
+				&& m_hOldFocusWnd)
 		{
 			::SetFocus(m_hOldFocusWnd);
 			m_hOldFocusWnd = 0;

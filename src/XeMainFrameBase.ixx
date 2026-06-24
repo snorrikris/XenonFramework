@@ -8,6 +8,7 @@ module;
 
 export module Xe.MainFrameBase;
 
+import Xe.MainFrameIF;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
 import Xe.D2DToolbar;
@@ -80,7 +81,7 @@ int _GetValueInValidRange(int newValue, int minValue, int maxValue)
 
 constexpr int VIEW_CX_MIN = 50;
 
-export class CXeMainFrameBase : public CXeD2DWndBase
+export class CXeMainFrameBase : public CXeD2DWndBase, public CXeMainFrameIF
 {
 #pragma region class_data
 protected:
@@ -100,11 +101,14 @@ protected:
 
 	// Splitter window data.
 	bool m_bTracking = false, m_bIsTrackerV, m_bIsLogSplit;
-	CRect m_rcVsplit;		// Vertical splitter (above timeline)
-	CRect m_rcH_BM_split;	// Horizontal splitter between bookmarks view and log view 0
-	CRect m_rcH_Log_split;	// Horizontal splitter between log views.
+	CRect m_rcVsplit;		// Vertical splitter (above horizontal view)
+	CRect m_rcHsplitSideVw;	// Horizontal splitter between side view and view 0
+	CRect m_rcHsplitView0;	// Horizontal splitter between view 0 and view 1.
 	CRect m_rcTracker;
 	int m_cxUserSelectWidthCol0 = -1, m_cyUserSelectHeightTimeline = -1;
+
+	// View windows rects - calculated when RepositionWindows() called.
+	CRect m_rcTabVw0, m_rcTabVw1, m_rcView0, m_rcView1, m_rcSideVw, m_rcHorzVw;
 #pragma endregion class_data
 
 #pragma region WindowCreation
@@ -149,7 +153,9 @@ public:
 				[this](const MSG& msg) { return _OnGlobalKeyboardFilter(msg); });
 
 		XeASSERT(m_pVwMgr);	// Derived class MUST set the pointer after creating the view manager.
-		m_pVwMgr->CreateTabViews(hWnd, m_pToolBar.get());
+		m_pVwMgr->SetGetViewPropCallback(
+				[this](int view_id, XeViewProp view_property_id, int param) { return _GetViewProp(view_id, view_property_id, param); });
+		m_pVwMgr->CreateTabViews(this/*hWnd, m_pToolBar.get()*/);
 
 		//m_pVwMgr->Create(Hwnd(), VW_ID_TABS_0, VW_ID_TABS_1, VW_ID_VIEW_0, VW_ID_VIEW_1);
 
@@ -240,6 +246,32 @@ protected:
 		return 0;
 	}
 #pragma endregion WindowCreation
+
+#pragma region MainFrameIF_impl
+public:
+	virtual HWND GetMainFrameHandle() const override
+	{
+		return Hwnd();
+	}
+
+	virtual CXeD2DToolbarIF* GetToolbarIF() const override { return m_pToolBar.get(); }
+
+	virtual void RecalculateAndRepositionWindows() override
+	{
+		RepositionWindows();
+	}
+
+	virtual void RecalculateWindowsRects() override
+	{
+		_RecalculateWindowsRects();
+	}
+
+	virtual CRect GetViewWindowRect(int view_id) const override
+	{
+		const CRect* prcVw = _GetViewRectConst(view_id);
+		return prcVw ? *prcVw : CRect();
+	}
+#pragma endregion MainFrameIF_impl
 
 #pragma region Custom_Window_Frame
 protected:
@@ -430,39 +462,89 @@ protected:
 
 #pragma region SplitterWindowSupport
 public:
-	virtual void RepositionWindows()
+virtual void RepositionWindows()
+{
+	_RecalculateWindowsRects();
+	HWND hHorzVwWnd = GetDlgItem(VW_ID_HVIEW);
+	HDWP hDWP = ::BeginDeferWindowPos(6);
+	if (hHorzVwWnd)
+	{
+		hDWP = ::DeferWindowPos(hDWP, hHorzVwWnd, NULL,
+			m_rcHorzVw.left, m_rcHorzVw.top, m_rcHorzVw.Width(), m_rcHorzVw.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+
+	HWND hBkMkVw = GetDlgItem(VW_ID_SIDE);
+	if (hBkMkVw)
+	{
+		hDWP = ::DeferWindowPos(hDWP, hBkMkVw, NULL,
+			m_rcSideVw.left, m_rcSideVw.top, m_rcSideVw.Width(), m_rcSideVw.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+	HWND hTabVw0 = GetDlgItem(VW_ID_TABS_0);
+	if (hTabVw0)
+	{
+		hDWP = ::DeferWindowPos(hDWP, hTabVw0, NULL,
+			m_rcTabVw0.left, m_rcTabVw0.top, m_rcTabVw0.Width(), m_rcTabVw0.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+	HWND hTabVw1 = GetDlgItem(VW_ID_TABS_1);
+	if (hTabVw1)
+	{
+		hDWP = ::DeferWindowPos(hDWP, hTabVw1, NULL,
+			m_rcTabVw1.left, m_rcTabVw1.top, m_rcTabVw1.Width(), m_rcTabVw1.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+	HWND hView0 = GetDlgItem(VW_ID_VIEW_0);
+	if (hView0)
+	{
+		hDWP = ::DeferWindowPos(hDWP, hView0, NULL,
+			m_rcView0.left, m_rcView0.top, m_rcView0.Width(), m_rcView0.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+	HWND hView1 = GetDlgItem(VW_ID_VIEW_1);
+	if (hView1)
+	{
+		hDWP = ::DeferWindowPos(hDWP, hView1, NULL,
+				m_rcView1.left, m_rcView1.top, m_rcView1.Width(), m_rcView1.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+	}
+	::EndDeferWindowPos(hDWP);
+
+	if (!(hTabVw0 || hTabVw1 || hView0 || hView1 || hBkMkVw || hHorzVwWnd))	// No child windows?
+	{
+		_RedrawDirectly();
+	}
+}
+
+protected:
+	void _RecalculateWindowsRects()
 	{
 		CRect rcClient = _GetClientRect();
-		int cxCli = rcClient.Width();
-		int cyCli = rcClient.Height();
-		//HWND hTimelineWnd = GetDlgItem(VW_ID_HVIEW);
+		int cxCli = rcClient.Width(), cyCli = rcClient.Height();
 		HWND hHorzVwWnd = GetDlgItem(VW_ID_HVIEW);
-		int nTimelineHeight = 0;
-		int yViews = 0;
+		int cyHorzVw = 0, yViews = 0;
 		m_rcVsplit.SetRectEmpty();
-		HDWP hDWP = ::BeginDeferWindowPos(6);
+		m_rcTabVw0.SetRectEmpty();
+		m_rcTabVw1.SetRectEmpty();
+		m_rcView0.SetRectEmpty();
+		m_rcView1.SetRectEmpty();
+		m_rcSideVw.SetRectEmpty();
+		m_rcHorzVw.SetRectEmpty();
 		CXeUserSettings settings(L"MainFrameWindow");
 		bool isHorzViewAtTop = settings.GetBool_or_Val(L"ShowHorzViewAtTop", false);
-		//bool isTimelineAtTop = s_xeUIsettings[L"TimelineSettings"].Get(L"ShowTimeLineViewAtTop").getBool();
 		if (hHorzVwWnd)
 		{
-			int nTimelineTotalHeight = _GetViewProp(VW_ID_HVIEW, XeViewProp::TOTAL_CY);
-			int nTimelineMinHeight = _GetViewProp(VW_ID_HVIEW, XeViewProp::MIN_CY);
-			int nTimelineMaxHeight = _GetViewProp(VW_ID_HVIEW, XeViewProp::MAX_CY);
-			if (m_cyUserSelectHeightTimeline > 0 && m_cyUserSelectHeightTimeline > nTimelineTotalHeight)
+			int cyHorzVwTotalHeight = _GetViewProp(VW_ID_HVIEW, XeViewProp::TOTAL_CY);
+			int cyHorzVwMaxHeight = _GetViewProp(VW_ID_HVIEW, XeViewProp::MAX_CY);
+			if (m_cyUserSelectHeightTimeline > 0 && m_cyUserSelectHeightTimeline > cyHorzVwTotalHeight)
 			{
 				// User selected timeline height but it is greater than current max timeline height.
 				// (meaning that timeline height has decreased below user set value, e.g. view closed)
-				m_cyUserSelectHeightTimeline = nTimelineTotalHeight;
+				m_cyUserSelectHeightTimeline = cyHorzVwTotalHeight;
 			}
-			nTimelineHeight = m_cyUserSelectHeightTimeline > 0
+			cyHorzVw = m_cyUserSelectHeightTimeline > 0
 				? m_cyUserSelectHeightTimeline
-				: nTimelineTotalHeight > nTimelineMaxHeight ? nTimelineMaxHeight : nTimelineTotalHeight;
-			int yTlWnd = isHorzViewAtTop ? 0 : cyCli - nTimelineHeight;
-			hDWP = ::DeferWindowPos(hDWP, hHorzVwWnd, NULL, 0, yTlWnd, cxCli, nTimelineHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+				: cyHorzVwTotalHeight > cyHorzVwMaxHeight ? cyHorzVwMaxHeight : cyHorzVwTotalHeight;
+			int yTlWnd = isHorzViewAtTop ? 0 : cyCli - cyHorzVw;
+			m_rcHorzVw.SetRect(0, yTlWnd, cxCli, yTlWnd + cyHorzVw);
 			if (isHorzViewAtTop)
 			{
-				int yTlSplt = yTlWnd + nTimelineHeight;
+				int yTlSplt = yTlWnd + cyHorzVw;
 				m_rcVsplit.SetRect(0, yTlSplt, cxCli, yTlSplt + SplitBarPx);
 				yViews = yTlSplt + SplitBarPx;
 			}
@@ -477,109 +559,118 @@ public:
 		}
 
 		HWND hBkMkVw = GetDlgItem(VW_ID_SIDE);
-		m_rcH_BM_split.SetRectEmpty();
-		int cxBkMkVwTotal = 0;	// width of bookmarks view incl. splitter.
-		int yViewsBottom = isHorzViewAtTop ? cyCli : cyCli - nTimelineHeight;
-		int cxBkMkVw = 0, cyBkMkVw = 0;
+		m_rcHsplitSideVw.SetRectEmpty();
+		int cxSideVwTotal = 0;	// width of bookmarks view incl. splitter.
+		int yViewsBottom = isHorzViewAtTop ? cyCli : cyCli - cyHorzVw;
+		int cxSideVw = 0, cySideVw = 0;
 		if (hBkMkVw)
 		{
-			cxBkMkVw = _GetViewProp(VW_ID_SIDE, XeViewProp::WIDTH);
-			cyBkMkVw = nTimelineHeight > 0 ? cyCli - nTimelineHeight - SplitBarPx : cyCli;
-			cxBkMkVwTotal = cxBkMkVw + SplitBarPx;
+			cxSideVw = _GetViewProp(VW_ID_SIDE, XeViewProp::WIDTH);
+			cySideVw = cyHorzVw > 0 ? cyCli - cyHorzVw - SplitBarPx : cyCli;
+			cxSideVwTotal = cxSideVw + SplitBarPx;
 		}
 
 		HWND hTabVw0 = GetDlgItem(VW_ID_TABS_0);
 		HWND hTabVw1 = GetDlgItem(VW_ID_TABS_1);
 		bool isDual = hTabVw0 && hTabVw1;
 		int cxViewMin = _GetViewProp(VW_ID_VIEW_0, XeViewProp::MIN_CX);
-		int cxLogVwTotal = cxCli - cxBkMkVwTotal;	// Width of log view(s).
-		int cxLogViewMin = isDual ? (2 * cxViewMin + SplitBarPx) : cxViewMin;
-		if (cxLogVwTotal < cxLogViewMin)
+		int cxViewTotal = cxCli - cxSideVwTotal;	// Width of view(s).
+		cxViewMin = isDual ? (2 * cxViewMin + SplitBarPx) : cxViewMin;
+		if (cxViewTotal < cxViewMin)
 		{
-			cxBkMkVw = cxCli - cxLogViewMin;
-			cxBkMkVwTotal = cxBkMkVw + SplitBarPx;
-			cxLogVwTotal = cxCli - cxBkMkVwTotal;
+			cxSideVw = cxCli - cxViewMin;
+			cxSideVwTotal = cxSideVw + SplitBarPx;
+			cxViewTotal = cxCli - cxSideVwTotal;
 		}
-		int xLogVw0 = cxBkMkVwTotal;				// X pos of log view 0
-		int cxLogVw0 = cxLogVwTotal, cxLogVw1 = 0, xLogVw1 = 0;
-		m_rcH_Log_split.SetRectEmpty();
+		int xView0 = cxSideVwTotal;				// X pos of log view 0
+		int cxView0 = cxViewTotal, cxView1 = 0, xLogVw1 = 0;
+		m_rcHsplitView0.SetRectEmpty();
 		if (isDual)
 		{
-			cxLogVw0 = m_cxUserSelectWidthCol0 > 0 ? m_cxUserSelectWidthCol0 : (cxLogVwTotal / 2) - (SplitBarPx / 2);
-			cxLogVw1 = cxLogVwTotal - cxLogVw0 - (SplitBarPx / 2);
-			if (cxLogVw1 < cxViewMin)
+			cxView0 = m_cxUserSelectWidthCol0 > 0 ? m_cxUserSelectWidthCol0 : (cxViewTotal / 2) - (SplitBarPx / 2);
+			cxView1 = cxViewTotal - cxView0 - (SplitBarPx / 2);
+			if (cxView1 < cxViewMin)
 			{
-				cxLogVw1 = cxViewMin + SplitBarPx;
-				cxLogVw0 = cxLogVwTotal - cxLogVw1;
+				cxView1 = cxViewMin + SplitBarPx;
+				cxView0 = cxViewTotal - cxView1;
 			}
-			xLogVw1 = xLogVw0 + cxLogVw0 + SplitBarPx;
-			m_rcH_Log_split.SetRect(xLogVw1 - SplitBarPx, yViews, xLogVw1, yViewsBottom);
+			xLogVw1 = xView0 + cxView0 + SplitBarPx;
+			m_rcHsplitView0.SetRect(xLogVw1 - SplitBarPx, yViews, xLogVw1, yViewsBottom);
 		}
 		else
 		{
 			m_cxUserSelectWidthCol0 = -1;
 		}
-		int cyTabView0 = _GetViewProp(VW_ID_TABS_0, XeViewProp::RECALC_CY, cxLogVw0);
-		int cyVw0 = nTimelineHeight > 0 ? cyCli - cyTabView0 - nTimelineHeight - SplitBarPx : cyCli - cyTabView0;
+		int cyTabView0 = _GetViewProp(VW_ID_TABS_0, XeViewProp::RECALC_CY, cxView0);
+		int cyVw0 = cyHorzVw > 0 ? cyCli - cyTabView0 - cyHorzVw - SplitBarPx : cyCli - cyTabView0;
 		int yVw0 = yViews + cyTabView0;
-		int cyTabView1 = _GetViewProp(VW_ID_TABS_1, XeViewProp::RECALC_CY, cxLogVw1);
-		int cyVw1 = nTimelineHeight > 0 ? cyCli - cyTabView1 - nTimelineHeight - SplitBarPx : cyCli - cyTabView1;
+		int cyTabView1 = _GetViewProp(VW_ID_TABS_1, XeViewProp::RECALC_CY, cxView1);
+		int cyVw1 = cyHorzVw > 0 ? cyCli - cyTabView1 - cyHorzVw - SplitBarPx : cyCli - cyTabView1;
 		int yVw1 = yViews + cyTabView1;
 		if (hBkMkVw)
 		{
-			hDWP = ::DeferWindowPos(hDWP, hBkMkVw, NULL, 0, yViews, cxBkMkVw, cyBkMkVw, SWP_NOZORDER | SWP_NOACTIVATE);
-			m_rcH_BM_split.SetRect(cxBkMkVw, yViews, cxBkMkVwTotal, yViewsBottom);
+			m_rcSideVw.SetRect(0, yViews, cxSideVw, yViews + cySideVw);
+			m_rcHsplitSideVw.SetRect(m_rcSideVw.right, m_rcSideVw.top, m_rcSideVw.right + SplitBarPx, m_rcSideVw.bottom);
 		}
 		if (hTabVw0)
 		{
-			hDWP = ::DeferWindowPos(hDWP, hTabVw0, NULL, xLogVw0, yViews, cxLogVw0, cyTabView0, SWP_NOZORDER | SWP_NOACTIVATE);
+			m_rcTabVw0.SetRect(xView0, yViews, xView0 + cxView0, yViews + cyTabView0);
 		}
 		if (hTabVw1)
 		{
-			hDWP = ::DeferWindowPos(hDWP, hTabVw1, NULL, xLogVw1, yViews, cxLogVw1, cyTabView1, SWP_NOZORDER | SWP_NOACTIVATE);
+			m_rcTabVw1.SetRect(xLogVw1, yViews, xLogVw1 + cxView1, yViews + cyTabView1);
 		}
-		HWND hView0 = GetDlgItem(VW_ID_VIEW_0);
-		if (hView0)
-		{
-			hDWP = ::DeferWindowPos(hDWP, hView0, NULL, xLogVw0, yVw0, cxLogVw0, cyVw0, SWP_NOZORDER | SWP_NOACTIVATE);
-		}
-		HWND hView1 = GetDlgItem(VW_ID_VIEW_1);
-		if (hView1)
-		{
-			hDWP = ::DeferWindowPos(hDWP, hView1, NULL, xLogVw1, yVw1, cxLogVw1, cyVw1, SWP_NOZORDER | SWP_NOACTIVATE);
-		}
-		::EndDeferWindowPos(hDWP);
-
-		if (!(hTabVw0 || hTabVw1 || hView0 || hView1 || hBkMkVw || hHorzVwWnd))	// No child windows?
-		{
-			_RedrawDirectly();
-		}
+		m_rcView0.SetRect(xView0, yVw0, xView0 + cxView0, yVw0 + cyVw0);
+		m_rcView1.SetRect(xLogVw1, yVw1, xLogVw1 + cxView1, yVw1 + cyVw1);
 	}
 
-protected:
+	const CRect* _GetViewRectConst(int view_id) const
+	{
+		const CRect* prcVw =
+				  view_id == VW_ID_HVIEW  ? &m_rcHorzVw
+				: view_id == VW_ID_SIDE   ? &m_rcSideVw
+				: view_id == VW_ID_TABS_0 ? &m_rcTabVw0
+				: view_id == VW_ID_TABS_1 ? &m_rcTabVw1
+				: view_id == VW_ID_VIEW_0 ? &m_rcView0
+				: view_id == VW_ID_VIEW_1 ? &m_rcView1
+				: nullptr;
+		XeASSERT(prcVw);
+		return prcVw;
+	}
+	CRect* _GetViewRect(int view_id)
+	{
+		const CRect* prcVw = _GetViewRectConst(view_id);
+		return const_cast<CRect*>(prcVw);
+	}
+
 	virtual int _GetViewProp(int view_id, XeViewProp view_property_id, int param = 0)
 	{
+		const CRect* prcVw = _GetViewRectConst(view_id);
+		if (prcVw)
+		{
+			if (view_property_id == XeViewProp::VW_X)  { return prcVw->left; }
+			if (view_property_id == XeViewProp::VW_Y)  { return prcVw->top; }
+			if (view_property_id == XeViewProp::VW_CX) { return prcVw->Width(); }
+			if (view_property_id == XeViewProp::VW_CY) { return prcVw->Height(); }
+		}
 		bool isTabsVwId = view_id == VW_ID_TABS_0 || view_id == VW_ID_TABS_1;
 		bool isViewsVwId = view_id == VW_ID_VIEW_0 || view_id == VW_ID_VIEW_1;
 		if (isTabsVwId && view_property_id == XeViewProp::RECALC_CY)
 		{
 			return m_pVwMgr->RecalculateTabViewHeight(view_id - VW_ID_TABS_0, param);
 		}
-		else if (isTabsVwId || isViewsVwId)
+		else if ((isTabsVwId || isViewsVwId) && view_property_id == XeViewProp::MIN_CX)
 		{
-			if (view_property_id == XeViewProp::MIN_CX)
-			{
-				return VIEW_CX_MIN;
-			}
+			return VIEW_CX_MIN;
+		}
+		else if (view_id == VW_ID_HVIEW && view_property_id == XeViewProp::MAX_CY)
+		{
+			CRect rcClient = _GetClientRect();
+			return rcClient.Height() / 4;
 		}
 		XeASSERT(false);	// Not (needed) implemented.
 		return 0;
 	}
-	//virtual int _GetViewProp(int view_id, XeViewProp view_property_id, int param = 0)
-	//{
-	//	XeASSERT(false);	// Derived class should implement this.
-	//	return 0;
-	//}
 
 	virtual void _SetSideViewWidth(int cxViewWidth)
 	{
@@ -631,13 +722,13 @@ protected:
 				if (m_bIsLogSplit && _IsViewVisible(VW_ID_SIDE))
 				{
 					// Range when bookmarks list is visible and we are doing log views splitter.
-					xMinTrackerLeft = m_rcH_BM_split.right + cxVwMin;
+					xMinTrackerLeft = m_rcHsplitSideVw.right + cxVwMin;
 				}
 				else if (!m_bIsLogSplit && _IsViewVisible(VW_ID_VIEW_1))
 				{
 					// Range when log view 1 visible and we are doing bookmarks view splitter.
 					xMinTrackerLeft = cxVwMin;
-					xMaxTrackerLeft = m_rcH_Log_split.left - cxVwMin;
+					xMaxTrackerLeft = m_rcHsplitView0.left - cxVwMin;
 				}
 				int xNewLeft = _GetValueInValidRange(pt.x - (SplitBarPx / 2), xMinTrackerLeft, xMaxTrackerLeft);
 				m_rcTracker.left = xNewLeft;
@@ -648,7 +739,7 @@ protected:
 		else
 		{
 			// hit-test and set cursor
-			bool isInHsplit = m_rcH_Log_split.PtInRect(pt) || m_rcH_BM_split.PtInRect(pt);
+			bool isInHsplit = m_rcHsplitView0.PtInRect(pt) || m_rcHsplitSideVw.PtInRect(pt);
 			LPCTSTR cursor = isInHsplit ? IDC_SIZEWE : m_rcVsplit.PtInRect(pt) ? IDC_SIZENS : IDC_ARROW;
 			SetCursor(::LoadCursor(NULL, cursor));
 		}
@@ -660,15 +751,15 @@ protected:
 		if (m_bTracking)
 			return 0;
 
-		if (m_rcH_BM_split.PtInRect(pt))
+		if (m_rcHsplitSideVw.PtInRect(pt))
 		{
-			m_rcTracker = m_rcH_BM_split;
+			m_rcTracker = m_rcHsplitSideVw;
 			m_bIsTrackerV = false;
 			m_bIsLogSplit = false;
 		}
-		else if (m_rcH_Log_split.PtInRect(pt))
+		else if (m_rcHsplitView0.PtInRect(pt))
 		{
-			m_rcTracker = m_rcH_Log_split;
+			m_rcTracker = m_rcHsplitView0;
 			m_bIsTrackerV = false;
 			m_bIsLogSplit = true;
 		}
@@ -719,7 +810,7 @@ protected:
 			{
 				if (_IsViewVisible(VW_ID_SIDE))
 				{
-					m_cxUserSelectWidthCol0 = m_rcTracker.left - m_rcH_BM_split.right;
+					m_cxUserSelectWidthCol0 = m_rcTracker.left - m_rcHsplitSideVw.right;
 				}
 				else
 				{
@@ -750,12 +841,12 @@ protected:
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 	{
-		if (m_rcH_BM_split.IsRectEmpty() && m_rcH_Log_split.IsRectEmpty() && m_rcVsplit.IsRectEmpty())
+		if (m_rcHsplitSideVw.IsRectEmpty() && m_rcHsplitView0.IsRectEmpty() && m_rcVsplit.IsRectEmpty())
 		{
 			pRT->FillRectangle(rcClient, GetBrush(CID::XTbBarBgCtrl));
 		}
-		_DrawSplitter(pRT, m_rcH_BM_split);
-		_DrawSplitter(pRT, m_rcH_Log_split);
+		_DrawSplitter(pRT, m_rcHsplitSideVw);
+		_DrawSplitter(pRT, m_rcHsplitView0);
 		_DrawSplitter(pRT, m_rcVsplit);
 	}
 

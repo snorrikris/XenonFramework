@@ -885,24 +885,28 @@ public:
 	}
 
 	void _DrawIconAndFilename(ID2D1RenderTarget* pRT, const std::wstring& filename,
-			const CRect& rc, EXE_FONT eFont, COLORREF rgbTxt, PID pid, bool isSmallIcon, const CRect& rcProgress)
+			const CRect& rc, EXE_FONT eFont, COLORREF rgbTxt, PID pid, bool isSmallIcon,
+			bool isIconSpaceReserved, const CRect& rcProgress)
 	{
 		if (!rcProgress.IsRectEmpty())
 		{
 			pRT->FillRectangle(RectFfromRect(rcProgress), GetBrush(CID::LogFilterHdrBg));
 		}
-		int cxyIcn = isSmallIcon ? 16 : 24;
-		CRect rcIcn = rc;
+		bool hasIcon = pid != PID::None;
 		CRect rcTxt = rc;
-		rcTxt.left += isSmallIcon ? 18 : 28;
-		if (rcIcn.Height() > cxyIcn)
+		CRect rcIcn = rc;
+		if (hasIcon || isIconSpaceReserved)
 		{
-			rcIcn.top = rcIcn.top + (int)((double)(rcIcn.Height() - cxyIcn) / 2 + 0.5);
-			rcIcn.bottom = rcIcn.top + cxyIcn;
+			int cxyIcn = isSmallIcon ? 16 : 24;
+			rcTxt.left += isSmallIcon ? 18 : 28;
+			if (rcIcn.Height() > cxyIcn)
+			{
+				rcIcn.top = rcIcn.top + (int)((double)(rcIcn.Height() - cxyIcn) / 2 + 0.5);
+				rcIcn.bottom = rcIcn.top + cxyIcn;
+			}
+			rcIcn.right = rcIcn.left + cxyIcn;
 		}
-		rcIcn.right = rcIcn.left + cxyIcn;
-
-		if (pid != PID::None)
+		if (hasIcon)
 		{
 			_DrawButtonImage(pRT, pid, RectFfromRect(rcIcn), true, true, false);
 		}
@@ -1159,6 +1163,39 @@ public:
 		Microsoft::WRL::ComPtr<ID2D1PathGeometry> tri2 = _MakeTriangle(pb[0], pb[1], pb[2]);
 		pRT->DrawGeometry(tri2.Get(), GetBrush(fg), 1.0f);
 		pRT->FillGeometry(tri2.Get(), GetBrush(fg));
+	}
+
+	enum class BtnTp { left, right, up, down };
+	void _DrawScrollbarButton(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcBtn, CID fgColor, BtnTp tp)
+	{
+		bool isHorz = tp == BtnTp::left || tp == BtnTp::right;
+		float cxTri = isHorz ? 5.0f : 9.0f, cyTri = isHorz ? 9.0f : 5.0f;
+		float cyTriMargin = (HeightOf(rcBtn) - cyTri) / 2.0f;
+		float cxTriMargin = (WidthOf(rcBtn) - cxTri) / 2.0f;
+		float x1 = rcBtn.left + cxTriMargin, x2 = x1 + cxTri;
+		float y1 = rcBtn.top + (HeightOf(rcBtn) / 2.0f), y2 = rcBtn.top + cyTriMargin;
+		float x3 = x2, y3 = y2 + cyTri;
+		if (tp == BtnTp::right)
+		{
+			std::swap(x1, x2);
+			x3 = x2;
+		}
+		else if (!isHorz)
+		{
+			x1 = (rcBtn.left + WidthOf(rcBtn)) / 2.0f;
+			x2 = rcBtn.left + cxTriMargin;
+			y1 = rcBtn.top + cyTriMargin, y2 = y1 + cyTri;
+			x3 = x2 + cxTri, y3 = y2;
+			if (tp == BtnTp::down)
+			{
+				std::swap(y1, y2);
+				y3 = y2;
+			}
+		}
+
+		Microsoft::WRL::ComPtr<ID2D1PathGeometry> tri = _MakeTriangle(D2D1_POINT_2F(x1, y1), D2D1_POINT_2F(x2, y2), D2D1_POINT_2F(x3, y3));
+		pRT->DrawGeometry(tri.Get(), GetBrush(fgColor), 1.0f);
+		pRT->FillGeometry(tri.Get(), GetBrush(fgColor));
 	}
 
 	D2D1_MATRIX_5X4_F _GetHotMatrix() const

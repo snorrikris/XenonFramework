@@ -14,9 +14,9 @@ export import Xe.DefData;
 import Xe.UIcolorsIF;
 import Xe.D2DToolbarIF;
 import Xe.UserSettings_Changed;
-//import Xe.WorkContext;
 import Xe.DefData;
 import Xe.Utils;
+import Xe.MainFrameIF;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -26,6 +26,8 @@ static char THIS_FILE[] = __FILE__;
 
 export enum class ViewNavigate { Prev, Next };
 
+export typedef std::function<int(int view_id, XeViewProp view_property_id, int param)> GetViewPropCallbackFunc;
+
 export class CXeViewManagerIF
 {
 public:
@@ -34,7 +36,7 @@ public:
 	virtual void Destroy() = 0;
 
 	// Set pointers to main window and main window toolbar, create tab views.
-	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) = 0;
+	virtual void CreateTabViews(CXeMainFrameIF* pMainFrm) = 0;
 
 	virtual bool AttachView(std::unique_ptr<CXeFileVwIF> view, CreateViewParams viewParams) = 0;
 
@@ -83,6 +85,12 @@ public:
 	virtual void SendMessageToAllViews(UINT uMessage, WPARAM wParam, LPARAM lParam) = 0;
 
 	virtual CRect GetTabViewWindow(ETABVIEWID tabVwId) = 0;
+
+	// Set callback - that is used when GetViewProp function is called.
+	// Note - CXeMainFrameBase calls to set this callback.
+	virtual void SetGetViewPropCallback(GetViewPropCallbackFunc getViewPropCallback) = 0;
+
+	virtual int GetViewProp(int view_id, XeViewProp view_property_id, int param) = 0;
 
 	virtual void ViewWithFocusChanged(dsid_t dwDataSourceId) = 0;
 

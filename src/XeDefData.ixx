@@ -56,6 +56,5 @@ export struct CreateViewParams
 	bool makeFirstOpenedCurrentView = true;
 	bool makeThisCurrentView = false;		// true if 'this' view should be made current view.
 	bool gotoLastRowInGrid = false;
-	bool isTabPinned = false;
 };
 

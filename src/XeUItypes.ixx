@@ -287,6 +287,10 @@ export enum class XeViewProp
 	MIN_CY = 4,		// Minimum view height (needed for HVIEW/timeline vw).
 	MAX_CY = 5,		// Maximum view height (needed for HVIEW/timeline vw).
 	MIN_CX = 6,		// Minimum view width (needed for VIEW_0/1 vw).
+	VW_X = 7,		// Left position of view - in parent window (MainFrame) coordinates.
+	VW_Y = 8,		// Top position of view - in parent window (MainFrame) coordinates.
+	VW_CX = 9,		// Width of view.
+	VW_CY = 10,		// Height of view.
 };
 //export constexpr int VW_PROP_WIDTH = 1;		// Get current width of view (only needed for side view).
 //export constexpr int VW_PROP_RECALC_CY = 2;	// Recalculate view height, cx available as param (needed for tabs vw).

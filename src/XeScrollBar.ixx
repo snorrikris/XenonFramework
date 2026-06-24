@@ -989,39 +989,6 @@ protected:
 			}
 		}
 	}
-
-	enum class BtnTp { left, right, up, down };
-	void _DrawScrollbarButton(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcBtn, CID fgColor, BtnTp tp)
-	{
-		bool isHorz = tp == BtnTp::left || tp == BtnTp::right;
-		float cxTri = isHorz ? 5.0f : 9.0f, cyTri = isHorz ? 9.0f : 5.0f;
-		float cyTriMargin = (HeightOf(rcBtn) - cyTri) / 2.0f;
-		float cxTriMargin = (WidthOf(rcBtn) - cxTri) / 2.0f;
-		float x1 = rcBtn.left + cxTriMargin, x2 = x1 + cxTri;
-		float y1 = HeightOf(rcBtn) / 2.0f, y2 = rcBtn.top + cyTriMargin;
-		float x3 = x2, y3 = y2 + cyTri;
-		if (tp == BtnTp::right)
-		{
-			std::swap(x1, x2);
-			x3 = x2;
-		}
-		else if (!isHorz)
-		{
-			x1 = (rcBtn.left + WidthOf(rcBtn)) / 2.0f;
-			x2 = rcBtn.left + cxTriMargin;
-			y1 = rcBtn.top + cyTriMargin, y2 = y1 + cyTri;
-			x3 = x2 + cxTri, y3 = y2;
-			if (tp == BtnTp::down)
-			{
-				std::swap(y1, y2);
-				y3 = y2;
-			}
-		}
-
-		Microsoft::WRL::ComPtr<ID2D1PathGeometry> tri = _MakeTriangle(D2D1_POINT_2F(x1, y1), D2D1_POINT_2F(x2, y2), D2D1_POINT_2F(x3, y3));
-		pRT->DrawGeometry(tri.Get(), GetBrush(fgColor), 1.0f);
-		pRT->FillGeometry(tri.Get(), GetBrush(fgColor));
-	}
 #pragma endregion Paint
 
 #pragma region KeyboardMessages

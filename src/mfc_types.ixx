@@ -561,5 +561,23 @@ public:
 			::MulDiv(right, nMultiplier, nDivisor),
 			::MulDiv(bottom, nMultiplier, nDivisor));
 	}
+
+	// non-mfc functions
+
+	// Apply offset to 'this' rect and then do hit test.
+	bool HitTestWithOffset(POINT point, int xOffset, int yOffset) const
+	{
+		CRect rc(*this);
+		::OffsetRect(&rc, xOffset, yOffset);
+		return rc.PtInRect(point);
+	}
+
+	// Is 'other' rect, with offset applied, intersecting with 'this' rect.
+	bool IsIntersectRectWithOffset(const CRect& rcOther, int xOffset, int yOffset) const
+	{
+		CRect rc(*this), rcO(rcOther), rcTest;
+		::OffsetRect(&rcO, xOffset, yOffset);
+		return rcTest.IntersectRect(rc, rcO);
+	}
 };
 

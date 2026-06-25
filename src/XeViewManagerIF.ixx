@@ -14,7 +14,6 @@ export import Xe.DefData;
 import Xe.UIcolorsIF;
 import Xe.D2DToolbarIF;
 import Xe.UserSettings_Changed;
-import Xe.DefData;
 import Xe.Utils;
 import Xe.MainFrameIF;
 
@@ -23,8 +22,6 @@ import Xe.MainFrameIF;
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
-export enum class ViewNavigate { Prev, Next };
 
 export typedef std::function<int(int view_id, XeViewProp view_property_id, int param)> GetViewPropCallbackFunc;
 
@@ -36,19 +33,14 @@ public:
 	virtual void Destroy() = 0;
 
 	// Set pointers to main window and main window toolbar, create tab views.
-	virtual void CreateTabViews(CXeMainFrameIF* pMainFrm) = 0;
+	virtual void Initialize(CXeMainFrameIF* pMainFrm) = 0;
 
 	virtual bool AttachView(std::unique_ptr<CXeFileVwIF> view, CreateViewParams viewParams) = 0;
 
 	virtual void On_Timer_1S() = 0;
 
-	virtual int GetTabViewHeight(int idx) = 0;
-	virtual int RecalculateTabViewHeight(int idx, int cxAvailable) = 0;
-
 	virtual void SetFocusToCurrentView() = 0;
 
-	//virtual void OnViewClosing(dsid_t dwDataSourceId, DSType eType) = 0;
-	//virtual void OnViewClosed(dsid_t dwDataSourceId, DSType eType) = 0;
 	virtual void OnViewClosing(dsid_t dwDataSourceId) = 0;
 	virtual void OnViewClosed(dsid_t dwDataSourceId) = 0;
 
@@ -83,8 +75,6 @@ public:
 	virtual std::vector<CXeFileVwIF*> GetAllViewsFromDataSourceIds(const std::vector<dsid_t>& dataSourceIds) = 0;
 
 	virtual void SendMessageToAllViews(UINT uMessage, WPARAM wParam, LPARAM lParam) = 0;
-
-	virtual CRect GetTabViewWindow(ETABVIEWID tabVwId) = 0;
 
 	// Set callback - that is used when GetViewProp function is called.
 	// Note - CXeMainFrameBase calls to set this callback.

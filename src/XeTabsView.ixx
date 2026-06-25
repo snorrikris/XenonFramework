@@ -41,7 +41,7 @@ constexpr UINT XSB_LBTN_DOWN_TIME		= 200;		// ms - time to first auto repeat.
 constexpr UINT XSB_LBTN_REPT_TIMERID	= 1002;
 constexpr UINT XSB_LBTN_REPT_TIME		= 50;		// ms - repeat interval.
 
-export class CXeTabsView : public CXeD2DWndBase
+export class CXeTabsView : public CXeD2DWndBase, public CXeTabsViewIF
 {
 protected:
 	CXeMainFrameIF* m_pMainFrm = nullptr;
@@ -113,14 +113,20 @@ public:
 
 #pragma region Misc
 public:
-	int RecalculateTabViewHeight(int cxAvailable)
+	virtual HWND GetTabWindowHandle() const override { return Hwnd(); }
+
+	virtual void RedrawTabView() override
 	{
-		m_listTabs->CalculateUI(cxAvailable);
-		return GetTabViewHeight();
+		_RedrawDirectly();
 	}
+	//int RecalculateTabViewHeight(int cxAvailable)
+	//{
+	//	m_listTabs->CalculateUI(cxAvailable);
+	//	return GetTabViewHeight();
+	//}
 
 	// Called from LVSState when view with focus has changed.
-	void ViewWithFocusChanged(dsid_t dwDataSourceId)
+	virtual void ViewWithFocusChanged(dsid_t dwDataSourceId) override
 	{
 		if (m_listTabs->UpdateIdOfViewWithFocus(dwDataSourceId))
 		{
@@ -128,14 +134,15 @@ public:
 		}
 	}
 
-	void OnViewRenamed(CXeFileVwIF* pView)
+	virtual void OnViewRenamed(CXeFileVwIF* pView) override
 	{
 		_RecalculateUIandRepositionWindowsIfNeeded();
 	}
 
-	void SendMessageToAllViews(UINT uMessage, WPARAM wParam, LPARAM lParam)
+	virtual void SendMessageToAllViews(UINT uMessage, WPARAM wParam, LPARAM lParam) override
 	{
 		m_listTabs->SendMessageToAllViews(uMessage, wParam, lParam);
+		SendMessageW(uMessage, wParam, lParam);
 
 		if (uMessage == WMU_NOTIFY_CHANGES)
 		{
@@ -150,12 +157,12 @@ public:
 		}
 	}
 
-	void SetTabProgressIndication(dsid_t dwDataSourceId, UINT uProgress)
+	virtual void SetTabProgressIndication(dsid_t dwDataSourceId, UINT uProgress) override
 	{
 		_RedrawDirectly();
 	}
 
-	void ClearProgressOnAllTabs()
+	virtual void ClearProgressOnAllTabs() override
 	{
 		_RedrawDirectly();
 	}
@@ -171,6 +178,7 @@ public:
 				|| m_xeUI->IsFontSettingsChanged(chg_settings))
 		{
 			m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"GeneralSettings"].Get(L"UseTextColorForFileInTabTitle").getBool();
+			m_listTabs->CalculateUI(m_listTabs->GetTabViewWidth());	// Recalculate tab row height.
 			_RecalculateUIandRepositionWindowsIfNeeded();
 		}
 		if (chg_settings.IsChanged(L"Colors", L"Color"))
@@ -182,9 +190,12 @@ public:
 protected:
 	virtual LRESULT _OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam) override
 	{
+		//UINT nType = (UINT)wParam;
+		int cx = GET_X_LPARAM(lParam);
+		//int cy = GET_Y_LPARAM(lParam);
 		if (m_fInitialUpdateDone)	// Initialized?
 		{
-			m_listTabs->RecalculateUI();
+			m_listTabs->CalculateUI(cx);
 			m_listTabs->MakeCurrentTabVisible(_GetCurrentView());
 			_RedrawDirectly();
 		}
@@ -216,16 +227,16 @@ protected:
 
 #pragma region Info
 public:
-	bool IsVisible() const { return ::GetDlgCtrlID(Hwnd()) == m_uTabVwDlgCtrlId; }
+	//bool IsVisible() const { return ::GetDlgCtrlID(Hwnd()) == m_uTabVwDlgCtrlId; }
 
 	int GetTabViewHeight() const { return m_listTabs->GetTabViewHeight(); }
 
 	int GetNumTabRows() const { return m_listTabs->GetNumTabRows(); }
 
-	ETABVIEWID GetTabVwId() const { return m_eTabVwId; }
+	virtual ETABVIEWID GetTabVwId() const override { return m_eTabVwId; }
 
 	// Return true if point (in screen coords.) is in a tab view or file view else false.
-	bool IsPointInThisView(POINT& pt) const
+	virtual bool IsPointInThisView(POINT& pt) const override
 	{
 		CXeFileVwIF* pView = _GetCurrentView();
 		bool isPtInFileVw = pView ? pView->IsPointInThisView(pt) : false;
@@ -235,27 +246,27 @@ public:
 		return isPtInTabVw || isPtInFileVw;
 	}
 
-	bool IsChildOfCurrentView(HWND hWnd) const
-	{
-		CXeFileVwIF* pCurView = _GetCurrentView();
-		HWND hWndVw = pCurView ? pCurView->GetHwndOfView() : nullptr;
-		return hWndVw ? ::IsChild(hWndVw, hWnd) : false;
-	}
+	//bool IsChildOfCurrentView(HWND hWnd) const
+	//{
+	//	CXeFileVwIF* pCurView = _GetCurrentView();
+	//	HWND hWndVw = pCurView ? pCurView->GetHwndOfView() : nullptr;
+	//	return hWndVw ? ::IsChild(hWndVw, hWnd) : false;
+	//}
 
-	bool IsTabPinned(dsid_t dataSourceId) const { return m_listTabs->IsTabPinned(dataSourceId); }
+	//bool IsTabPinned(dsid_t dataSourceId) const { return m_listTabs->IsTabPinned(dataSourceId); }
 
-	UINT GetIndexOfCurrentTab() const
+	virtual UINT GetIndexOfCurrentTab() const override
 	{
 		return m_listTabs->GetIndexOfCurrentTab();
 	}
 
-	int GetTabCount() const { return m_listTabs->GetTabCount(); }
+	virtual int GetTabCount() const override { return m_listTabs->GetTabCount(); }
 
 	int GetTotalTabCount() const { return GetTabCount() + (m_pOtherView ? m_pOtherView->GetTabCount() : 0); }
 
-	std::vector<CVwInfo> GetAllTabs() const { return m_listTabs->GetAllTabs(); }
+	virtual std::vector<CVwInfo> GetAllTabs() const override { return m_listTabs->GetAllTabs(); }
 
-	std::vector<CXeFileVwIF*> GetAllViews() const
+	virtual std::vector<CXeFileVwIF*> GetAllViews() const override
 	{
 		std::vector<CXeFileVwIF*> views;
 		for (auto item : m_listTabs->GetAllTabs())
@@ -265,12 +276,12 @@ public:
 		return views;
 	}
 
-	const CVwInfo* FindView(CXeFileVwIF* pView) const
+	virtual const CVwInfo* FindView(CXeFileVwIF* pView) const override
 	{
 		return m_listTabs->GetTab(pView);
 	}
 
-	CXeFileVwIF* FindView(dsid_t dwDataSourceId) const
+	virtual CXeFileVwIF* FindView(dsid_t dwDataSourceId) const override
 	{
 		const CVwInfo* pTabInfo = m_listTabs->GetTabFromDataSourceId(dwDataSourceId);
 		if (pTabInfo)
@@ -280,9 +291,9 @@ public:
 		return nullptr;
 	}
 
-	CXeFileVwIF* GetCurrentView() const { return _GetCurrentView(); }
+	virtual CXeFileVwIF* GetCurrentView() const override { return _GetCurrentView(); }
 
-	dsid_t GetDataSourceIdOfCurrentView() const
+	virtual dsid_t GetDataSourceIdOfCurrentView() const override
 	{
 		CXeFileVwIF* pCurView = _GetCurrentView();
 		return pCurView ? pCurView->GetDataSourceId() : dsid_t();
@@ -374,7 +385,7 @@ public:
 	// setFocusToView = true to set input focus to view (only when makeCurrentTab = true),
 	// viewParams.insertBeforeDSid = -1 to add at the end, 0 to add at the begining, 
 	// or datasource Id of tab to insert before.
-	bool AttachView(CXeFileVwIF* pView, CreateViewParams viewParams, bool setFocusToView)
+	virtual bool AttachView(CXeFileVwIF* pView, CreateViewParams viewParams, bool setFocusToView) override
 	{
 		bool setAsCurrentView = viewParams.makeThisCurrentView || m_listTabs->GetTabCount() == 0;
 
@@ -386,7 +397,7 @@ public:
 		return true;
 	}
 
-	void CloseAndDeleteTabs(const std::vector<CVwInfo>& tabsList)
+	virtual void CloseAndDeleteTabs(const std::vector<CVwInfo>& tabsList) override
 	{
 		for (const CVwInfo& tabInfo : tabsList)
 		{
@@ -394,12 +405,12 @@ public:
 		}
 	}
 
-	void DeleteAllTabsAndViews()
+	virtual void DeleteAllTabsAndViews() override
 	{
 		_DeleteAllTabsAndViews();
 	}
 
-	bool FindAndDeleteTabAndView(dsid_t dwDataSourceId)
+	virtual bool FindAndDeleteTabAndView(dsid_t dwDataSourceId) override
 	{
 		const CVwInfo* pTabInfo = m_listTabs->GetTabFromDataSourceId(dwDataSourceId);
 		if (pTabInfo)
@@ -410,7 +421,7 @@ public:
 		return false;
 	}
 
-	bool SwitchToView(CXeFileVwIF* pView, bool setFocusToView)
+	virtual bool SwitchToView(CXeFileVwIF* pView, bool setFocusToView) override
 	{
 		XeASSERT(pView);
 		//XeTRACE("TabId=%d, SwitchToView : %s, setFocusToView: %d\r\n", m_eTabVwId, xet::to_astr(pView->GetViewName()).c_str(), setFocusToView);
@@ -424,7 +435,7 @@ public:
 		return true;
 	}
 
-	bool SwitchToView(dsid_t dwDataSourceId, bool setFocusToView)
+	virtual bool SwitchToView(dsid_t dwDataSourceId, bool setFocusToView) override
 	{
 		//TRACE("SwitchToView : dwDataSourceId: %d, setFocusToView: %d\r\n", dwDataSourceId, setFocusToView);
 		const CVwInfo* pTabInfo = m_listTabs->GetTabFromDataSourceId(dwDataSourceId);
@@ -432,7 +443,7 @@ public:
 		return pTabInfo ? SwitchToView(pTabInfo->m_pView, setFocusToView) : false;
 	}
 
-	bool SwitchToViewAtIndex(UINT uIndex)
+	virtual bool SwitchToViewAtIndex(UINT uIndex) override
 	{
 		//TRACE("SwitchToView : uIndex: %d\r\n", uIndex);
 		const CVwInfo* pTabInfo = m_listTabs->GetTabAtIndex(uIndex);
@@ -440,7 +451,7 @@ public:
 		return pTabInfo ? SwitchToView(pTabInfo->m_pView, true) : false;
 	}
 
-	bool SwitchToView(ViewNavigate navigate)
+	virtual bool SwitchToView(ViewNavigate navigate) override
 	{
 		CXeFileVwIF* pCurView = _GetCurrentView();
 		if (pCurView)
@@ -465,7 +476,8 @@ protected:
 
 		::SetParent(pView->GetHwndOfView(), m_hParentOfViews);
 
-		if (m_listTabs->GetTabCount() == 0)	// Attaching first view?
+		bool isAttachingFirstView = m_listTabs->GetTabCount() == 0;
+		if (isAttachingFirstView)
 		{
 			_ShowThisTabView();	// Make 'this' window visible and set 'our' dlg control ID on it.
 		}
@@ -1197,7 +1209,7 @@ public:
 
 #pragma region Context_Menu
 public:
-	void UpdateMenuItem(ListBoxExItem& menu_item, CXeFileVwIF* pView)
+	virtual void UpdateMenuItem(ListBoxExItem& menu_item, CXeFileVwIF* pView) const override
 	{
 		// IMPORTANT! pView can be null ! ! ! ! ! ! ! ! ! ! !
 

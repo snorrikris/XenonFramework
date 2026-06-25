@@ -9,13 +9,13 @@ module;
 export module Xe.MainFrameBase;
 
 import Xe.MainFrameIF;
+import Xe.TabsView;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
 import Xe.D2DToolbar;
 import Xe.UserSettingsForUI;
 import Xe.Helpers;
 import Xe.ViewManager;
-//import Xe.LogFormatsManager;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -89,6 +89,8 @@ protected:
 
 	UINT m_uIDR_MAINFRAME = 0;
 
+	std::vector<std::unique_ptr<CXeTabsView>> m_tabViews;
+
 	std::unique_ptr<CXeD2DToolbar> m_pToolBar;
 
 	bool m_isClientWndCreated = false;	// Set TRUE in OnCreateClient(...)
@@ -155,7 +157,13 @@ public:
 		XeASSERT(m_pVwMgr);	// Derived class MUST set the pointer after creating the view manager.
 		m_pVwMgr->SetGetViewPropCallback(
 				[this](int view_id, XeViewProp view_property_id, int param) { return _GetViewProp(view_id, view_property_id, param); });
-		m_pVwMgr->CreateTabViews(this/*hWnd, m_pToolBar.get()*/);
+		m_pVwMgr->Initialize(this);
+
+		XeASSERT(m_tabViews.size() == 0);
+		m_tabViews.push_back(std::make_unique<CXeTabsView>(this, m_pVwMgr));
+		m_tabViews.push_back(std::make_unique<CXeTabsView>(this, m_pVwMgr));
+		m_tabViews[0]->Create(Hwnd(), ETABVIEWID::ePrimaryTabVw, VW_ID_TABS_0, VW_ID_VIEW_0, m_tabViews[1].get());
+		m_tabViews[1]->Create(Hwnd(), ETABVIEWID::eSecondaryTabVw, VW_ID_TABS_1, VW_ID_VIEW_1, m_tabViews[0].get());
 
 		//m_pVwMgr->Create(Hwnd(), VW_ID_TABS_0, VW_ID_TABS_1, VW_ID_VIEW_0, VW_ID_VIEW_1);
 
@@ -270,6 +278,26 @@ public:
 	{
 		const CRect* prcVw = _GetViewRectConst(view_id);
 		return prcVw ? *prcVw : CRect();
+	}
+
+	virtual CXeTabsViewIF* GetTabView(ETABVIEWID tabVwId) const override
+	{
+		XeASSERT(m_tabViews.size() == 2
+			&& (tabVwId == ETABVIEWID::eAnyTabVw || tabVwId == ETABVIEWID::ePrimaryTabVw
+				|| tabVwId == ETABVIEWID::eSecondaryTabVw));
+		return tabVwId == ETABVIEWID::ePrimaryTabVw ? m_tabViews[0].get()
+			: tabVwId == ETABVIEWID::eSecondaryTabVw ? m_tabViews[1].get()
+			: tabVwId == ETABVIEWID::eAnyTabVw ? m_tabViews[0].get() : nullptr;
+	}
+
+	virtual std::vector<CXeTabsViewIF*> GetAllTabViews() const override
+	{
+		std::vector<CXeTabsViewIF*> views;
+		for (auto& pTabView : m_tabViews)
+		{
+			views.push_back(pTabView.get());
+		}
+		return views;
 	}
 #pragma endregion MainFrameIF_impl
 
@@ -601,10 +629,11 @@ protected:
 		{
 			m_cxUserSelectWidthCol0 = -1;
 		}
-		int cyTabView0 = _GetViewProp(VW_ID_TABS_0, XeViewProp::RECALC_CY, cxView0);
+		XeASSERT(m_tabViews.size() == 2);	// Only Primary and Secondary tab views expected.
+		int cyTabView0 = m_tabViews[0]->GetTabViewHeight(); // _GetViewProp(VW_ID_TABS_0, XeViewProp::RECALC_CY, cxView0);
 		int cyVw0 = cyHorzVw > 0 ? cyCli - cyTabView0 - cyHorzVw - SplitBarPx : cyCli - cyTabView0;
 		int yVw0 = yViews + cyTabView0;
-		int cyTabView1 = _GetViewProp(VW_ID_TABS_1, XeViewProp::RECALC_CY, cxView1);
+		int cyTabView1 = m_tabViews[1]->GetTabViewHeight(); // _GetViewProp(VW_ID_TABS_1, XeViewProp::RECALC_CY, cxView1);
 		int cyVw1 = cyHorzVw > 0 ? cyCli - cyTabView1 - cyHorzVw - SplitBarPx : cyCli - cyTabView1;
 		int yVw1 = yViews + cyTabView1;
 		if (hBkMkVw)
@@ -655,11 +684,11 @@ protected:
 		}
 		bool isTabsVwId = view_id == VW_ID_TABS_0 || view_id == VW_ID_TABS_1;
 		bool isViewsVwId = view_id == VW_ID_VIEW_0 || view_id == VW_ID_VIEW_1;
-		if (isTabsVwId && view_property_id == XeViewProp::RECALC_CY)
-		{
-			return m_pVwMgr->RecalculateTabViewHeight(view_id - VW_ID_TABS_0, param);
-		}
-		else if ((isTabsVwId || isViewsVwId) && view_property_id == XeViewProp::MIN_CX)
+		//if (isTabsVwId && view_property_id == XeViewProp::RECALC_CY)
+		//{
+		//	return m_pVwMgr->RecalculateTabViewHeight(view_id - VW_ID_TABS_0, param);
+		//}
+		/*else*/ if ((isTabsVwId || isViewsVwId) && view_property_id == XeViewProp::MIN_CX)
 		{
 			return VIEW_CX_MIN;
 		}
@@ -1042,6 +1071,11 @@ protected:
 		}
 
 		m_pVwMgr->OnChangedSettings(chg_settings);
+
+		for (auto& pTabView : m_tabViews)
+		{
+			pTabView->OnChangedSettings(chg_settings);
+		}
 
 		if (chg_settings.IsChanged(L"Colors", L"Color"))
 		{

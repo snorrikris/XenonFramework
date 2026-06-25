@@ -710,6 +710,8 @@ public:
 
 	int GetTabViewHeight() const { return m_cyTabRow * GetNumTabRows(); }
 
+	int GetTabViewWidth() const { return m_cxVw; }
+
 	void MakeCurrentTabVisible(CXeFileVwIF* pCurrentView)
 	{
 		if (!pCurrentView)

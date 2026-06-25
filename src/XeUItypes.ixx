@@ -282,7 +282,7 @@ export constexpr int VW_ID_SIDE   = VW_ID_BASE + (0 * 16) + 0;	// "row" 0, "col"
 export enum class XeViewProp
 {
 	WIDTH = 1,		// Get current width of view (only needed for side view).
-	RECALC_CY = 2,	// Recalculate view height, cx available as param (needed for tabs vw).
+	//RECALC_CY = 2,	// Recalculate view height, cx available as param (needed for tabs vw).
 	TOTAL_CY = 3,	// Total view height (needed for HVIEW/timeline vw).
 	MIN_CY = 4,		// Minimum view height (needed for HVIEW/timeline vw).
 	MAX_CY = 5,		// Maximum view height (needed for HVIEW/timeline vw).

@@ -11,20 +11,15 @@ module;
 #include <sstream>
 #include "logging.h"
 #include "XeResource.h"
-//#include "CustomWndMsgs.h"
 #include <boost/algorithm/string/erase.hpp>
 
 export module Xe.ViewManager;
 
 export import Xe.ViewManagerIF;
 export import Xe.D2DToolbarIF;
-//import Xe.FileVw;
-import Xe.TabsView;
 import Xe.FileHelpers;
 import Xe.FileDlgHelpers;
-//import Xe.FindHistory;
 import Xe.UIcolorsIF;
-//import Xe.LogGridCtrlBase;
 import Xe.OpenFileExplorerAsync;
 import Xe.UIWorkThread;
 import Xe.UserSettingsForUI;
@@ -37,7 +32,6 @@ import Xe.SettingsDlg;
 import Xe.VerifyDirectoryAccessible;
 import Xe.Menu;
 import Xe.Helpers;
-//import Xe.FileContainerIF;
 import Xe.Utils;
 import Xe.StringTools;
 
@@ -53,13 +47,15 @@ private:
 	VSRL::Logger& logger() { return VSRL::s_pVSRL->GetInstance("CXeViewManager"); }
 
 protected:
+	CXeMainFrameIF* m_pMainFrm = nullptr;
 	HWND m_hMainWnd = nullptr;
 	CXeD2DToolbarIF* m_pMainWndToolbar = nullptr;
 
 	CXeUIcolorsIF* m_xeUI = nullptr;
-	std::vector<std::unique_ptr<CXeTabsView>> m_tabViews;
 
 	std::map<dsid_t, std::unique_ptr<CXeFileVwIF>> m_views;
+
+	GetViewPropCallbackFunc m_getViewPropCallback = nullptr;
 
 	CXeUIWorkThread m_uiWorkThread;
 
@@ -97,20 +93,16 @@ public:
 	CXeViewManager(const CXeViewManager&) = delete;
 	CXeViewManager& operator=(const CXeViewManager&) = delete;
 
-	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar/*HWND hParentOfTabVw, UINT uLeftTabDlgCtrlId, UINT uRightTabDlgCtrlId,
-			UINT uLeftViewDlgCtrlId, UINT uRightViewDlgCtrlId*/) override
+	virtual void Initialize(CXeMainFrameIF* pMainFrm) override
 	{
-		m_hMainWnd = m_hParentOfTabVw = hMainWnd;
-		m_pMainWndToolbar = pMainWndToolBar;
+		m_pMainFrm = pMainFrm;
+		XeASSERT(m_pMainFrm);
+		m_hMainWnd = m_hParentOfTabVw = m_pMainFrm->GetMainFrameHandle(); // hMainWnd;
+		m_pMainWndToolbar = m_pMainFrm->GetToolbarIF(); // pMainWndToolBar;
 		XeASSERT(m_hMainWnd && m_pMainWndToolbar);
 
 		m_pMainWndToolbar->SetUpdateMenuCallback(
 			[this](CXeMenu* pMenu, size_t top_level_index) { _UpdateMenuCallback(pMenu, top_level_index); });
-
-		//::SetWindowText(m_hMainWnd, m_strAppName.c_str());
-
-		//m_hParentOfTabVw = hParentOfTabVw;
-		//XeASSERT(hParentOfTabVw && m_tabViews.size() == 0);
 
 		std::wstring settings_path = GetCurrentUserAppDataFolder(m_xeUI->GetAppName());
 
@@ -118,18 +110,11 @@ public:
 		m_MRUList.LoadFromFile(settings_path + L"OpenFileMRUlist.json");
 		
 		m_uiWorkThread.StartThread();
-
-		XeASSERT(m_tabViews.size() == 0);
-		m_tabViews.push_back(std::make_unique<CXeTabsView>(this));
-		m_tabViews.push_back(std::make_unique<CXeTabsView>(this));
-		m_tabViews[0]->Create(m_hMainWnd, ETABVIEWID::ePrimaryTabVw, VW_ID_TABS_0, VW_ID_VIEW_0, m_tabViews[1].get());
-		m_tabViews[1]->Create(m_hMainWnd, ETABVIEWID::eSecondaryTabVw, VW_ID_TABS_1, VW_ID_VIEW_1, m_tabViews[0].get());
-		//return m_tabViews[0]->GetTabViewHeight();
 	}
 
 	virtual bool AttachView(std::unique_ptr<CXeFileVwIF> view, CreateViewParams viewParams) override
 	{
-		CXeTabsView* pTabVw = _GetTabView(viewParams.eTabVwId);
+		CXeTabsViewIF* pTabVw = _GetTabView(viewParams.eTabVwId);
 		XeASSERT(pTabVw);
 		if (!pTabVw)
 		{
@@ -169,18 +154,6 @@ protected:
 	}
 
 public:
-	//virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override
-	//{
-	//	m_hMainWnd = hMainWnd;
-	//	m_pMainWndToolbar = pMainWndToolBar;
-	//	XeASSERT(m_hMainWnd && m_pMainWndToolbar);
-
-	//	m_pMainWndToolbar->SetUpdateMenuCallback(
-	//		[this](CXeMenu* pMenu, size_t top_level_index) { _UpdateMenuCallback(pMenu, top_level_index); });
-
-	//	::SetWindowText(m_hMainWnd, m_strAppName.c_str());
-	//}
-
 	virtual void On_Timer_1S() override
 	{
 	}
@@ -198,12 +171,6 @@ public:
 		{
 			SetFocusToView(m_dwLastViewWithFocus);
 		}
-	}
-
-	virtual int GetTabViewHeight(int idx) override { return m_tabViews.size() > idx ? m_tabViews[idx]->GetTabViewHeight() : 0; }
-	virtual int RecalculateTabViewHeight(int idx, int cxAvailable) override
-	{
-		return m_tabViews.size() > idx ? m_tabViews[idx]->RecalculateTabViewHeight(cxAvailable) : 0;
 	}
 
 	virtual void OnViewClosing(dsid_t dwDataSourceId) override
@@ -239,18 +206,13 @@ public:
 
 	virtual void OnViewRenamed(CXeFileVwIF* pView, const std::wstring& strNewTitle) override
 	{
-		CXeTabsView* pTabVw = _GetTabViewContainingView(pView);
+		CXeTabsViewIF* pTabVw = _GetTabViewContainingView(pView);
 		XeASSERT(pTabVw);
-		pTabVw->RenameTab(pView, strNewTitle);
+		pTabVw->OnViewRenamed(pView);
 	}
 
 	virtual void OnChangedSettings(const ChangedSettings& chg_settings) override
 	{
-		for (auto& pTabView : m_tabViews)
-		{
-			pTabView->OnChangedSettings(chg_settings);
-		}
-
 		if (chg_settings.IsChanged(L"GeneralSettings", L"MRU_Items"))
 		{
 			uint32_t mru_items = s_xeUIsettings[L"GeneralSettings"].Get(L"MRU_Items").getU32();
@@ -264,7 +226,7 @@ public:
 
 	virtual bool SwitchToView(CXeFileVwIF* pView, bool setFocusToView) override
 	{
-		CXeTabsView* pTabVw = _GetTabViewContainingView(pView);
+		CXeTabsViewIF* pTabVw = _GetTabViewContainingView(pView);
 		if (pTabVw)
 		{
 			return pTabVw->SwitchToView(pView, setFocusToView) ? true : false;
@@ -285,7 +247,7 @@ public:
 
 	virtual bool SwitchToViewAtIndex(ETABVIEWID tabVwId, UINT uIndex) override
 	{
-		CXeTabsView* pTabsVw = _GetTabView(tabVwId);
+		CXeTabsViewIF* pTabsVw = _GetTabView(tabVwId);
 		XeASSERT(pTabsVw);
 		if (pTabsVw)
 		{
@@ -299,7 +261,7 @@ public:
 		ETABVIEWID tabVwId = _GetTabVwOfView(dwDataSourceIdOfViewWithFocus);
 		if (tabVwId != ETABVIEWID::eAnyTabVw)
 		{
-			CXeTabsView* pTabsVw = _GetTabView(tabVwId);
+			CXeTabsViewIF* pTabsVw = _GetTabView(tabVwId);
 			if (pTabsVw)
 			{
 				return pTabsVw->SwitchToView(navigate);
@@ -315,7 +277,7 @@ public:
 
 	virtual size_t GetTabViewCount(ETABVIEWID vwId) const override
 	{
-		CXeTabsView* pTabsVw = _GetTabView(vwId);
+		CXeTabsViewIF* pTabsVw = _GetTabView(vwId);
 		if (pTabsVw)
 		{
 			return pTabsVw->GetTabCount();
@@ -325,7 +287,7 @@ public:
 
 	virtual size_t GetTabViewCurrentIndex(ETABVIEWID vwId) const override
 	{
-		CXeTabsView* pTabsVw = _GetTabView(vwId);
+		CXeTabsViewIF* pTabsVw = _GetTabView(vwId);
 		if (pTabsVw)
 		{
 			return pTabsVw->GetIndexOfCurrentTab();
@@ -336,7 +298,7 @@ public:
 	virtual UINT GetTotalViewCount() override
 	{
 		UINT uViewCount = 0;
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			uViewCount += (UINT)pTabView->GetTabCount();
 		}
@@ -346,7 +308,7 @@ public:
 	// Get tab view from point (screen coords.), return tab view id if point is in a tab view or file view else eAnyTabVw.
 	virtual ETABVIEWID GetTabVwFromPoint(POINT& pt) override
 	{
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			if (pTabView->IsPointInThisView(pt))
 			{
@@ -379,10 +341,9 @@ public:
 	// Send message to all views.
 	virtual void SendMessageToAllViews(UINT uMessage, WPARAM wParam, LPARAM lParam) override
 	{
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			pTabView->SendMessageToAllViews(uMessage, wParam, lParam);
-			pTabView->SendMessageW(uMessage, wParam, lParam);
 		}
 		HWND hWndHorzVw = ::GetDlgItem(m_hMainWnd, VW_ID_HVIEW);
 		if (hWndHorzVw)
@@ -396,16 +357,15 @@ public:
 		}
 	}
 
-	// Get tab view window rect in screen coords.
-	virtual CRect GetTabViewWindow(ETABVIEWID tabVwId) override
+	virtual void SetGetViewPropCallback(GetViewPropCallbackFunc getViewPropCallback) override
 	{
-		CRect rcTabVw;
-		CXeTabsView* pTabVw = _GetTabView(tabVwId);
-		if (pTabVw)
-		{
-			pTabVw->GetWindowRect(&rcTabVw);
-		}
-		return rcTabVw;
+		m_getViewPropCallback = getViewPropCallback;
+	}
+
+	virtual int GetViewProp(int view_id, XeViewProp view_property_id, int param) override
+	{
+		XeASSERT(m_getViewPropCallback);
+		return m_getViewPropCallback ? m_getViewPropCallback(view_id, view_property_id, param) : 0;
 	}
 
 	virtual CXeCancelEvent* DoWorkThreadWork(WorkThreadWorkCallbackFunc wt_callback) override
@@ -421,7 +381,7 @@ public:
 	// Called from LVSState when view with focus has changed.
 	virtual void ViewWithFocusChanged(dsid_t dwDataSourceId) override
 	{
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			pTabView->ViewWithFocusChanged(dwDataSourceId);
 		}
@@ -430,7 +390,7 @@ public:
 	// Called from CXeSplitWndLVS::OnSetFocus - set focus to last view with focus.
 	virtual void SetFocusToView(dsid_t dwDataSourceId) override
 	{
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			CXeFileVwIF* pView = pTabView->GetCurrentView();
 			if (pView)
@@ -450,7 +410,7 @@ public:
 
 	virtual bool IsViewVisible(dsid_t dwDataSourceId) override
 	{
-		CXeTabsView* pTabVw = _GetTabViewContainingView(dwDataSourceId);
+		CXeTabsViewIF* pTabVw = _GetTabViewContainingView(dwDataSourceId);
 		if (pTabVw)
 		{
 			return pTabVw->GetDataSourceIdOfCurrentView() == dwDataSourceId;
@@ -615,7 +575,7 @@ protected:
 			if (m_dwLastViewWithFocus.is_valid())
 			{
 				CXeFileVwIF* pView = GetViewFromDataSourceId(m_dwLastViewWithFocus);
-				CXeTabsView* pTab = _GetTabViewContainingView(pView);
+				CXeTabsViewIF* pTab = _GetTabViewContainingView(pView);
 				if (!pTab)
 				{
 					pTab = _GetTabView(ETABVIEWID::ePrimaryTabVw);
@@ -736,7 +696,9 @@ public:
 			if (allViews.size())
 			{
 				m_hOldFocusWnd = ::GetFocus();
-				CRect rcMaxSize, rcTabVw = GetTabViewWindow(ETABVIEWID::ePrimaryTabVw);
+				HWND hWndTabVw = m_pMainFrm->GetTabView(ETABVIEWID::ePrimaryTabVw)->GetTabWindowHandle();
+				CRect rcMaxSize, rcTabVw;
+				::GetWindowRect(hWndTabVw, &rcTabVw);
 				::GetWindowRect(m_hMainWnd, &rcMaxSize);
 				rcMaxSize.top = rcTabVw.bottom;
 				rcMaxSize.bottom -= 10;
@@ -751,8 +713,9 @@ public:
 
 	void _OnNotifyTabListWndDestroyed(dsid_t dwSelectedDataSourceId)
 	{
-		if (!SwitchToViewWithDataSourceId(dwSelectedDataSourceId, true)
-			&& m_hOldFocusWnd)
+		if (m_dwLastViewWithFocus != dwSelectedDataSourceId
+				&& !SwitchToViewWithDataSourceId(dwSelectedDataSourceId, true)
+				&& m_hOldFocusWnd)
 		{
 			::SetFocus(m_hOldFocusWnd);
 			m_hOldFocusWnd = 0;
@@ -911,45 +874,35 @@ protected:
 	}
 
 protected:
-	std::vector<CXeTabsView*> _GetAllTabViews()
+	std::vector<CXeTabsViewIF*> _GetAllTabViews() const
 	{
-		std::vector<CXeTabsView*> views;
-		for (auto& pTabView : m_tabViews)
-		{
-			views.push_back(pTabView.get());
-		}
-		return views;
+		return m_pMainFrm->GetAllTabViews();
 	}
 
-	CXeTabsView* _GetTabView(ETABVIEWID tabVwId) const
+	CXeTabsViewIF* _GetTabView(ETABVIEWID tabVwId) const
 	{
-		XeASSERT(m_tabViews.size() == 2
-			&& (tabVwId == ETABVIEWID::eAnyTabVw || tabVwId == ETABVIEWID::ePrimaryTabVw
-				|| tabVwId == ETABVIEWID::eSecondaryTabVw));
-		return tabVwId == ETABVIEWID::ePrimaryTabVw ? m_tabViews[0].get()
-			: tabVwId == ETABVIEWID::eSecondaryTabVw ? m_tabViews[1].get()
-			: tabVwId == ETABVIEWID::eAnyTabVw ? m_tabViews[0].get() : nullptr;
+		return m_pMainFrm->GetTabView(tabVwId);
 	}
 
-	CXeTabsView* _GetTabViewContainingView(CXeFileVwIF* pView)
+	CXeTabsViewIF* _GetTabViewContainingView(CXeFileVwIF* pView)
 	{
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			if (pTabView->FindView(pView))
 			{
-				return pTabView.get();
+				return pTabView;
 			}
 		}
 		return nullptr;
 	}
 
-	CXeTabsView* _GetTabViewContainingView(dsid_t dwDataSourceId)
+	CXeTabsViewIF* _GetTabViewContainingView(dsid_t dwDataSourceId)
 	{
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			if (pTabView->FindView(dwDataSourceId))
 			{
-				return pTabView.get();
+				return pTabView;
 			}
 		}
 		return nullptr;
@@ -958,7 +911,7 @@ protected:
 	std::vector<CVwInfo> _CopyAllTabsInfos()
 	{
 		std::vector<CVwInfo> allTabs;
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			std::vector<CVwInfo> tabs = pTabView->GetAllTabs();
 			allTabs.insert(allTabs.end(), tabs.begin(), tabs.end());
@@ -968,7 +921,7 @@ protected:
 
 	ETABVIEWID _GetTabVwOfView(dsid_t dwDataSourceId) const
 	{
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			if (pTabView->FindView(dwDataSourceId) != nullptr)
 			{
@@ -991,7 +944,7 @@ protected:
 	virtual std::vector<CXeFileVwIF*> GetAllForegroundViews() override
 	{
 		std::vector<CXeFileVwIF*> allFgViews;
-		for (auto& pTabView : m_tabViews)
+		for (auto& pTabView : _GetAllTabViews())
 		{
 			CXeFileVwIF* pView = pTabView->GetCurrentView();
 			if (pView)
@@ -1010,11 +963,11 @@ protected:
 		_SortOnDataSourceId(allViews);
 		std::vector<CXeFileVwIF*> nonFgViews;
 		std::set_difference(allViews.begin(), allViews.end(), allFgViews.begin(), allFgViews.end(),
-			std::inserter(nonFgViews, nonFgViews.begin()),
-			[](CXeFileVwIF* pA, CXeFileVwIF* pB)
-			{
-				return pA->GetDataSourceId() < pB->GetDataSourceId();
-			});
+				std::inserter(nonFgViews, nonFgViews.begin()),
+				[](CXeFileVwIF* pA, CXeFileVwIF* pB)
+				{
+					return pA->GetDataSourceId() < pB->GetDataSourceId();
+				});
 		return nonFgViews;
 	}
 

@@ -37,7 +37,7 @@ public:
 		ClientToScreen(rc);
 		return rc.PtInRect(pt) != 0;
 	}
-	virtual void SetFocusToView() override {}
+	virtual void SetFocusToView() const override {}
 	virtual void OnCopyInfoToClipboard(ECLIPBRDOP eClpBrdOp) override {}
 	virtual bool CanCopyInfoToClipboard(ECLIPBRDOP eClpBrdOp) override { return false; }
 	virtual void OnChangedSettings(const ChangedSettings& chg_settings) override

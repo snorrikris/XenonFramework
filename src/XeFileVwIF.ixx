@@ -47,7 +47,7 @@ public:
 	// Return true if point (in screen coords.) is in 'this' view else false.
 	virtual bool IsPointInThisView(POINT& pt) = 0;
 
-	virtual void SetFocusToView() = 0;
+	virtual void SetFocusToView() const = 0;
 
 	//virtual std::wstring GetViewTitle() = 0;
 
@@ -139,18 +139,15 @@ public:
 	int				m_cxViewName = 0;
 	CRect			m_rcPos;			// Item position in client coords.
 
-	std::wstring	m_viewName, m_pathname;
-
 	CVwInfo()
 	{
 		ClearUIvars();
 	}
 	CVwInfo(CXeFileVwIF* pView) : m_pView(pView)
 	{
+		XeASSERT(pView);
 		m_dsid = pView ? pView->GetDataSourceId() : dsid_t();
 		ClearUIvars();
-		m_viewName = pView ? m_pView->GetViewName() : L"";
-		m_pathname = pView ? m_pView->GetPathName() : L"";
 	}
 	//~CVwInfo() {}
 
@@ -159,35 +156,24 @@ public:
 		m_rcTab.SetRectEmpty();
 		m_rcCloseBtn.SetRectEmpty();
 		m_rcPinBtn.SetRectEmpty();
+		m_rcPos.SetRectEmpty();
 		m_bIsMouseOver = m_bIsMouseOverCloseBtn = m_bIsMouseOverPinBtn = false;
-		m_nRow = 0;
+		m_nRow = m_cxTabNeeded = m_cxViewName = 0;
 	}
 
-	//DSType GetDataSourceType() const
-	//{
-	//	XeASSERT(m_pView);
-	//	if (m_pView) { return m_pView->GetDataSourceType(); }
-	//	return DSType::UNKNOWN;
-	//}
-
-	const std::wstring& GetViewName() const
+	std::wstring GetViewName() const
 	{
-		//XeASSERT(m_pView);
-		//if (!m_pView) { return m_empty_string; }
-		////return m_pView->GetFileContainerUI_IF()->GetMetadata().m_strLogFilename;
-		//return m_pView->GetViewName();
-		return m_viewName;
+		XeASSERT(m_pView);
+		if (!m_pView) { return std::wstring(); }
+		return m_pView->GetViewName();
 	}
 
-	const std::wstring& GetPathName() const
+	std::wstring GetPathName() const
 	{
-		//XeASSERT(m_pView);
-		//if (!m_pView) { return m_empty_string; }
-		//return m_pView->GetPathName();
-		return m_pathname;
+		XeASSERT(m_pView);
+		if (!m_pView) { return std::wstring(); }
+		return m_pView->GetPathName();
 	}
 };
 
-export typedef std::list<CVwInfo> CVwInfoList;
-export typedef std::list<CVwInfo>::iterator Iterator_VwInfoList;
 

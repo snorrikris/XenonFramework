@@ -46,8 +46,7 @@ export class CViewsListWnd : public CXeD2DWndBase
 
 	NotifyTabListWndDestroyedCallbackFunc m_notifyCallback = nullptr;
 
-	CVwInfoList m_viewList;
-	Iterator_VwInfoList m_iterCurItem;
+	std::vector<CVwInfo> m_viewList;
 	dsid_t m_dwSelItemDataSourceId;
 	dsid_t m_dwMouseOverItemDataSourceId;
 
@@ -78,8 +77,7 @@ public:
 		m_cyViewListRow = m_cyPath = _GetViewsListPathTextHeight();
 		_MakeViewList(hParent, allViews);
 
-		m_iterCurItem = std::find_if(m_viewList.begin(), m_viewList.end(), 
-			[curViewId](const auto& item) { return item.m_dsid == curViewId; });
+		m_dwSelItemDataSourceId = curViewId;
 
 		_CalculateItems(hParent, rcMaxSize);
 
@@ -126,30 +124,32 @@ protected:
 		if (wParam == VK_TAB)
 		{
 			CXeShiftCtrlAltKeyHelper sca;
-			bool isListValid = m_iterCurItem != m_viewList.end();
+			auto it = std::find_if(m_viewList.begin(), m_viewList.end(),
+					[this](const auto& item) { return item.m_dsid == m_dwSelItemDataSourceId; });
+			bool isListValid = it != m_viewList.end();
 			if (isListValid)
 			{
 				if (sca.IsOnlyShiftCtrlDown())	// Reverse direction iteration
 				{
-					if (m_iterCurItem == m_viewList.begin())
+					if (it == m_viewList.begin())
 					{
-						m_iterCurItem = m_viewList.end();
-						m_iterCurItem--;
+						it = m_viewList.end();
+						it--;
 					}
 					else
 					{
-						m_iterCurItem--;
+						it--;
 					}
 				}
 				else if (sca.IsOnlyCtrlDown())
 				{
-					m_iterCurItem++;
-					if (m_iterCurItem == m_viewList.end())
+					it++;
+					if (it == m_viewList.end())
 					{
-						m_iterCurItem = m_viewList.begin();
+						it = m_viewList.begin();
 					}
 				}
-				m_dwSelItemDataSourceId = m_iterCurItem->m_dsid;
+				m_dwSelItemDataSourceId = it->m_dsid;
 				if (m_hasScrollbar)
 				{
 					int nCurItemRow = _GetCurItemRow();
@@ -211,8 +211,7 @@ protected:
 
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rc) override
 	{
-		dsid_t curVwId = m_iterCurItem != m_viewList.end() ? m_iterCurItem->m_dsid : dsid_t();
-		_DrawViewsListWndUI(pRT, rc, m_viewList, curVwId, m_dwMouseOverItemDataSourceId);
+		_DrawViewsListWndUI(pRT, rc);
 	}
 
 	virtual LRESULT _OnMouseMove(UINT nFlags, CPoint point) override
@@ -438,25 +437,21 @@ protected:
 
 	int _GetCurItemRow()
 	{
-		bool isCurItemValid = m_iterCurItem != m_viewList.end();
-		if (isCurItemValid)
+		int nCurRow = 0, nItemInColCount = 0;
+		for (CVwInfo& item : m_viewList)
 		{
-			int nCurRow = 0, nItemInColCount = 0;
-			for (CVwInfo& item : m_viewList)
+			if (item.m_dsid == m_dwSelItemDataSourceId)
 			{
-				if (item.m_dsid == m_iterCurItem->m_dsid)
-				{
-					return nCurRow;
-				}
-				if (++nItemInColCount >= m_nNumItemsInCol)
-				{
-					nItemInColCount = 0;
-					nCurRow = 0;
-				}
-				else
-				{
-					nCurRow++;
-				}
+				return nCurRow;
+			}
+			if (++nItemInColCount >= m_nNumItemsInCol)
+			{
+				nItemInColCount = 0;
+				nCurRow = 0;
+			}
+			else
+			{
+				nCurRow++;
 			}
 		}
 		return 0;
@@ -474,10 +469,10 @@ protected:
 		return std::max((int)18, m_xeUI->GetFontMetric(EXE_FONT::eUI_Font).GetHeight());
 	}
 
-	void _DrawViewsListWndUI(ID2D1RenderTarget* pRT, D2D1_RECT_F rc,
-			const CVwInfoList& list, dsid_t curVwId, dsid_t mouseOvrVwId)
+	void _DrawViewsListWndUI(ID2D1RenderTarget* pRT, D2D1_RECT_F rc)
 	{
-		pRT->FillRectangle(rc, GetBrush(CID::CtrlBg));
+		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg)); // Fill background
+		//pRT->FillRectangle(rc, GetBrush(CID::CtrlBg));
 		int cxVw = (int)WidthOf(rc), cyVw = (int)HeightOf(rc);
 		int cyTitle = _GetViewsListTitleTextHeight();
 		int cyPath = _GetViewsListPathTextHeight();
@@ -485,7 +480,7 @@ protected:
 		int yPathTop = c_cyVL_ClientMargin + cyTitle + c_cyVL_PathMarginTop;
 		CRect rcPath(c_cxVL_ClientMargin, yPathTop, cxVw, yPathTop + cyPath);
 
-		for (const CVwInfo& item : list)
+		for (const CVwInfo& item : m_viewList)
 		{
 			if (!item.m_pView || item.m_rcPos.IsRectEmpty())
 			{
@@ -493,17 +488,19 @@ protected:
 			}
 			PID pid = item.m_pView->GetViewPID();
 			COLORREF rgbTxt = item.m_pView->GetViewTitleTextColor();
-			if (item.m_dsid == curVwId)
+			if (item.m_dsid == m_dwSelItemDataSourceId)
 			{
-				_DrawIconAndFilename(pRT, item.GetViewName(), rcTitle, EXE_FONT::eTabListTitleFont, rgbTxt, pid, false, CRect());
+				_DrawIconAndFilename(pRT, item.GetViewName(), rcTitle, EXE_FONT::eTabListTitleFont, rgbTxt,
+						pid, false, true, CRect());
 				_CreateAndDrawTextLayout(pRT, item.GetPathName(), rcPath, CID::CtrlTxt);
 				rgbTxt = m_xeUI->GetColor(CID::TabTxtFg);
 			}
-			if (item.m_dsid == curVwId || item.m_dsid == mouseOvrVwId)
+			if (item.m_dsid == m_dwSelItemDataSourceId || item.m_dsid == m_dwMouseOverItemDataSourceId)
 			{
 				_DrawCurItemBg(pRT, item.m_rcPos);
 			}
-			_DrawIconAndFilename(pRT, item.GetViewName(), item.m_rcPos, EXE_FONT::eUI_Font, rgbTxt, pid, true, CRect());
+			_DrawIconAndFilename(pRT, item.GetViewName(), item.m_rcPos, EXE_FONT::eUI_Font, rgbTxt,
+					pid, true, true, CRect());
 		}
 	}
 

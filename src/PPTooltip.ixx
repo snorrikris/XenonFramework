@@ -92,20 +92,15 @@ This is often used to create labels that span multiple columns.< / indent>< / fo
 <td><b><font color = #000000>Press F1 for more help< / b>< / td>< / font>< / tr>< / table>
 #endif // end example
 
+#include "os_minimal.h"
 #include <string>
 #include <format>
 #include <d2d1.h>
 #include <dwrite.h>
 
-#include "PPHtmlDrawer.h"
-
-#include "PPTooltipDefs.h"
-
-//#include <boost/algorithm/string.hpp>
-//#include "XeStringTools.h"
-
 export module Xe.PPTooltip;
 
+import Xe.PPHtmlDrawer;
 import Xe.UIcolorsIF;
 import Xe.Helpers;
 import Xe.D2DWndBase;
@@ -116,6 +111,11 @@ import Xe.Monitors;
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+//#define CPPTOOLTIP_TRACE XeTRACE
+#define CPPTOOLTIP_TRACE (__noop)		// +++hd
+//#define MM_CPPTOOLTIP_TRACE XeTRACE
+#define MM_CPPTOOLTIP_TRACE (__noop)	// +++sk
 
 #define TIMER_HIDE		0x101 //the identifier of the timer for hide the tooltip
 #define TIMER_SHOW		0x100 //the identifier of the timer for show the tooltip

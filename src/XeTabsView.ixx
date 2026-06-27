@@ -231,7 +231,7 @@ public:
 
 	int GetTabViewHeight() const { return m_listTabs->GetTabViewHeight(); }
 
-	int GetNumTabRows() const { return m_listTabs->GetNumTabRows(); }
+	//int GetNumTabRows() const { return m_listTabs->GetNumTabRows(); }
 
 	virtual ETABVIEWID GetTabVwId() const override { return m_eTabVwId; }
 
@@ -554,25 +554,29 @@ protected:
 		// Note - the view being deleted is not necessarily the current view
 		// (i.e. the user can close a view that is not current).
 		XeASSERT(pDelView);
-		dsid_t dwDataSourceIdOfClosingView = pDelView->GetDataSourceId();
-
-		m_pVwMgr->OnViewClosing(dwDataSourceIdOfClosingView);
-
 		CXeFileVwIF* pCurrentView = _GetCurrentView();
 		bool isDelViewCurrent = pDelView == pCurrentView;
-
-		CXeFileVwIF* pNextView = m_listTabs->RemoveTab(pDelView);	// Remove tab from tab control.
 		if (isDelViewCurrent)
 		{
-			if (pNextView)
+			CXeFileVwIF* pNextVw = m_listTabs->GetAdjacentTab(pCurrentView);
+			if (pNextVw)
 			{
-				bool setFocusToView = isDelViewCurrent;
-				_SwitchViews(pNextView, true);
+				_SwitchViews(pNextVw, true);
 			}
 			else
 			{
 				_HideView(pDelView);
 			}
+		}
+
+		dsid_t dwDataSourceIdOfClosingView = pDelView->GetDataSourceId();
+
+		m_pVwMgr->OnViewClosing(dwDataSourceIdOfClosingView);
+
+		m_listTabs->RemoveTab(pDelView);	// Remove tab from tab control.
+		if (!isDelViewCurrent)
+		{
+			_HideView(pDelView);
 		}
 
 		::DestroyWindow(pDelView->GetHwndOfView());
@@ -640,6 +644,7 @@ protected:
 		else
 		{
 			_HideThisTabView();							// 'this' is other view with no tabs - hide it.
+			m_pOtherView->_RecalculateUIandRepositionWindowsIfNeeded(true);	// Reposition Primary view.
 		}
 	}
 
@@ -673,7 +678,9 @@ protected:
 			::SetParent(tabinfo.m_pView->GetHwndOfView(), m_hParentOfViews);
 		}
 		_ShowView(pCurView, true);
-		m_listTabs->RecalculateUI();
+		m_pMainFrm->RecalculateWindowsRects();
+		CRect rcTabVw = m_pMainFrm->GetViewWindowRect(m_uTabVwDlgCtrlId);
+		m_listTabs->CalculateUI(rcTabVw.Width());
 		m_listTabs->MakeCurrentTabVisible(_GetCurrentView());
 		m_pMainFrm->RecalculateWindowsRects();
 		_SetThisTabViewPosition();
@@ -689,7 +696,7 @@ protected:
 		}
 	}
 
-	void _RecalculateUIandRepositionWindowsIfNeeded()
+	void _RecalculateUIandRepositionWindowsIfNeeded(bool isSetWindowsPosWanted = false)
 	{
 		if (::GetDlgCtrlID(Hwnd()) == m_uTabVwDlgCtrlId)	// Is 'this' view visible?
 		{
@@ -699,7 +706,7 @@ protected:
 			{
 				m_listTabs->MakeCurrentTabVisible(pCurView);
 			}
-			if (isTabHeightChanged)
+			if (isTabHeightChanged || isSetWindowsPosWanted)
 			{
 				// Height needed for tabs has changed.
 				m_pMainFrm->RecalculateWindowsRects();
@@ -872,12 +879,12 @@ protected:
 		rcBtnSpcR.left -= 2;
 		pRT->FillRectangle(RectFfromRect(rcBtnSpcR), GetBrush(CID::TabBg));
 
-		if (!m_listTabs->m_isOneRowUI)
+		if (m_listTabs->HasHscrollButtons())
 		{
 			CID cidXL = m_listTabs->m_isMouseOverLeftXscrollButton ? CID::CtrlCurItemBg : CID::CtrlBgDis;
-			_DrawScrollbarButton(pRT, RectFfromRect(m_listTabs->m_rcLeftXscrollBtn), cidXL, BtnTp::left);
+			_DrawScrollbarButton(pRT, RectFfromRect(m_listTabs->m_rcLeftXscrollBtn), cidXL, BtnTp::left, CID::TabBg);
 			CID cidXR = m_listTabs->m_isMouseOverRightXscrollButton ? CID::CtrlCurItemBg : CID::CtrlBgDis;
-			_DrawScrollbarButton(pRT, RectFfromRect(m_listTabs->m_rcRightXscrollBtn), cidXR, BtnTp::right);
+			_DrawScrollbarButton(pRT, RectFfromRect(m_listTabs->m_rcRightXscrollBtn), cidXR, BtnTp::right, CID::TabBg);
 		}
 
 		CRect rcFocusLine(0, cyVw - 2, cxVw, cyVw);

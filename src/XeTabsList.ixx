@@ -78,7 +78,7 @@ public:
 	bool m_isMouseOverLeftXscrollButton = false, m_isMouseOverRightXscrollButton = false;
 
 	// UI vars.
-	int m_cxVw = 0, m_cyTabRow = 0;
+	int m_cxVw = 0, m_cyTabRow = 0, m_cyTabView = 0;
 
 	CXeTabsList(CXeUIcolorsIF* pUIcolors) : m_xeUI(pUIcolors) {}
 	//~CXeTabsList(void) {}
@@ -140,6 +140,28 @@ public:
 		m_list.clear();
 		return tabList;
 	}
+
+	// Get view after pView - or before pView, when pView is last view - or nullptr if pView is the only view.
+	CXeFileVwIF* GetAdjacentTab(CXeFileVwIF* pView)
+	{
+		dsid_t dsid = pView->GetDataSourceId();
+		auto it = std::find_if(m_list.begin(), m_list.end(),
+				[&](CVwInfo& tabinfo) { return tabinfo.m_dsid == dsid; });
+		XeASSERT(it != m_list.end());	// View should have been found.
+		if (it == m_list.end() || m_list.size() == 1)
+		{
+			return nullptr;
+		}
+		auto it_next = it + 1;
+		if (it_next != m_list.end())
+		{
+			return it_next->m_pView;
+		}
+		XeASSERT(it != m_list.begin());
+		auto it_prev = it - 1;	// Note - we have two or more views in the list - so this is safe.
+		return it_prev->m_pView;
+	}
+
 #pragma endregion Tab_Management
 
 #pragma region Tab_Info
@@ -701,14 +723,14 @@ public:
 	// Return true if height changed.
 	bool RecalculateUI()
 	{
-		int cyBefore = GetTabViewHeight();
+		int cyBefore = m_cyTabView;
 		_RecalculateTabsViewUI();
-		return cyBefore != GetTabViewHeight();
+		return cyBefore != m_cyTabView;
 	}
 
 	int GetTabViewRowHeight() const { return m_cyTabRow; }
 
-	int GetTabViewHeight() const { return m_cyTabRow * GetNumTabRows(); }
+	int GetTabViewHeight() const { return m_cyTabView; }
 
 	int GetTabViewWidth() const { return m_cxVw; }
 
@@ -752,6 +774,13 @@ public:
 		m_xOffset = GetValueInValidRange(m_xOffset + xScroll, 0, m_xOffsetLimit);
 	}
 
+	bool HasHscrollButtons() const
+	{
+		const CRect& rcXL = m_rcLeftXscrollBtn;
+		const CRect& rcXR = m_rcRightXscrollBtn;
+		return rcXL.right > rcXL.left && rcXR.right > rcXR.left;
+	}
+
 	inline int GetXoffsetForPaint() const
 	{
 		return m_xOffset - m_rcLeftTabListDropDownBtn.right;
@@ -775,6 +804,11 @@ protected:
 		* If pinned tabs need more than one row - then unpinned tabs will not share a row with the
 		* pinned tabs. In this case all unpinned tabs occupy the bottom row.
 		*/
+
+		if (m_cyTabRow == 0)
+		{
+			m_cyTabRow = _GetTabViewRowHeight();
+		}
 
 		m_isOneRowUI = true;	// Assume that one row for UI is enough.
 		int x_firstTabAfterLB = _SetTabListUIbuttonRects(0 /*row*/);
@@ -813,6 +847,7 @@ protected:
 			}
 		}
 		m_isOneRowUI = cxForOneRow < m_cxVw;
+		m_cyTabView = m_list.size() > 0 ? m_cyTabRow : 0;
 		if (m_isOneRowUI)	// If one row is enough for all tabs - then no more work is needed.
 		{
 			m_xOffset = 0;
@@ -858,10 +893,12 @@ protected:
 		int cxForTabs = m_cxVw - (listBtn.cx + scrollBtn.cx * 2);
 		m_xOffsetLimit = cxUnpinnedTabsTotal > cxForTabs ? cxUnpinnedTabsTotal - cxForTabs : 0;
 
+		m_cyTabView = m_list.size() > 0 ? ((row + 1) * m_cyTabRow) : 0;
+
 		int lastRow = GetNumTabRows() - 1;
 		if (numUnpinnedTabs == 0)	// No unpinned tabs?
 		{
-			// Need to reposition last row tabs to fit L drop down button.
+			// Need to reposition last row tabs to fit left drop down button.
 			for (CVwInfo& tabInfo : m_list)
 			{
 				if (tabInfo.m_nRow == lastRow)
@@ -906,9 +943,9 @@ protected:
 		yListBtns += (m_cyTabRow * row);
 		rcLB.SetRect(xListBtnL, yListBtns, xListBtnL + listBtn.cx, yListBtns + listBtn.cy);
 		int xListBtnR = m_cxVw - (scrollBtn.cx * 2);
-		if (xListBtnR < rcLB.right || m_isOneRowUI)
+		if (xListBtnR < rcLB.right || m_isOneRowUI || GetUnPinnedTabCount() == 0)
 		{
-			// No space for X scroll buttons OR one row UI - don't need X scroll buttons.
+			// No space for X scroll buttons OR one row UI OR no unpinned tabs - don't need X scroll buttons.
 			rcXL.SetRect(m_cxVw, yListBtns, m_cxVw, yListBtns + scrollBtn.cy);
 			rcXR.SetRect(m_cxVw, yListBtns, m_cxVw, yListBtns + scrollBtn.cy);
 		}

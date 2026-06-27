@@ -1166,7 +1166,7 @@ public:
 	}
 
 	enum class BtnTp { left, right, up, down };
-	void _DrawScrollbarButton(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcBtn, CID fgColor, BtnTp tp)
+	void _DrawScrollbarButton(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcBtn, CID fgColor, BtnTp tp, CID bgColor = CID::Invalid)
 	{
 		bool isHorz = tp == BtnTp::left || tp == BtnTp::right;
 		float cxTri = isHorz ? 5.0f : 9.0f, cyTri = isHorz ? 9.0f : 5.0f;
@@ -1193,6 +1193,10 @@ public:
 			}
 		}
 
+		if (bgColor != CID::Invalid)
+		{
+			pRT->FillRectangle(rcBtn, GetBrush(bgColor));
+		}
 		Microsoft::WRL::ComPtr<ID2D1PathGeometry> tri = _MakeTriangle(D2D1_POINT_2F(x1, y1), D2D1_POINT_2F(x2, y2), D2D1_POINT_2F(x3, y3));
 		pRT->DrawGeometry(tri.Get(), GetBrush(fgColor), 1.0f);
 		pRT->FillGeometry(tri.Get(), GetBrush(fgColor));

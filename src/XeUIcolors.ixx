@@ -25,6 +25,7 @@ import Xe.Helpers;
 import Xe.FileHelpers;
 import Xe.Menu;
 import Xe.PPTooltip;
+import Xe.PPTooltipWindow;
 import Xe.D2DWndBase;
 //import Xe.LogDefs;
 import Xe.StringTools;
@@ -450,7 +451,9 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////
 	// Other data
 
-	XeTooltipsMap m_tooltips;
+	XeTooltipsMap m_tooltipsMap;
+
+	std::unique_ptr<CPPToolTipWindow> m_theOneAndOnlyTooltipWindow;
 
 	// Dialog that wants to know if user clicked L button down outside it's window.
 	HWND m_hWndDialogWantsClickOutsideMouseDown = nullptr;
@@ -588,8 +591,18 @@ public:
 		m_hwndMapDialog.Set(hDlgWnd, dlgClosedCallback);
 	}
 
+	// Note - is called twice - once when main frame created
+	// - and once when destroyed - to set handle to 0.
 	virtual void SetMainWindowHandle(HWND hMainWnd) override
 	{
+		if (hMainWnd)
+		{
+			_CreateTheOneAndOnlyTooltipWindow(hMainWnd);
+		}
+		else
+		{
+			_DestroyTheOneAndOnlyTooltipWindow();
+		}
 		m_hMainWnd = hMainWnd;
 	}
 
@@ -840,28 +853,6 @@ protected:
 		return m_monospacedCharSize;
 	}
 
-	virtual CXeTooltipIF* CreateTooltip(const std::wstring& nameForLogging, HWND hWndParent) override
-	{
-		return m_tooltips.Create(this, nameForLogging, hWndParent);
-	}
-
-	virtual void DestroyTooltip(HWND hWndParent) override
-	{
-		return m_tooltips.Destroy(hWndParent);
-	}
-
-	virtual void HideTooltip(HWND hWndParent)
-	{
-		return m_tooltips.HideTooltip(hWndParent);
-	}
-
-	virtual void HideOtherTooltips(HWND hWndTooltip) override
-	{
-		m_tooltips.HideOtherTooltips(hWndTooltip);
-	}
-
-	virtual int GetTooltipDefaultWidth() const override { return m_cxDefaultTooltip; }
-
 protected:
 	void _DeleteFonts()
 	{
@@ -1107,6 +1098,48 @@ protected:
 		}
 	}
 #pragma endregion Fonts
+
+#pragma region Tooltips
+public:
+	virtual CXeTooltipIF* CreateTooltip(const std::wstring& nameForLogging, HWND hWndParent) override
+	{
+		return m_tooltipsMap.Create(this, nameForLogging, hWndParent);
+	}
+
+	virtual void DestroyTooltip(HWND hWndParent) override
+	{
+		return m_tooltipsMap.Destroy(hWndParent);
+	}
+
+	virtual void HideTooltip(HWND hWndParent)
+	{
+		return m_tooltipsMap.HideTooltip(hWndParent);
+	}
+
+	virtual void HideOtherTooltips(HWND hWndTooltip) override
+	{
+		m_tooltipsMap.HideOtherTooltips(hWndTooltip);
+	}
+
+	virtual int GetTooltipDefaultWidth() const override { return m_cxDefaultTooltip; }
+
+	virtual void SetNewTooltip(HWND hWndParent, CPoint point, const PPTOOLTIP_INFO& ttInfo) override
+	{
+		XeASSERT(m_theOneAndOnlyTooltipWindow.get());
+		m_theOneAndOnlyTooltipWindow->SetNewTooltip(hWndParent, point, ttInfo);
+	}
+
+protected:
+	void _CreateTheOneAndOnlyTooltipWindow(HWND hMainWnd)
+	{
+		m_theOneAndOnlyTooltipWindow = std::make_unique<CPPToolTipWindow>(this);
+		m_theOneAndOnlyTooltipWindow->Create(L"TooltipWindow", hMainWnd);
+	}
+	void _DestroyTheOneAndOnlyTooltipWindow()
+	{
+		m_theOneAndOnlyTooltipWindow->DestroyWindow();
+	}
+#pragma endregion Tooltips
 
 #pragma region Cursor
 	virtual HCURSOR GetAppCursor(bool isGrid = false) const override

@@ -451,12 +451,14 @@ protected:
 		if (bDisplayWithDelay && m_dwTimeInitial)
 		{
 			CPPTOOLTIP_TRACE("Start the show timer - delay=%d\n", m_dwTimeInitial);
-			::SetTimer(Hwnd(), TIMER_SHOW, m_dwTimeInitial, NULL);
+			//::SetTimer(Hwnd(), TIMER_SHOW, m_dwTimeInitial, NULL);
 		}
 		else
 		{
 			_OnTimer(TIMER_SHOW, 0);
 		}
+
+		m_xeUI->SetNewTooltip(m_hParentWnd, m_ptOriginal, m_tiNextTool);
 	} //End of SetNewTooltip
 
 	BOOL PreventTooltipShowing()

@@ -363,6 +363,8 @@ public:
 	virtual void HideTooltip(HWND hWndParent) = 0;
 	virtual void HideOtherTooltips(HWND hWndTooltip) = 0;
 
+	virtual void SetNewTooltip(HWND hWndParent, CPoint point, const PPTOOLTIP_INFO& ttInfo) = 0;
+
 	//virtual void ApplyTooltipFontAndSize(LOGFONTW& lf) const = 0;
 
 	virtual int GetTooltipDefaultWidth() const = 0;

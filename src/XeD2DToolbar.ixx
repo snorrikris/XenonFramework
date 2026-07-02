@@ -966,7 +966,7 @@ public:
 		//sti.rgbBg = m_xeUI->GetColor(CID::TT_Bg);
 		//sti.rgbText = m_xeUI->GetColor(CID::TT_Text);
 		//sti.hWnd = GetSafeHwnd();
-		pNeedTT->ti->hTWnd = GetSafeHwnd();
+		pNeedTT->ti->hWndTTparent = GetSafeHwnd();
 
 		CPoint pt(*pNeedTT->pt);
 		const XETBItem* pItem = 0;
@@ -989,7 +989,7 @@ public:
 				//sti.nSizeX = cxTooltip;
 				pNeedTT->ti->sTooltip = tooltip;
 				//sti.m_sBody = tooltip.c_str();
-				pNeedTT->ti->hTWnd = GetSafeHwnd();
+				pNeedTT->ti->hWndTTparent = GetSafeHwnd();
 				pNeedTT->ti->rectBounds = pItem->m_rItem;
 				pNeedTT->ti->ptTipOffset.x = pItem->m_rItem.left;
 				isToolTip = true;

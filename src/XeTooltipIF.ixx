@@ -13,14 +13,19 @@ export constexpr UINT PPTOOLTIP_NOCLOSE_OVER	=	0x00000008; //No close tooltip if
 export struct PPTOOLTIP_INFO
 {
 	PPTOOLTIP_INFO() = default;
-	PPTOOLTIP_INFO(HWND hWnd_ContainingTool, const std::wstring& tooltip) : hTWnd(), sTooltip(tooltip) {}
+	PPTOOLTIP_INFO(HWND hWnd_ContainingTool, const std::wstring& tooltip)
+			: hWndTTparent(hWnd_ContainingTool), sTooltip(tooltip) {}
 
 	CRect			rectBounds;				// Bounding rect for toolinfo to be displayed
 	std::wstring	sTooltip;				// The string of the tooltip
 	UINT			nBehaviour = PPTOOLTIP_NOCLOSE_OVER /*| PPTOOLTIP_CLOSE_LEAVEWND | PPTOOLTIP_MULTIPLE_SHOW*/;		// The tooltip's behaviour
-	HWND			hTWnd = NULL;			// +++hd
+	HWND			hWndTTparent = NULL;	// +++hd
 	CPoint			ptTipOffset;			// +++sk offset coords. for tool tip (from left,bottom).
 };
+
+// UDM_TOOLTIP_NEED_TT is sent as WM_NOTIFY message to parent when no tooltip found.
+// lParam = pointer to NM_PPTOOLTIP_NEED_TT structure.
+export constexpr UINT UDM_TOOLTIP_NEED_TT = (WM_USER + 104);
 
 // This structure sent to PPTooltip parent in a WM_NOTIFY - UDM_TOOLTIP_NEED_TT message
 // when no tooltip found at mouse coords.
@@ -32,16 +37,19 @@ export struct NM_PPTOOLTIP_NEED_TT
 	NMHDR hdr;
 	LPPOINT pt;				// Mouse coords.
 	PPTOOLTIP_INFO* ti;
-};
 
-// UDM_TOOLTIP_NEED_TT is sent as WM_NOTIFY message to parent when no tooltip found.
-// lParam = pointer to NM_PPTOOLTIP_NEED_TT structure.
-export constexpr UINT UDM_TOOLTIP_NEED_TT = (WM_USER + 104);
+	NM_PPTOOLTIP_NEED_TT(POINT* pPT, PPTOOLTIP_INFO* pTI) : pt(pPT), ti(pTI)
+	{
+		hdr.code = UDM_TOOLTIP_NEED_TT;
+		hdr.hwndFrom = 0;
+		hdr.idFrom = 0;
+	}
+};
 
 export class CXeTooltipIF
 {
 public:
-	virtual BOOL RelayMessageToTooltip(UINT message, CPoint pt_msg) = 0;
+	virtual BOOL RelayMessageToTooltip(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
 
 	virtual void HideTooltip() = 0;
 

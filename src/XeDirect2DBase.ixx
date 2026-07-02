@@ -165,13 +165,10 @@ public:
 public:
 	LRESULT _OnMessageD2DBase(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		DWORD dwMsgPos = ::GetMessagePos();
-		bool isMouseMessage = IsMouseMessage(uMsg);
-		if (isMouseMessage)
+		if (IsMouseMessage(uMsg))
 		{
-			CPoint msg_pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			if ((m_xtooltip && m_xtooltip->RelayMessageToTooltip(uMsg, msg_pt))
-					|| _FilterMouseMessage(uMsg, wParam, lParam, msg_pt))
+			if ((m_xtooltip && m_xtooltip->RelayMessageToTooltip(hWnd, uMsg, wParam, lParam))
+					|| _OnAnyMouseMessage(hWnd, uMsg, wParam, lParam))
 			{
 				return 0;
 			}
@@ -341,7 +338,7 @@ public:
 	}
 
 protected:
-	virtual bool _FilterMouseMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, const CPoint& msg_pt)
+	virtual bool _OnAnyMouseMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		return false;	// Message should be processed normally
 	}
@@ -1444,7 +1441,7 @@ protected:
 			CPoint pt(*pNeedTT->pt);
 
 			pNeedTT->ti->sTooltip = m_tooltip_string;
-			pNeedTT->ti->hTWnd = GetSafeHwnd();
+			pNeedTT->ti->hWndTTparent = GetSafeHwnd();
 			pNeedTT->ti->ptTipOffset.x = pt.x;
 			return 1;
 		}

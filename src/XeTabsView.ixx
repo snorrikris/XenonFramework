@@ -1467,7 +1467,7 @@ public:
 				if (sTT.size())
 				{
 					pNeedTT->ti->sTooltip = sTT;
-					pNeedTT->ti->hTWnd = GetSafeHwnd();
+					pNeedTT->ti->hWndTTparent = GetSafeHwnd();
 					pNeedTT->ti->ptTipOffset.x = pt.x;
 					return 1;
 				}

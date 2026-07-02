@@ -360,16 +360,16 @@ public:
 	void Destroy(HWND hWndParent)
 	{
 		CPPToolTip* pTT = Find(hWndParent);
-		if (pTT->GetSafeHwnd())
-		{
-			pTT->DestroyWindow();
-		}
+		//if (pTT->GetSafeHwnd())
+		//{
+		//	pTT->DestroyWindow();
+		//}
 	}
 
 	void HideTooltip(HWND hWndParent)
 	{
 		CPPToolTip* pTT = Find(hWndParent);
-		if (pTT->GetSafeHwnd())
+		//if (pTT->GetSafeHwnd())
 		{
 			pTT->HideTooltip();
 		}
@@ -377,14 +377,14 @@ public:
 
 	void HideOtherTooltips(HWND hWndTooltip)
 	{
-		for (auto& [hWndParent, tt] : m_tooltips)
-		{
-			HWND hWndTT = tt->GetSafeHwnd();
-			if (hWndTT && hWndTT != hWndTooltip)
-			{
-				tt->HideTooltip();
-			}
-		}
+		//for (auto& [hWndParent, tt] : m_tooltips)
+		//{
+		//	HWND hWndTT = tt->GetSafeHwnd();
+		//	if (hWndTT && hWndTT != hWndTooltip)
+		//	{
+		//		tt->HideTooltip();
+		//	}
+		//}
 	}
 
 	CPPToolTip* Find(HWND hWndParent)

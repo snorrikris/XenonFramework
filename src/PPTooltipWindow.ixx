@@ -137,37 +137,16 @@ protected:
 		pRT->DrawRoundedRectangle(rr, rndr.m_border_brush, 1.0f);
 	}
 
-	bool _FilterMouseMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, const CPoint& msg_pt) override
+	// Handle 'this' window mouse message.
+	bool _OnAnyMouseMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override
 	{
-		RelayEvent(uMsg, msg_pt);
-		return false;	// Message should be processed normally
-	}
-
-	BOOL RelayEvent(UINT message, CPoint pt_msg)
-	{
-		//ENG: Disables a message translation if object was't created (thanks to Stoil Todorov)
-		//RUS: Запрет обработки сообщений если объект не создан
-		if (NULL == GetSafeHwnd())
-			return FALSE;
-
 		XeASSERT(m_hCurrentParentWnd);
 
-		switch (message)
+		CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		switch (uMsg)
 		{
 		case WM_RBUTTONDOWN:
-			// The user has interrupted the current tool - dismiss it
-			CPPTOOLTIP_TRACE("CPPToolTipWindow::Pop() in RelayEvent because WM_RBUTTONDOWN\n");
-			Pop();
-			break;
 		case WM_LBUTTONDOWN:
-			CPPTOOLTIP_TRACE("CPPToolTipWindow::WM_LBUTTONDOWN\n");
-			if (IsCursorOverTooltip())
-			{
-				//Left Button was pressed over the tooltip
-				CPoint pt = pt_msg;
-				::ScreenToClient(Hwnd(), &pt);
-				m_drawer->OnLButtonDown(&pt, 0);
-			} //if
 		case WM_LBUTTONDBLCLK:
 		case WM_RBUTTONUP:
 		case WM_RBUTTONDBLCLK:
@@ -180,22 +159,21 @@ protected:
 		case WM_NCMBUTTONDOWN:
 		case WM_NCMBUTTONDBLCLK:
 		case WM_MOUSEWHEEL:
-			//		// The user has interrupted the current tool - dismiss it
-			//		if (!(m_tiDisplayed.nBehaviour & PPTOOLTIP_NOCLOSE_MOUSEDOWN))
-			CPPTOOLTIP_TRACE("CPPToolTipWindow::Pop() in RelayEvent because mouse or keyb\n");
+			CPPTOOLTIP_TRACE("CPPToolTipWindow::Pop() in RelayEvent because mouse msg\n");
 			Pop();
 			break;
 		case WM_NCMOUSEMOVE:
-			::ScreenToClient(m_hCurrentParentWnd, &pt_msg);
+			::ScreenToClient(m_hCurrentParentWnd, &pt);
 		case WM_MOUSEMOVE:
-			_OnRelayMsg_MouseMove(pt_msg);
+			_HandleMouseMove(pt);
 			break;
-		} //switch
+		}
 
-		return FALSE;
-	} //End RelayEvent
+		return false;	// Message should be processed normally
+	}
 
-	void _OnRelayMsg_MouseMove(const CPoint& pt_msg)
+	// Note - pt_msg is in screen coordinates.
+	void _HandleMouseMove(const CPoint& pt_msg)
 	{
 		if (m_ptOriginal.x == pt_msg.x && m_ptOriginal.y == pt_msg.y)
 		{
@@ -210,11 +188,11 @@ protected:
 		std::wstring strTemp;
 
 		m_ptOriginal = pt = pt_msg;
-		CPPTOOLTIP_TRACE("On mouse move. orig=%d,%d\n", m_ptOriginal.x, m_ptOriginal.y);
+		CPPTOOLTIP_TRACE("CPPToolTipWindow - On mouse move. orig=%d,%d\n", (int)(m_ptOriginal.x), (int)(m_ptOriginal.y));
 
 		if (IsCursorOverTooltip())
 		{
-			MM_CPPTOOLTIP_TRACE("over tooltip ==========\n");
+			MM_CPPTOOLTIP_TRACE("CPPToolTipWindow - over tooltip ==========\n");
 
 			//ENG: Mouse over a tooltip and tracking mode was disabled
 			//RUS: Курсор над тултипом при выключенном режиме "тракинга"
@@ -279,16 +257,16 @@ protected:
 public:
 	void SetNewTooltip(HWND hWndParent, CPoint pt, const PPTOOLTIP_INFO& ti)
 	{
-		CPPTOOLTIP_TRACE("CPPToolTipWindow::SetNewTooltip(hWnd=0x%08X, CRect(left=%d, top=%d, right=%d, bottom=%d))\n",
-			hWndParent, ti.rectBounds.left, ti.rectBounds.top, ti.rectBounds.right, ti.rectBounds.bottom);
+		CPPTOOLTIP_TRACE("CPPToolTipWindow::SetNewTooltip(hWnd=0x%08X, pt.x=%d, pt.y=%d, (left=%d, top=%d, right=%d, bottom=%d))\n",
+			hWndParent, pt.x, pt.y, ti.rectBounds.left, ti.rectBounds.top, ti.rectBounds.right, ti.rectBounds.bottom);
 
-		CPPTOOLTIP_TRACE("m_nTooltipState = %d\n", m_nTooltipState);
+		CPPTOOLTIP_TRACE("CPPToolTipWindow - m_nTooltipState = %d\n", m_nTooltipState);
 
 		Pop();
 
 		if (m_hCurrentParentWnd != hWndParent)
 		{
-			CPPTOOLTIP_TRACE("Parent has changed\n");
+			CPPTOOLTIP_TRACE("CPPToolTipWindow - Parent has changed\n");
 			::DestroyWindow(Hwnd());
 
 			m_hCurrentParentWnd = hWndParent;
@@ -333,13 +311,13 @@ protected:
 	// Note - pt is in screen coordinates
 	void DisplayTooltip(CPoint pt)
 	{
-		CPPTOOLTIP_TRACE("CPPToolTipWindow::PrepareDisplayTooltip() - pt.x=%d, pt.y=%d\n", pt.x, pt.y);
+		CPPTOOLTIP_TRACE("CPPToolTipWindow::DisplayTooltip() - pt.x=%d, pt.y=%d\n", pt.x, pt.y);
 
 		//If string and icon are not exist then exit
 		if (m_tiNextTool.sTooltip.empty())
 			return;
 
-		HWND hWnd = m_tiNextTool.hTWnd;	//+++sk
+		HWND hWnd = m_tiNextTool.hWndTTparent;	//+++sk
 		if (hWnd == NULL)
 		{
 			pt.x += 24;
@@ -371,7 +349,7 @@ protected:
 		//RUS: Устанавливаем тултип на экране
 		CRect rect = _AdjustTooltipOnScreenPosition(pt, m_rcTooltip.Size());
 
-		CPPTOOLTIP_TRACE("SetWindowPos left=%d, top=%d, right=%d, bottom=%d\n", rect.left, rect.top, rect.right, rect.bottom);
+		CPPTOOLTIP_TRACE("CPPToolTipWindow - SetWindowPos left=%d, top=%d, right=%d, bottom=%d\n", rect.left, rect.top, rect.right, rect.bottom);
 		SetWindowPos(NULL, rect, SWP_SHOWWINDOW | SWP_NOACTIVATE);
 		RedrawWindow();
 	} //End of PrepareDisplayTooltip

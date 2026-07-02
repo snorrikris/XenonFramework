@@ -9955,7 +9955,7 @@ LRESULT CUGCtrl::MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT,
 		TOOLTIP_SETTINGS ttSettings;
 		if (OnHint(col, row, section, ttSettings) == TRUE)
 		{
-			pNeedTT->ti->hTWnd = hWnd;
+			pNeedTT->ti->hWndTTparent = hWnd;
 			pNeedTT->ti->sTooltip = ttSettings.m_strTooltipText.c_str();
 			//SUPER_TOOLTIP_INFO sti;
 			//sti.m_sBody = ttSettings.m_strTooltipText.c_str();

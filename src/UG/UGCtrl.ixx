@@ -309,7 +309,7 @@ CUGCtrl::CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
 	m_GI->BestFit = [this](int startCol, int endCol, int CalcRange, int flag) { return BestFit(startCol, endCol, CalcRange, flag); };
 	m_GI->SetTH_RowHeight = [this](int row, int height) { return SetTH_RowHeight(row, height); };
 	m_GI->SetSH_ColWidth = [this](int col, int width) { return SetSH_ColWidth(col, width); };
-	m_GI->MakeSuperTooltip = [this](NM_PPTOOLTIP_NEED_TT* pNeedTT, CXeTooltipIF* xtooltip, HWND hWnd, int section) { return MakeSuperTooltip(pNeedTT, xtooltip, hWnd, section); };
+	m_GI->MakeSuperTooltip = [this](NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section) { return MakeSuperTooltip(pNeedTT, hWnd, section); };
 	m_GI->HideTooltip = [this]() { HideTooltip(); };
 	m_GI->OnColSwapStart = [this](int col) { return OnColSwapStart(col); };
 	m_GI->OnCanColSwap = [this](int fromCol, int toCol) { return OnCanColSwap(fromCol, toCol); };
@@ -9939,8 +9939,7 @@ int CUGCtrl::OnHScrollHint(int col, std::wstring*string){
 	return TRUE;
 }
 
-LRESULT CUGCtrl::MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT, 
-	CXeTooltipIF* xtooltip, HWND hWnd, int section)
+LRESULT CUGCtrl::MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT, HWND hWnd, int section)
 {
 	int col;
 	long row;
@@ -10001,13 +10000,7 @@ LRESULT CUGCtrl::MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT,
 
 void CUGCtrl::HideTooltip()
 {
-	//m_xtooltip->HideTooltip();
-	m_CUGGrid->HideTooltip();
-	//m_CUGTopHdg->HideTooltip();
-	m_CUGSideHdg->HideTooltip();
-	//m_CUGCnrBtn->HideToolTip();
-	//m_CUGVScroll->HideToolTip();
-	//m_CUGHScroll->HideToolTip();
+	m_xeUI->HideTooltip();
 }
 
 /***************************************************

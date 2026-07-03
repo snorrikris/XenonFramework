@@ -341,63 +341,6 @@ public:
 	}
 };
 
-class XeTooltipsMap
-{
-protected:
-	std::map<HWND, std::unique_ptr<CPPToolTip>> m_tooltips;
-
-public:
-	CXeTooltipIF* Create(CXeUIcolorsIF* pUIcolors, const std::wstring& nameForLogging, HWND hWndParent)
-	{
-		XeASSERT(m_tooltips.find(hWndParent) == m_tooltips.end());
-		std::unique_ptr<CPPToolTip> tt = std::make_unique<CPPToolTip>(pUIcolors);
-		XeASSERT(tt.get());
-		tt->Create(nameForLogging.c_str(), hWndParent);
-		m_tooltips[hWndParent] = std::move(tt);
-		return Find(hWndParent);
-	}
-
-	void Destroy(HWND hWndParent)
-	{
-		CPPToolTip* pTT = Find(hWndParent);
-		//if (pTT->GetSafeHwnd())
-		//{
-		//	pTT->DestroyWindow();
-		//}
-	}
-
-	void HideTooltip(HWND hWndParent)
-	{
-		CPPToolTip* pTT = Find(hWndParent);
-		//if (pTT->GetSafeHwnd())
-		{
-			pTT->HideTooltip();
-		}
-	}
-
-	void HideOtherTooltips(HWND hWndTooltip)
-	{
-		//for (auto& [hWndParent, tt] : m_tooltips)
-		//{
-		//	HWND hWndTT = tt->GetSafeHwnd();
-		//	if (hWndTT && hWndTT != hWndTooltip)
-		//	{
-		//		tt->HideTooltip();
-		//	}
-		//}
-	}
-
-	CPPToolTip* Find(HWND hWndParent)
-	{
-		auto it = m_tooltips.find(hWndParent);
-		if (it != m_tooltips.end())
-		{
-			return it->second.get();
-		}
-		return nullptr;
-	}
-};
-
 // Define function pointer for DWM dll functions.
 //typedef HRESULT (WINAPI * LPFNDLL_DwmEnableComposition)( UINT uCompositionAction );
 //LPFNDLL_DwmEnableComposition pFN 
@@ -450,8 +393,6 @@ protected:
 
 	/////////////////////////////////////////////////////////////////////////////
 	// Other data
-
-	XeTooltipsMap m_tooltipsMap;
 
 	std::unique_ptr<CPPToolTipWindow> m_theOneAndOnlyTooltipWindow;
 
@@ -1101,25 +1042,15 @@ protected:
 
 #pragma region Tooltips
 public:
-	virtual CXeTooltipIF* CreateTooltip(const std::wstring& nameForLogging, HWND hWndParent) override
+	virtual void HideTooltip(HWND hWndParent = 0) const
 	{
-		return m_tooltipsMap.Create(this, nameForLogging, hWndParent);
+		//return m_tooltipsMap.HideTooltip(hWndParent);
 	}
 
-	virtual void DestroyTooltip(HWND hWndParent) override
-	{
-		return m_tooltipsMap.Destroy(hWndParent);
-	}
-
-	virtual void HideTooltip(HWND hWndParent)
-	{
-		return m_tooltipsMap.HideTooltip(hWndParent);
-	}
-
-	virtual void HideOtherTooltips(HWND hWndTooltip) override
-	{
-		m_tooltipsMap.HideOtherTooltips(hWndTooltip);
-	}
+	//virtual void HideOtherTooltips(HWND hWndTooltip) override
+	//{
+	//	//m_tooltipsMap.HideOtherTooltips(hWndTooltip);
+	//}
 
 	virtual int GetTooltipDefaultWidth() const override { return m_cxDefaultTooltip; }
 
@@ -1127,6 +1058,11 @@ public:
 	{
 		XeASSERT(m_theOneAndOnlyTooltipWindow.get());
 		m_theOneAndOnlyTooltipWindow->SetNewTooltip(hWndParent, point, ttInfo);
+	}
+
+	virtual bool IsMouseOverTooltip(HWND hWndParent = 0) const override
+	{
+		return false;
 	}
 
 protected:

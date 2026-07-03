@@ -10,7 +10,7 @@ module;
 export module Xe.UItypes;
 
 export import Xe.UItypesPID;
-//import Xe.LogDefs;
+import Xe.mfc_types;
 
 export CID;
 
@@ -298,3 +298,44 @@ export enum class XeViewProp
 //export constexpr int VW_PROP_MIN_CY = 4;	// Minimum view height (needed for HVIEW/timeline vw).
 //export constexpr int VW_PROP_MAX_CY = 5;	// Maximum view height (needed for HVIEW/timeline vw).
 //export constexpr int VW_PROP_MIN_CX = 6;	// Minimum view width (needed for VIEW_0/1 vw).
+
+//The behaviours
+export constexpr UINT PPTOOLTIP_NOCLOSE_OVER = 0x00000008; //No close tooltip if mouse over him
+
+export struct PPTOOLTIP_INFO
+{
+	PPTOOLTIP_INFO() = default;
+	PPTOOLTIP_INFO(HWND hWnd_ContainingTool, const std::wstring& tooltip)
+		: hWndTTparent(hWnd_ContainingTool), sTooltip(tooltip) {
+	}
+
+	CRect			rectBounds;				// Bounding rect for toolinfo to be displayed
+	std::wstring	sTooltip;				// The string of the tooltip
+	UINT			nBehaviour = PPTOOLTIP_NOCLOSE_OVER /*| PPTOOLTIP_CLOSE_LEAVEWND | PPTOOLTIP_MULTIPLE_SHOW*/;		// The tooltip's behaviour
+	HWND			hWndTTparent = NULL;	// +++hd
+	CPoint			ptTipOffset;			// +++sk offset coords. for tool tip (from left,bottom).
+};
+
+// UDM_TOOLTIP_NEED_TT is sent as WM_NOTIFY message to parent when no tooltip found.
+// lParam = pointer to NM_PPTOOLTIP_NEED_TT structure.
+export constexpr UINT UDM_TOOLTIP_NEED_TT = (WM_USER + 104);
+
+// This structure sent to PPTooltip parent in a WM_NOTIFY - UDM_TOOLTIP_NEED_TT message
+// when no tooltip found at mouse coords.
+// Parent can make a tooltip by filling in the ti structure and returning 1 to the message.
+// Note - it's important to set the bounds rect so tooltip is hidden when mouse has left
+// the tooltip 'control'. See -> CXeToolBar::OnPPTTNF_NeedTT for example.
+export struct NM_PPTOOLTIP_NEED_TT
+{
+	NMHDR hdr;
+	LPPOINT pt;				// Mouse coords.
+	PPTOOLTIP_INFO* ti;
+
+	NM_PPTOOLTIP_NEED_TT(POINT* pPT, PPTOOLTIP_INFO* pTI) : pt(pPT), ti(pTI)
+	{
+		hdr.code = UDM_TOOLTIP_NEED_TT;
+		hdr.hwndFrom = 0;
+		hdr.idFrom = 0;
+	}
+};
+

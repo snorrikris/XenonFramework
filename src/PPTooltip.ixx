@@ -102,7 +102,6 @@ export module Xe.PPTooltip;
 
 import Xe.UIcolorsIF;
 import Xe.Helpers;
-import Xe.D2DWndBase;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -115,7 +114,7 @@ static char THIS_FILE[] = __FILE__;
 #define MM_CPPTOOLTIP_TRACE XeTRACE
 //#define MM_CPPTOOLTIP_TRACE (__noop)	// +++sk
 
-export class CPPToolTip : /*public CXeD2DWndBase,*/ public CXeTooltipIF
+export class CPPToolTip
 {
 #pragma region Class_data
 protected:
@@ -130,7 +129,7 @@ protected:
 
 #pragma region Create
 public:
-	CPPToolTip(CXeUIcolorsIF* pUIcolors) : m_xeUI(pUIcolors) //: CXeD2DWndBase(pUIcolors)
+	CPPToolTip(CXeUIcolorsIF* pUIcolors) : m_xeUI(pUIcolors)
 	{
 	}
 	//virtual ~CPPToolTip() {}
@@ -150,7 +149,7 @@ public:
 
 #pragma region CXeTooltipIF_impl
 public:
-	virtual BOOL RelayMessageToTooltip(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override
+	BOOL RelayMessageToTooltip(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		XeASSERT(m_hParentWnd);
 		CPoint pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -189,17 +188,17 @@ public:
 		return false;
 	}
 
-	virtual void HideTooltip() override
-	{
-		//_HideTooltip();
-		//XeASSERT(false);
-	}
+	//virtual void HideTooltip() override
+	//{
+	//	//_HideTooltip();
+	//	//XeASSERT(false);
+	//}
 
-	virtual bool IsMouseOverTooltip() override
-	{
-		//return IsCursorOverTooltip();
-		return false;
-	}
+	//virtual bool IsMouseOverTooltip() override
+	//{
+	//	//return IsCursorOverTooltip();
+	//	return false;
+	//}
 #pragma endregion CXeTooltipIF_impl
 };
 

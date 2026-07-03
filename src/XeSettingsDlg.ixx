@@ -363,7 +363,7 @@ protected:
 		m_cur_group_name = L"";
 		XeASSERT(m_xtooltip);
 		//m_xtooltip->RemoveAllTools();
-		m_xtooltip->HideTooltip();
+		HideTooltip();
 	}
 
 	int _GetTxtCY(double multiplier)

@@ -108,7 +108,7 @@ typedef std::function<int(int startCol, int endCol, int CalcRange, int flag)> fn
 typedef std::function<int(int row, int height)> fnSetTH_RowHeight;
 typedef std::function<int(int col, int width)> fnSetSH_ColWidth;
 //typedef std::function<LRESULT(NM_PPTOOLTIP_NEED_TT* pNeedTT, CXSuperTooltip& xtooltip, HWND hWnd, int section)> fnMakeSuperTooltip;
-typedef std::function<LRESULT(NM_PPTOOLTIP_NEED_TT* pNeedTT, CXeTooltipIF* xtooltip, HWND hWnd, int section)> fnMakeSuperTooltip;
+typedef std::function<LRESULT(NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section)> fnMakeSuperTooltip;
 typedef std::function<void()> fnHideTooltip;
 typedef std::function<BOOL(int col)> fnOnColSwapStart;
 typedef std::function<BOOL(int fromCol, int toCol)> fnOnCanColSwap;

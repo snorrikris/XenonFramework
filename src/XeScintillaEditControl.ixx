@@ -523,7 +523,7 @@ public:
 
 	std::string GetSelectedText() const
 	{
-		int length = ::SendMessageW(m_hSciEdWnd, SCI_GETSELTEXT, 0, 0);
+		int length = (int)::SendMessageW(m_hSciEdWnd, SCI_GETSELTEXT, 0, 0);
 
 		std::string sel_text;
 		sel_text.resize(length, ' ');

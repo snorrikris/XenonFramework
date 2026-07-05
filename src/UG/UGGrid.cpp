@@ -68,7 +68,7 @@ LRESULT CUGGrid::_OnMouseLeave(WPARAM wparam, LPARAM lparam)
 	//{
 	//	m_xtooltip->HideTooltip();
 	//}
-	if (m_xtooltip && !m_xtooltip->IsMouseOverTooltip())
+	if (!m_xeUI->IsMouseOverTooltip(Hwnd()))
 	{
 		_HideTooltip();
 	}
@@ -77,10 +77,10 @@ LRESULT CUGGrid::_OnMouseLeave(WPARAM wparam, LPARAM lparam)
 
 LRESULT CUGGrid::_OnNotify_NeedTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT)
 {
-	XeASSERT(pNeedTT && m_xtooltip);
-	if (pNeedTT && m_xtooltip && !m_GI->m_editInProgress)	// Don't show tooltips when a cell is in edit mode.
+	XeASSERT(pNeedTT);
+	if (pNeedTT && !m_GI->m_editInProgress)	// Don't show tooltips when a cell is in edit mode.
 	{
-		return m_GI->MakeSuperTooltip(pNeedTT, m_xtooltip, GetSafeHwnd(), UG_GRID);
+		return m_GI->MakeSuperTooltip(pNeedTT, GetSafeHwnd(), UG_GRID);
 	}
 	return 0;
 }

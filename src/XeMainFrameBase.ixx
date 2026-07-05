@@ -998,32 +998,45 @@ protected:
 
 	virtual LRESULT _OnNotify_NeedTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT) override
 	{
-		XeASSERT(pNeedTT);
-		if (pNeedTT)
+		return GetNCTooltip(pNeedTT);
+	}
+
+	// Get tool tip for NC title bar area.
+	LRESULT GetNCTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT)
+	{
+		if (m_pToolBar && pNeedTT && pNeedTT->pt->y < 0)	// Coords. in NC area?
 		{
-			if (pNeedTT->pt->y < 0)	// Coords. in NC area?
+			const XeWindowStyleRects& wnd_rects = m_style.GetRects();
+
+			CPoint pt_scr(*pNeedTT->pt);
+			const CRect& rcCliScr = wnd_rects.GetRect(HTCLIENT);
+			pt_scr.Offset(rcCliScr.TopLeft());	// Convert from client coords - to screen coords.
+
+			const CRect& rcToolbar = wnd_rects.GetRect(HT_TOOLBAR);
+			if (rcToolbar.PtInRect(pt_scr))
 			{
-				::ClientToScreen(Hwnd(), pNeedTT->pt);
-				if (GetNCTooltip(pNeedTT/*, sti*/))
+				CPoint pt_tt = *pNeedTT->pt;
+				*pNeedTT->pt = pt_scr;
+				pNeedTT->pt->x += -rcToolbar.left;
+				pNeedTT->pt->y += -rcToolbar.top;	// pt = toolbar client coords.
+				if (m_pToolBar->GetTooltip(pNeedTT))
 				{
+					*pNeedTT->pt = pt_tt;
+					pNeedTT->ti->hWndTTparent = Hwnd();
+					CRect& rcBounds = pNeedTT->ti->rectBounds;
+					rcBounds.OffsetRect(rcToolbar.TopLeft());	// from toolbar client coords. to screen coords.
+					rcBounds.OffsetRect(-rcCliScr.left, -rcCliScr.top);	// to main wnd client coords.
+					CPoint& ptOfs = pNeedTT->ti->ptTipOffset;	// Offset from tooltip window left,bottom
+					const CRect& rcMainWnd = wnd_rects.GetRect(HT_WINDOW);
+					CPoint ptTT_Scr(rcToolbar.left, rcToolbar.bottom);	// TT position wanted (screen coords).
+					ptTT_Scr.Offset(ptOfs);
+					ptOfs.x = ptTT_Scr.x - rcMainWnd.left;	// Calculate offset relative to main wnd left,bottom.
+					ptOfs.y = ptTT_Scr.y - rcMainWnd.bottom;
 					return 1;
 				}
 			}
 		}
 		return 0;
-	}
-
-	// Get tool tip for NC title bar area. Note - mouse coords. are in screen coords.
-	bool GetNCTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT/*, SUPER_TOOLTIP_INFO& sti*/)
-	{
-		if (m_pToolBar)
-		{
-			const CRect& rcToolbar = m_style.GetRects().GetRect(HT_TOOLBAR);
-			pNeedTT->pt->x += -rcToolbar.left;
-			pNeedTT->pt->y += -rcToolbar.top;
-			return m_pToolBar->GetTooltip(pNeedTT/*, sti*/);
-		}
-		return false;
 	}
 
 protected:

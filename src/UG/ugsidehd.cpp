@@ -878,10 +878,10 @@ Returns:
 
 LRESULT CUGSideHdg::_OnNotify_NeedTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT)
 {
-	XeASSERT(pNeedTT && m_xtooltip);
-	if (pNeedTT && m_xtooltip)
+	XeASSERT(pNeedTT);
+	if (pNeedTT)
 	{
-		return m_GI->MakeSuperTooltip(pNeedTT, m_xtooltip, GetSafeHwnd(), UG_SIDEHEADING);
+		return m_GI->MakeSuperTooltip(pNeedTT, GetSafeHwnd(), UG_SIDEHEADING);
 	}
 	return 0;
 }
@@ -889,7 +889,7 @@ LRESULT CUGSideHdg::_OnNotify_NeedTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT)
 //LRESULT CUGSideHdg::OnMouseLeave(WPARAM wparam, LPARAM lparam)
 LRESULT CUGSideHdg::_OnMouseLeave(WPARAM wparam, LPARAM lparam)
 {
-	if (m_xtooltip && !m_xtooltip->IsMouseOverTooltip())	// Don't hide tooltip if cursor is over it.
+	if (!m_xeUI->IsMouseOverTooltip(Hwnd()))	// Don't hide tooltip if cursor is over it.
 	{
 		_HideTooltip();
 	}

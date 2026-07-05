@@ -18,6 +18,7 @@ import Xe.UIcolorsIF;
 export import Xe.D2DRenderContext;
 import Xe.WindowStyle;
 import Xe.Helpers;
+import Xe.PPTooltip;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -79,7 +80,7 @@ protected:
 	BOOL m_bActive = FALSE;		// Window active or not.
 	BOOL m_bTrackNcMouseLeave = FALSE;	// TRUE when TrackMouseEvent called.
 
-	CXeTooltipIF* m_xtooltip = nullptr;
+	std::unique_ptr<CPPToolTip> m_xtooltip;
 	bool m_isHideTooltipOnMouseLeave = true;
 
 	// If border was specified in the style when windows was created.
@@ -147,7 +148,7 @@ public:
 protected:
 	void _EnableTooltip(const std::wstring& nameForLogging)
 	{
-		m_xtooltip = m_xeUI->CreateTooltip(nameForLogging, GetSafeHwnd());
+		m_xtooltip = std::make_unique<CPPToolTip>(m_xeUI, Hwnd());
 	}
 #pragma endregion Create
 
@@ -165,13 +166,10 @@ public:
 public:
 	LRESULT _OnMessageD2DBase(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		DWORD dwMsgPos = ::GetMessagePos();
-		bool isMouseMessage = IsMouseMessage(uMsg);
-		if (isMouseMessage)
+		if (IsMouseMessage(uMsg))
 		{
-			CPoint msg_pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			if ((m_xtooltip && m_xtooltip->RelayMessageToTooltip(uMsg, msg_pt))
-					|| _FilterMouseMessage(uMsg, wParam, lParam, msg_pt))
+			if ((m_xtooltip && m_xtooltip->RelayMessageToTooltip(hWnd, uMsg, wParam, lParam))
+					|| _OnAnyMouseMessage(hWnd, uMsg, wParam, lParam))
 			{
 				return 0;
 			}
@@ -341,7 +339,7 @@ public:
 	}
 
 protected:
-	virtual bool _FilterMouseMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, const CPoint& msg_pt)
+	virtual bool _OnAnyMouseMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		return false;	// Message should be processed normally
 	}
@@ -590,8 +588,6 @@ protected:
 
 	virtual LRESULT _OnDestroy()
 	{
-		m_xeUI->DestroyTooltip(GetSafeHwnd());
-
 		return 0;
 	}
 
@@ -913,10 +909,7 @@ protected:
 
 	void _HideTooltip()
 	{
-		if (m_xtooltip)
-		{
-			m_xtooltip->HideTooltip();
-		}
+		m_xeUI->HideTooltip();
 	}
 public:
 	void HideTooltip()
@@ -1444,7 +1437,7 @@ protected:
 			CPoint pt(*pNeedTT->pt);
 
 			pNeedTT->ti->sTooltip = m_tooltip_string;
-			pNeedTT->ti->hTWnd = GetSafeHwnd();
+			pNeedTT->ti->hWndTTparent = GetSafeHwnd();
 			pNeedTT->ti->ptTipOffset.x = pt.x;
 			return 1;
 		}

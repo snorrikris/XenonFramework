@@ -13,9 +13,7 @@ export module Xe.UIcolorsIF;
 export import Xe.UItypes;
 import Xe.UserSettingsForUI;
 import Xe.ThemeIF;
-export import Xe.TooltipIF;
 export import Xe.mfc_types;
-//export import Xe.LogDefs;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -358,14 +356,17 @@ public:
 	//	}
 	//}
 
-	[[nodiscard]] virtual CXeTooltipIF* CreateTooltip(const std::wstring& nameForLogging, HWND hWndParent) = 0;
-	virtual void DestroyTooltip(HWND hWndParent) = 0;
-	virtual void HideTooltip(HWND hWndParent) = 0;
-	virtual void HideOtherTooltips(HWND hWndTooltip) = 0;
+	// Hide tooltip - hWnd = 0 to hide any tooltip,
+	// otherwise - hide if tooltip parent is hWndParent.
+	virtual void HideTooltip(HWND hWndParent = 0) const = 0;
 
-	//virtual void ApplyTooltipFontAndSize(LOGFONTW& lf) const = 0;
+	virtual void SetNewTooltip(HWND hWndParent, CPoint point, const PPTOOLTIP_INFO& ttInfo) = 0;
 
 	virtual int GetTooltipDefaultWidth() const = 0;
+
+	// Is mouse over tooltip - hWnd = 0 ? any tooltip,
+	// otherwise - ? tooltip parent is hWndParent.
+	virtual bool IsMouseOverTooltip(HWND hWndParent = 0) const = 0;
 
 	virtual HCURSOR GetAppCursor(bool isGrid = false) const = 0;
 

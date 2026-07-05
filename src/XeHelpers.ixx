@@ -792,6 +792,25 @@ public:
 	bool IsOnlyCtrlAltDown() const { return m_isCtrlKeyDown && !m_isShiftKeyDown && m_isMenuKeyDown; }
 	bool IsShiftCtrlAltDown() const { return m_isCtrlKeyDown && m_isShiftKeyDown && m_isMenuKeyDown; }
 	bool IsShiftOrCtrlOrAltDown() const { return m_isCtrlKeyDown || m_isShiftKeyDown || m_isMenuKeyDown; }
+	bool IsShiftOrAltDown() const { return m_isShiftKeyDown || m_isMenuKeyDown; }
+};
+
+export class CXeMouseKeyHelper
+{
+public:
+	bool m_isLeftKeyDown, m_isMiddleKeyDown, m_isRightKeyDown;
+
+	CXeMouseKeyHelper()
+	{
+		m_isLeftKeyDown   = (::GetKeyState(VK_LBUTTON) & 0x8000) ? true : false;
+		m_isMiddleKeyDown = (::GetKeyState(VK_MBUTTON) & 0x8000) ? true : false;
+		m_isRightKeyDown  = (::GetKeyState(VK_RBUTTON) & 0x8000) ? true : false;
+	}
+
+	bool IsNoneDown() const { return !m_isLeftKeyDown && !m_isMiddleKeyDown && !m_isRightKeyDown; }
+	bool IsOnlyLeftDown() const { return m_isLeftKeyDown && !m_isMiddleKeyDown && !m_isRightKeyDown; }
+	bool IsOnlyMiddleDown() const { return !m_isLeftKeyDown && m_isMiddleKeyDown && !m_isRightKeyDown; }
+	bool IsOnlyRightDown() const { return !m_isLeftKeyDown && !m_isMiddleKeyDown && m_isRightKeyDown; }
 };
 
 inline uint8_t _ConvHexChar(char c, bool& isValid)

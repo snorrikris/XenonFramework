@@ -708,8 +708,7 @@ public:
 	int OnVScrollHint(long row, std::wstring*string);
 	int OnHScrollHint(int col, std::wstring*string);
 
-	LRESULT MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT *pNeedTT, 
-		CXeTooltipIF* xtooltip, HWND hWnd, int section);
+	LRESULT MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT *pNeedTT, HWND hWnd, int section);
 
 	void HideTooltip();
 

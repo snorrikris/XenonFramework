@@ -109,10 +109,10 @@ import Xe.Helpers;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define CPPTOOLTIP_TRACE XeTRACE
-//#define CPPTOOLTIP_TRACE (__noop)		// +++hd
-#define MM_CPPTOOLTIP_TRACE XeTRACE
-//#define MM_CPPTOOLTIP_TRACE (__noop)	// +++sk
+//#define CPPTOOLTIP_TRACE XeTRACE
+#define CPPTOOLTIP_TRACE (__noop)		// +++hd
+//#define MM_CPPTOOLTIP_TRACE XeTRACE
+#define MM_CPPTOOLTIP_TRACE (__noop)	// +++sk
 
 export class CPPToolTip
 {
@@ -123,31 +123,19 @@ protected:
 	HWND m_hParentWnd = 0; // The handle of the parent window
 
 	CPoint m_ptOriginal;
-
-	std::wstring m_logName;
 #pragma endregion Class_data
 
 #pragma region Create
 public:
-	CPPToolTip(CXeUIcolorsIF* pUIcolors) : m_xeUI(pUIcolors)
-	{
-	}
-	//virtual ~CPPToolTip() {}
-
-	BOOL Create(const wchar_t* szNameForLogging, HWND hParentWnd)
+	CPPToolTip(CXeUIcolorsIF* pUIcolors, HWND hParentWnd)
+			: m_xeUI(pUIcolors), m_hParentWnd(hParentWnd)
 	{
 		CPPTOOLTIP_TRACE("CPPToolTip::Create\n");
-
-		m_logName = szNameForLogging;
-
-		m_hParentWnd = hParentWnd;
 		XeASSERT(m_hParentWnd);	// Parent window not created yet.
-
-		return TRUE;
 	}
+	//virtual ~CPPToolTip() {}
 #pragma endregion Create
 
-#pragma region CXeTooltipIF_impl
 public:
 	BOOL RelayMessageToTooltip(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
@@ -187,18 +175,5 @@ public:
 		}
 		return false;
 	}
-
-	//virtual void HideTooltip() override
-	//{
-	//	//_HideTooltip();
-	//	//XeASSERT(false);
-	//}
-
-	//virtual bool IsMouseOverTooltip() override
-	//{
-	//	//return IsCursorOverTooltip();
-	//	return false;
-	//}
-#pragma endregion CXeTooltipIF_impl
 };
 

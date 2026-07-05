@@ -20,16 +20,19 @@ import Xe.Monitors;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#define CPPTOOLTIP_TRACE XeTRACE
-//#define CPPTOOLTIP_TRACE (__noop)		// +++hd
-#define MM_CPPTOOLTIP_TRACE XeTRACE
-//#define MM_CPPTOOLTIP_TRACE (__noop)	// +++sk
+//#define CPPTOOLTIP_TRACE XeTRACE
+#define CPPTOOLTIP_TRACE (__noop)		// +++hd
+//#define MM_CPPTOOLTIP_TRACE XeTRACE
+#define MM_CPPTOOLTIP_TRACE (__noop)	// +++sk
 
 #define TIMER_HIDE		0x101 //the identifier of the timer for hide the tooltip
 #define TIMER_SHOW		0x100 //the identifier of the timer for show the tooltip
 
 constexpr wchar_t PPTOOLTIPWINDOW_CLASSNAME[] = L"PPToolTipWindow";
 
+/// <summary>
+/// CPPToolTipWindow is the tooltip window - CPPToolTip is the client window facing business logic.
+/// </summary>
 export class CPPToolTipWindow : public CXeD2DWndBase
 {
 #pragma region Class_data
@@ -108,10 +111,57 @@ protected:
 	LRESULT _OnDestroy() override
 	{
 		CPPTOOLTIP_TRACE("CPPToolTipWindow::DestroyWindow()\n");
-		Pop();
+		_Pop();
 		return 0;
 	}
 #pragma endregion Create
+
+public:
+	void SetNewTooltip(HWND hWndParent, CPoint pt, const PPTOOLTIP_INFO& ti)
+	{
+		CPPTOOLTIP_TRACE("CPPToolTipWindow::SetNewTooltip(hWnd=0x%08X, pt.x=%d, pt.y=%d, (left=%d, top=%d, right=%d, bottom=%d))\n",
+			hWndParent, pt.x, pt.y, ti.rectBounds.left, ti.rectBounds.top, ti.rectBounds.right, ti.rectBounds.bottom);
+
+		CPPTOOLTIP_TRACE("CPPToolTipWindow - m_nTooltipState = %d\n", m_nTooltipState);
+
+		bool isShowingNewTooltipAlready =
+			PPTOOLTIP_STATE_SHOWN == m_nTooltipState
+			&& m_hCurrentParentWnd == hWndParent
+			&& _CompareNewTooltipToCurrentTooltip(ti);
+		if (isShowingNewTooltipAlready)
+		{
+			return;
+		}
+
+		_Pop();
+
+		if (m_hCurrentParentWnd != hWndParent)
+		{
+			CPPTOOLTIP_TRACE("CPPToolTipWindow - Parent has changed\n");
+			::DestroyWindow(Hwnd());
+
+			m_hCurrentParentWnd = hWndParent;
+			_CreateTooltipWindow();
+		}
+
+		m_tiNextTool = ti;
+		m_ptOriginal = pt;
+
+		//ENG: Start the show timer
+		//RUS: Начинаем показ нового тултипа
+		CPPTOOLTIP_TRACE("CPPToolTipWindow - Start the show timer - delay=%d\n", m_dwTimeInitial);
+		::SetTimer(Hwnd(), TIMER_SHOW, m_dwTimeInitial, NULL);
+	}
+
+	void HideTooltip(HWND hWndParent = 0)
+	{
+		_Pop();
+	}
+
+	bool IsMouseOverTooltip(HWND hWndParent = 0) const
+	{
+		return _IsCursorOverTooltip();
+	}
 
 protected:
 	void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rc) override
@@ -160,7 +210,7 @@ protected:
 		case WM_NCMBUTTONDBLCLK:
 		case WM_MOUSEWHEEL:
 			CPPTOOLTIP_TRACE("CPPToolTipWindow::Pop() in RelayEvent because mouse msg\n");
-			Pop();
+			_Pop();
 			break;
 		case WM_NCMOUSEMOVE:
 			::ScreenToClient(m_hCurrentParentWnd, &pt);
@@ -181,16 +231,10 @@ protected:
 		}
 		// The mouse pointer's position was changed
 
-		HWND hWnd = NULL;
-		CPoint pt;
-		CRect rect;
-		PPTOOLTIP_INFO ti;
-		std::wstring strTemp;
-
-		m_ptOriginal = pt = pt_msg;
+		m_ptOriginal = pt_msg;
 		CPPTOOLTIP_TRACE("CPPToolTipWindow - On mouse move. orig=%d,%d\n", (int)(m_ptOriginal.x), (int)(m_ptOriginal.y));
 
-		if (IsCursorOverTooltip())
+		if (_IsCursorOverTooltip())
 		{
 			MM_CPPTOOLTIP_TRACE("CPPToolTipWindow - over tooltip ==========\n");
 
@@ -207,109 +251,32 @@ protected:
 			{
 				//ENG: Resetup autopop timer
 				//RUS: Переустанавливаем таймер автозакрытия тултипа
-				SetAutoPopTimer();
+				_SetAutoPopTimer();
 			}
 		}
 		else
 		{
 			MM_CPPTOOLTIP_TRACE("CPPToolTipWindow - not over tooltip ==========\n");
-			////ENG: Searching a toolbar's item
-			////RUS: Ищем элемент на панели инструментов
-			//if (NULL == hWnd)	// +++sk
-			//{
-			//	if (SendNotifyNeedTT(&pt, ti))
-			//	{
-			//		hWnd = ti.hTWnd;
-			//	}
-			//} //if
-			//if (NULL == hWnd)
-			//{
-			//	//ENG: An item with a tooltip wasn't found
-			//	//RUS: Ни один элемент, отображающий тултип, не найден
-			//	m_hwndDisplayedTool = NULL;
-			//	m_tiDisplayed.rectBounds.SetRectEmpty();
-			//	MM_CPPTOOLTIP_TRACE("CPPToolTipWindow::KillTimer(TIMER_SHOW) An item with a tooltip wasn't found\n");
-			//	::KillTimer(Hwnd(), TIMER_SHOW);
-			//	_HideTooltip();
-			//}
-			//else
-			{
-				//MM_CPPTOOLTIP_TRACE("CPPToolTipWindow - found tool =========\n");
-				//if ((hWnd != m_hwndDisplayedTool) || (ti.rectBounds != m_tiDisplayed.rectBounds/* m_rcDisplayedTool*/))
-				//{
-				//	//ENG: Sets new tooltip for the new window or for the new window's item
-				//	//RUS: Если новое окно или новый элемент окна, то установить новый тултип
-				//	SetNewTooltip(hWnd, ti);
-				//}
-				//else
-				{
-					//ENG: Nothing was changed
-					//RUS: Если ни окно, ни элемент окна не изменялись
-					MM_CPPTOOLTIP_TRACE("CPPToolTipWindow - calling SetAutoPopTimer ==========\n");
-					//ENG: A tooltip don't must when a mouse is over window
-					//RUS: Тултип не должен прятаться пока находится над окном
-					SetAutoPopTimer();
-				} //if
-			} //if
+			//ENG: Nothing was changed
+			//RUS: Если ни окно, ни элемент окна не изменялись
+			MM_CPPTOOLTIP_TRACE("CPPToolTipWindow - calling SetAutoPopTimer ==========\n");
+			//ENG: A tooltip don't must when a mouse is over window
+			//RUS: Тултип не должен прятаться пока находится над окном
+			_SetAutoPopTimer();
 		} //if
 	}
 
-public:
-	void SetNewTooltip(HWND hWndParent, CPoint pt, const PPTOOLTIP_INFO& ti)
+	bool _CompareNewTooltipToCurrentTooltip(const PPTOOLTIP_INFO& rhs) const
 	{
-		CPPTOOLTIP_TRACE("CPPToolTipWindow::SetNewTooltip(hWnd=0x%08X, pt.x=%d, pt.y=%d, (left=%d, top=%d, right=%d, bottom=%d))\n",
-			hWndParent, pt.x, pt.y, ti.rectBounds.left, ti.rectBounds.top, ti.rectBounds.right, ti.rectBounds.bottom);
+		return m_tiNextTool.sTooltip     == rhs.sTooltip
+			&& m_tiNextTool.rectBounds   == rhs.rectBounds
+			&& m_tiNextTool.hWndTTparent == rhs.hWndTTparent
+			//&& m_tiNextTool.ptTipOffset  == rhs.ptTipOffset
+			&& m_tiNextTool.nBehaviour   == rhs.nBehaviour;
+	}
 
-		CPPTOOLTIP_TRACE("CPPToolTipWindow - m_nTooltipState = %d\n", m_nTooltipState);
-
-		Pop();
-
-		if (m_hCurrentParentWnd != hWndParent)
-		{
-			CPPTOOLTIP_TRACE("CPPToolTipWindow - Parent has changed\n");
-			::DestroyWindow(Hwnd());
-
-			m_hCurrentParentWnd = hWndParent;
-			_CreateTooltipWindow();
-		}
-
-		//m_hCurrentParentWnd = hWndParent;
-		//::SetParent(Hwnd(), m_hCurrentParentWnd);
-		m_tiNextTool = ti;
-		m_ptOriginal = pt;
-
-		//ENG: Hides a tooltip
-		//RUS: Прячем тултип если он показан или показывается
-		if (PPTOOLTIP_STATE_SHOWN == m_nTooltipState)
-		{
-			CPPTOOLTIP_TRACE("CPPToolTipWindow - SHOWING or SHOWN == HideTooltip\n");
-			_HideTooltip();
-		}
-
-		//+++sk
-		// Prevent tootip from showing if any mouse button down or if shift, ctrl or alt down.
-		//if (PreventTooltipShowing())
-		//{
-		//	CPPTOOLTIP_TRACE("CPPToolTipWindow::PreventTooltipShowing\n");
-		//	return;
-		//}
-
-		//ENG: Start the show timer
-		//RUS: Начинаем показ нового тултипа
-		//if (bDisplayWithDelay && m_dwTimeInitial)
-		{
-			CPPTOOLTIP_TRACE("CPPToolTipWindow - Start the show timer - delay=%d\n", m_dwTimeInitial);
-			::SetTimer(Hwnd(), TIMER_SHOW, m_dwTimeInitial, NULL);
-		}
-		//else
-		//{
-		//	_OnTimer(TIMER_SHOW, 0);
-		//}
-	} //End of SetNewTooltip
-
-protected:
 	// Note - pt is in screen coordinates
-	void DisplayTooltip(CPoint pt)
+	void _DisplayTooltip(CPoint pt)
 	{
 		CPPTOOLTIP_TRACE("CPPToolTipWindow::DisplayTooltip() - pt.x=%d, pt.y=%d\n", pt.x, pt.y);
 
@@ -351,20 +318,8 @@ protected:
 
 		CPPTOOLTIP_TRACE("CPPToolTipWindow - SetWindowPos left=%d, top=%d, right=%d, bottom=%d\n", rect.left, rect.top, rect.right, rect.bottom);
 		SetWindowPos(NULL, rect, SWP_SHOWWINDOW | SWP_NOACTIVATE);
-		RedrawWindow();
+		//RedrawWindow();
 	} //End of PrepareDisplayTooltip
-
-	//BOOL PreventTooltipShowing()
-	//{
-	//	BOOL fLmouse = (::GetKeyState(VK_LBUTTON) & 0x8000) ? TRUE : FALSE;
-	//	BOOL fRmouse = (::GetKeyState(VK_RBUTTON) & 0x8000) ? TRUE : FALSE;
-	//	BOOL fMmouse = (::GetKeyState(VK_MBUTTON) & 0x8000) ? TRUE : FALSE;
-	//	BOOL fShiftKeyDown = (::GetKeyState(VK_SHIFT) & 0x8000) ? TRUE : FALSE;
-	//	BOOL fMenuKeyDown = (::GetKeyState(VK_MENU) & 0x8000) ? TRUE : FALSE;
-	//	if (fLmouse || fRmouse || fMmouse || fShiftKeyDown || fMenuKeyDown)
-	//		return TRUE;
-	//	return FALSE;
-	//}
 
 	LRESULT _OnTimer(WPARAM wParam, LPARAM lParam) override
 	{
@@ -379,9 +334,8 @@ protected:
 			::KillTimer(Hwnd(), TIMER_SHOW);
 			//ENG: Get current mouse coordinates
 			//RUS: Получить текущее положение тултипа
-			GetCursorPos(&pt);
+			::GetCursorPos(&pt);
 			::ScreenToClient(m_hCurrentParentWnd, &pt);
-			//if ((pt.x != m_ptOriginal.x) || (pt.y != m_ptOriginal.y))
 			if ((std::abs(pt.x - m_ptOriginal.x) > 3) || (std::abs(pt.y - m_ptOriginal.y) > 3))
 			{
 				//ENG: If mouse coordinates was changed
@@ -391,20 +345,17 @@ protected:
 			}
 			else if (PPTOOLTIP_STATE_HIDDEN == m_nTooltipState)
 			{
-				// Hide all other tooltips owned by 'this' process.
-				//m_xeUI->HideOtherTooltips(GetSafeHwnd());
-
 				//Display first step
-				DisplayTooltip(m_ptOriginal);
+				_DisplayTooltip(m_ptOriginal);
 
 				CPPTOOLTIP_TRACE("CPPToolTipWindow::OnTimerShow(Shown)\n");
 				m_nTooltipState = PPTOOLTIP_STATE_SHOWN; //Tooltip is already show
-				SetAutoPopTimer();
+				_SetAutoPopTimer();
 			} //if
 			break;
 		case TIMER_HIDE:
 			CPPTOOLTIP_TRACE("CPPToolTipWindow::OnTimerHide()\n");
-			Pop();
+			_Pop();
 			break;
 		default:
 			return CXeD2DWndBase::_OnTimer(wParam, lParam);
@@ -422,7 +373,7 @@ protected:
 		}
 	}
 
-	void SetAutoPopTimer()
+	void _SetAutoPopTimer()
 	{
 		if (m_dwTimeAutoPop)
 		{
@@ -431,7 +382,7 @@ protected:
 		}
 	}
 
-	void Pop()
+	void _Pop()
 	{
 		CPPTOOLTIP_TRACE("CPPToolTipWindow::Pop()\n");
 
@@ -441,7 +392,6 @@ protected:
 		if (IsWindowVisible())
 		{
 			::ShowWindow(Hwnd(), SW_HIDE);
-			//::SetParent(Hwnd(), m_hParentWndMainFrame);
 		}
 		m_tiNextTool = PPTOOLTIP_INFO();
 	}
@@ -479,7 +429,7 @@ protected:
 		return rect;
 	}
 
-	BOOL IsCursorOverTooltip() const
+	bool _IsCursorOverTooltip() const
 	{
 		XeASSERT(m_hCurrentParentWnd);
 		if (IsWindowVisible())	// Is tooltip visible?
@@ -489,7 +439,7 @@ protected:
 			HWND hWnd = ::WindowFromPoint(pt);
 			return hWnd == Hwnd();
 		}
-		return FALSE;
+		return false;
 	}
 };
 

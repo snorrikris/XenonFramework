@@ -148,8 +148,7 @@ public:
 protected:
 	void _EnableTooltip(const std::wstring& nameForLogging)
 	{
-		m_xtooltip = std::make_unique<CPPToolTip>(m_xeUI);
-		m_xtooltip->Create(L"tooltip", Hwnd());
+		m_xtooltip = std::make_unique<CPPToolTip>(m_xeUI, Hwnd());
 	}
 #pragma endregion Create
 

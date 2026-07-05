@@ -1044,13 +1044,8 @@ protected:
 public:
 	virtual void HideTooltip(HWND hWndParent = 0) const
 	{
-		//return m_tooltipsMap.HideTooltip(hWndParent);
+		m_theOneAndOnlyTooltipWindow->HideTooltip(hWndParent);
 	}
-
-	//virtual void HideOtherTooltips(HWND hWndTooltip) override
-	//{
-	//	//m_tooltipsMap.HideOtherTooltips(hWndTooltip);
-	//}
 
 	virtual int GetTooltipDefaultWidth() const override { return m_cxDefaultTooltip; }
 
@@ -1062,7 +1057,7 @@ public:
 
 	virtual bool IsMouseOverTooltip(HWND hWndParent = 0) const override
 	{
-		return false;
+		return m_theOneAndOnlyTooltipWindow->IsMouseOverTooltip(hWndParent);
 	}
 
 protected:

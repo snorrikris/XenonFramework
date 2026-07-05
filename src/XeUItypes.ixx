@@ -309,6 +309,16 @@ export struct PPTOOLTIP_INFO
 		: hWndTTparent(hWnd_ContainingTool), sTooltip(tooltip) {
 	}
 
+	bool operator==(const PPTOOLTIP_INFO& rhs) const
+	{
+		return     sTooltip     == rhs.sTooltip
+				&& rectBounds   == rhs.rectBounds
+				&& hWndTTparent == rhs.hWndTTparent
+				&& ptTipOffset  == rhs.ptTipOffset
+				&& nBehaviour   == rhs.nBehaviour;
+	}
+	bool operator!=(const PPTOOLTIP_INFO& rhs) const { return !operator==(rhs); }
+
 	CRect			rectBounds;				// Bounding rect for toolinfo to be displayed
 	std::wstring	sTooltip;				// The string of the tooltip
 	UINT			nBehaviour = PPTOOLTIP_NOCLOSE_OVER /*| PPTOOLTIP_CLOSE_LEAVEWND | PPTOOLTIP_MULTIPLE_SHOW*/;		// The tooltip's behaviour

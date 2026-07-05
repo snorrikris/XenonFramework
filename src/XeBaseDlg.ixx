@@ -31,6 +31,7 @@ import Xe.DurationCtrl;
 import Xe.CalendarCtrl;
 import Xe.ColorPicker;
 import Xe.FileTimeX;
+import Xe.Monitors;
 
 #pragma comment (lib, "Dwmapi")
 
@@ -618,9 +619,11 @@ protected:
 			x = rcParent.left + ((rcParent.Width() - dlg_cx) / 2);
 			y = rcParent.top + ((rcParent.Height() - dlg_cy) / 2);
 		}
+		CMonitor mon = CMonitors::GetNearestMonitor(CPoint(x, y));
+		CRect rcDlg = mon.AdjustRectOnScreen(CRect(x, y, x + dlg_cx, y + dlg_cy));
 
 		HWND hWnd = CreateD2DWindow(0, XEDIALOGWND_CLASSNAME, dlg_template.m_hdr.title.c_str(), style,
-				CRect(x, y, x + dlg_cx, y + dlg_cy), m_hDlgParentWnd, 0, true);
+				rcDlg, m_hDlgParentWnd, 0, true);
 		if (dlg_template.m_hdr.title.size())
 		{
 			::SetWindowTextW(hWnd, dlg_template.m_hdr.title.c_str());

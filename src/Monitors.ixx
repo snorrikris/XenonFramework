@@ -34,6 +34,9 @@ import Xe.mfc_types;
 static char THIS_FILE[] = __FILE__;
 #endif
 
+//#define MON_TRACE XeTRACE
+#define MON_TRACE (__noop)
+
 export class CMonitor
 {
 public:
@@ -156,6 +159,41 @@ public:
 		lprc->top = std::max(rect.top, std::min(rect.bottom - h, lprc->top));
 		lprc->right = lprc->left + w;
 		lprc->bottom = lprc->top + h;
+	}
+
+	[[nodiscard]] CRect AdjustRectOnScreen(const CRect& rc) const
+	{
+		CRect rect(rc);
+		CRect rMonitor;
+		GetWorkAreaRect(&rMonitor);
+		MON_TRACE("CMonitor - Monitor:  left=%d  top=%d  right=%d  bottom=%d --------\n",
+				rMonitor.left, rMonitor.top, rMonitor.right, rMonitor.bottom);
+		MON_TRACE("CMonitor - input rect:  left=%d  top=%d  right=%d  bottom=%d --------\n",
+				rect.left, rect.top, rect.right, rect.bottom);
+
+		if (rect.right > rMonitor.right)
+		{
+			MON_TRACE("CMonitor - right edge is off the screen -----------\n");
+			rect.OffsetRect(rMonitor.right - rect.right, 0);
+		}
+		if (rect.left < rMonitor.left)
+		{
+			MON_TRACE("CMonitor - left edge is off the screen -----------\n");
+			rect.OffsetRect(rMonitor.left - rect.left, 0);
+		}
+		if (rect.bottom > rMonitor.bottom)
+		{
+			MON_TRACE("CMonitor - bottom is off the screen -----------\n");
+			rect.OffsetRect(0, rMonitor.bottom - rect.bottom);
+		}
+		if (rect.top < rMonitor.top)
+		{
+			MON_TRACE("CMonitor - top is off the screen -----------\n");
+			rect.OffsetRect(0, rMonitor.top - rect.top);
+		}
+		MON_TRACE("CMonitor - output rect:  left=%d  top=%d  right=%d  bottom=%d ----------\n",
+				rect.left, rect.top, rect.right, rect.bottom);
+		return rect;
 	}
 
 	//

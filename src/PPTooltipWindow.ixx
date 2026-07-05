@@ -314,11 +314,11 @@ protected:
 
 		//ENG: Sets a tooltip on the screen
 		//RUS: Устанавливаем тултип на экране
-		CRect rect = _AdjustTooltipOnScreenPosition(pt, m_rcTooltip.Size());
+		CMonitor mon = CMonitors::GetNearestMonitor(pt);
+		CRect rect = mon.AdjustRectOnScreen(CRect(pt, m_rcTooltip.Size()));
 
 		CPPTOOLTIP_TRACE("CPPToolTipWindow - SetWindowPos left=%d, top=%d, right=%d, bottom=%d\n", rect.left, rect.top, rect.right, rect.bottom);
 		SetWindowPos(NULL, rect, SWP_SHOWWINDOW | SWP_NOACTIVATE);
-		//RedrawWindow();
 	} //End of PrepareDisplayTooltip
 
 	LRESULT _OnTimer(WPARAM wParam, LPARAM lParam) override
@@ -394,39 +394,6 @@ protected:
 			::ShowWindow(Hwnd(), SW_HIDE);
 		}
 		m_tiNextTool = PPTOOLTIP_INFO();
-	}
-
-	[[nodiscard]] CRect _AdjustTooltipOnScreenPosition(const CPoint& pt_onscreen, const CSize& sizeTooltip)
-	{
-		CRect rect{ pt_onscreen, sizeTooltip };
-		CMonitor mon = CMonitors::GetNearestMonitor(pt_onscreen);
-		CRect rMonitor;
-		mon.GetMonitorRect(&rMonitor);
-		CPPTOOLTIP_TRACE("CPPToolTipWindow - rMonitor:  left=%d  top=%d  right=%d  bottom=%d --------\n",
-				rMonitor.left, rMonitor.top, rMonitor.right, rMonitor.bottom);
-		CPPTOOLTIP_TRACE("CPPToolTipWindow - rect:  left=%d  top=%d  right=%d  bottom=%d --------\n",
-				rect.left, rect.top, rect.right, rect.bottom);
-
-		if (rect.right > rMonitor.right)
-		{
-			rect.OffsetRect(rMonitor.right - rect.right, 0);
-		}
-		if (rect.left < rMonitor.left)
-		{
-			rect.OffsetRect(rMonitor.left - rect.left, 0);
-		}
-		if (rect.bottom > rMonitor.bottom)
-		{
-			CPPTOOLTIP_TRACE("CPPToolTipWindow - off the screen -----------\n");
-			rect.OffsetRect(0, rMonitor.bottom - rect.bottom);
-			CPPTOOLTIP_TRACE("CPPToolTipWindow - rect:  left=%d  top=%d  right=%d  bottom=%d ----------\n",
-					rect.left, rect.top, rect.right, rect.bottom);
-		}
-		if (rect.top < rMonitor.top)
-		{
-			rect.OffsetRect(0, rMonitor.top - rect.top);
-		}
-		return rect;
 	}
 
 	bool _IsCursorOverTooltip() const

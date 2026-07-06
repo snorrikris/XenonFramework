@@ -753,7 +753,10 @@ protected:
 		m_isTracking = m_isHovering = false;
 		if (m_isHideTooltipOnMouseLeave)
 		{
-			_HideTooltip();
+			if (!m_xeUI->IsMouseOverTooltip())
+			{
+				_HideTooltip();
+			}
 		}
 		return 0;
 	}

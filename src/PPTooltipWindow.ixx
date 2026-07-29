@@ -389,7 +389,7 @@ protected:
 		m_nTooltipState = PPTOOLTIP_STATE_HIDDEN;
 		::KillTimer(Hwnd(), TIMER_SHOW);
 		::KillTimer(Hwnd(), TIMER_HIDE);
-		if (IsWindowVisible())
+		if (::IsWindow(Hwnd()) && IsWindowVisible())
 		{
 			::ShowWindow(Hwnd(), SW_HIDE);
 		}
@@ -399,7 +399,7 @@ protected:
 	bool _IsCursorOverTooltip() const
 	{
 		XeASSERT(m_hCurrentParentWnd);
-		if (IsWindowVisible())	// Is tooltip visible?
+		if (::IsWindow(Hwnd()) && IsWindowVisible())	// Is tooltip visible?
 		{
 			POINT pt;
 			::GetCursorPos(&pt);

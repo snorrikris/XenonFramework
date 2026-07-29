@@ -108,16 +108,7 @@ export struct XETBItem
 
 	uint8_t						m_flags = 0;		// Special flags - see: XETBD2D_ST_xxxxx
 
-	XETBItem()
-	{
-		XeASSERT(true);
-	}
-	virtual ~XETBItem()
-	{
-		XeASSERT(true);
-	}
-
-	XETBItem(CXeUIcolorsIF* pUIcolors, UINT uID, XETBItemType type, const wchar_t* szTooltip) : XETBItem()
+	XETBItem(CXeUIcolorsIF* pUIcolors, UINT uID, XETBItemType type, const wchar_t* szTooltip)
 	{
 		m_xeUI = pUIcolors;
 		m_uIDcommand = uID;
@@ -127,6 +118,8 @@ export struct XETBItem
 			m_sToolTip = szTooltip;
 		}
 	}
+
+	virtual ~XETBItem() {}
 
 	// Called by Toolbar when its window is being destroyed.
 	virtual void OnDestroy() = 0;

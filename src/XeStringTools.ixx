@@ -8,6 +8,8 @@ module;
 #include <cwctype>
 #include <locale>
 #include <cwchar>
+#include <string_view>
+#include <ranges>
 
 export module Xe.StringTools;
 
@@ -334,6 +336,22 @@ public:
         return true;
     }
 
+    static bool is_equal_no_case(const wchar_t* strA, size_t strA_len, const std::wstring& strB)
+    {
+        if (strA_len != strB.size())
+        {
+            return false;
+        }
+		for (size_t i = 0; i < strA_len; ++i)
+		{
+			if (std::towlower(strA[i]) != std::towlower(strB[i]))
+			{
+				return false;
+			}
+		}
+        return true;
+    }
+
     // Return true if strA contains strB (case insensetive compare)
     static bool is_contains_no_case(const std::wstring& strA, const std::wstring& strB)
     {
@@ -361,7 +379,35 @@ public:
         return false;
     }
 
-    static bool is_starts_with_no_case(const std::wstring& strA, const std::wstring& strB)
+	// Returns the index of the match relative to stringA, or std::wstring_view::npos if not found
+	static size_t find_wstring_ranges(const wchar_t* stringA_ptr, size_t stringA_len, const std::wstring& stringB)
+	{
+		// 1. Wrap the raw pointer and length into a view to make it a C++20 range
+		std::wstring_view rng_strA{ stringA_ptr, stringA_len };
+		std::wstring_view rng_strB{ stringB };
+
+		// 2. Perform a case-insensitive search using C++20 ranges
+		auto result = std::ranges::search(rng_strA, rng_strB,
+				[](wchar_t ch1, wchar_t ch2)
+				{ return std::towlower(ch1) == std::towlower(ch2); });
+
+		// 3. Check if the subrange was found and calculate the index
+		if (!result.empty())
+		{
+			return std::ranges::distance(rng_strA.begin(), result.begin());
+		}
+
+		return std::wstring_view::npos;
+	}
+	
+	// Return true if strA contains strB (case insensetive compare)
+	static bool is_contains_no_case(const wchar_t* strA, size_t strA_len, const std::wstring& strB)
+	{
+		size_t result = find_wstring_ranges(strA, strA_len, strB);
+		return result != std::wstring_view::npos;
+	}
+
+	static bool is_starts_with_no_case(const std::wstring& strA, const std::wstring& strB)
     {
         if (strA.size() < strB.size())
         {
@@ -374,6 +420,22 @@ public:
                 return false;
             }
         }
+        return true;
+    }
+
+    static bool is_starts_with_no_case(const wchar_t* strA, size_t strA_len, const std::wstring& strB)
+    {
+        if (strA_len < strB.size())
+        {
+            return false;
+        }
+		for (size_t i = 0; i < strA_len; ++i)
+		{
+			if (std::towlower(strA[i]) != std::towlower(strB[i]))
+			{
+				return false;
+			}
+		}
         return true;
     }
 
@@ -394,6 +456,31 @@ public:
         }
         return true;
     }
+
+    static bool is_ends_with_no_case(const wchar_t* strA, size_t strA_len, const std::wstring& strB)
+    {
+        size_t b_len = strB.size();
+        if (strA_len < b_len)
+        {
+            return false;
+        }
+		for (size_t iA = strA_len - b_len, iB = 0; iA < strA_len; ++iA, ++iB)
+		{
+			if (std::towlower(strA[iA]) != std::towlower(strB[iB]))
+			{
+				return false;
+			}
+		}
+        return true;
+    }
+
+	static bool is_ends_with(const wchar_t* strA, size_t strA_len, const std::wstring& strB)
+	{
+		if (!strA) return false; // Safety check for null pointers
+
+		std::wstring_view rng_strA{ strA, strA_len };
+		return rng_strA.ends_with(strB);
+	}
 };
 
 export std::wstring LoadResourceString(uint32_t uID)

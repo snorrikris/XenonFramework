@@ -47,6 +47,8 @@ public:
 
 export enum class ETABVIEWID { eAnyTabVw = 0, ePrimaryTabVw, eSecondaryTabVw };
 
+export enum class STRTYPE { ANSI, Wide };
+
 export struct CreateViewParams
 {
 	CreateViewParams() = default;

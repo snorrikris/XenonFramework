@@ -105,6 +105,21 @@ public:
 		return isOk;
 	}
 
+	// Remove deprecated settings.
+	// deprecated_settings is a list of tuples - each tuple is "user settings collection name", "setting name".
+	void RemoveDeprecatedSettings(const std::vector<std::tuple<std::wstring, std::wstring>>& deprecated_settings)
+	{
+		for (auto [settings_collection_name, setting_name] : deprecated_settings)
+		{
+			CXeUserSettings* pCollection = GetSettingsFromName(settings_collection_name);
+			XeASSERT(pCollection);
+			if (pCollection)
+			{
+				pCollection->RemoveSetting(setting_name);
+			}
+		}
+	}
+
 	bool Exists(const std::wstring& settings_name) const
 	{
 		auto it_map = m_user_settings_map.find(settings_name);

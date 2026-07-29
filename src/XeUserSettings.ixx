@@ -209,6 +209,17 @@ public:
 		return true;
 	}
 
+	bool RemoveSetting(const std::wstring& setting_name)
+	{
+		auto it = m_settingsMap.find(setting_name);
+		if (it != m_settingsMap.end())
+		{
+			m_settingsMap.erase(it);
+			return true;
+		}
+		return false;
+	}
+
 	bool Exists(const std::wstring& s) const
 	{
 		return m_settingsMap.find(s) != m_settingsMap.cend();

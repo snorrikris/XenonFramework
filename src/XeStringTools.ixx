@@ -380,7 +380,7 @@ public:
     }
 
 	// Returns the index of the match relative to stringA, or std::wstring_view::npos if not found
-	static size_t find_wstring_ranges(const wchar_t* stringA_ptr, size_t stringA_len, const std::wstring& stringB)
+	static size_t find_wstring_ranges_no_case(const wchar_t* stringA_ptr, size_t stringA_len, const std::wstring& stringB)
 	{
 		// 1. Wrap the raw pointer and length into a view to make it a C++20 range
 		std::wstring_view rng_strA{ stringA_ptr, stringA_len };
@@ -396,14 +396,30 @@ public:
 		{
 			return std::ranges::distance(rng_strA.begin(), result.begin());
 		}
+		return std::wstring_view::npos;
+	}
+	
+	// Returns the index of the match relative to stringA, or std::wstring_view::npos if not found
+	static size_t find_wstring_ranges(const wchar_t* stringA_ptr, size_t stringA_len, const std::wstring& stringB)
+	{
+		std::wstring_view rng_strA{ stringA_ptr, stringA_len };
+		std::wstring_view rng_strB{ stringB };
 
+		auto result = std::ranges::search(rng_strA, rng_strB,
+				[](wchar_t ch1, wchar_t ch2)
+				{ return ch1 == ch2; });
+
+		if (!result.empty())	// Check if the subrange was found and calculate the index
+		{
+			return std::ranges::distance(rng_strA.begin(), result.begin());
+		}
 		return std::wstring_view::npos;
 	}
 	
 	// Return true if strA contains strB (case insensetive compare)
 	static bool is_contains_no_case(const wchar_t* strA, size_t strA_len, const std::wstring& strB)
 	{
-		size_t result = find_wstring_ranges(strA, strA_len, strB);
+		size_t result = find_wstring_ranges_no_case(strA, strA_len, strB);
 		return result != std::wstring_view::npos;
 	}
 

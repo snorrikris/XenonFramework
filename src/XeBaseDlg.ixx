@@ -219,6 +219,8 @@ constexpr UINT c_uDialogWantsClickOutsideMouseDownMessage = (WM_USER + 0x7000);
 
 constexpr wchar_t XEDIALOGWND_CLASSNAME[] = L"XeDialogWndClass";  // Window class name
 
+constexpr int INVALID_PIXEL_POS = -2147483648;
+
 export class CXeBaseDlg : public CXeD2DWndBase
 {
 #pragma region class_data
@@ -233,8 +235,9 @@ protected:
 
 	CXeViewManagerIF* m_pVwMgr = nullptr;
 
-	CRect m_rectCell;
-	bool m_isRepositionDlgToRectCell = false;
+	// Position dialog relative to this rect (in screen coords.).
+	CRect m_rectPosScreen;
+	bool m_isRepositionDlgToRectPos = false;
 
 	std::wstring m_settingsName;			// Set by derived class (before OnInitDialog is called).
 	bool m_isSaveRecallDlgPos = false;	// true if dlg should be positioned to last saved position.
@@ -265,24 +268,23 @@ protected:
 
 #pragma region ctor
 public:
-	CXeBaseDlg(UINT nIDTemplate, CXeViewManagerIF* pVwMgr, HWND hParentWnd, CRect* pRectCell = 0)
+	// pRectPosScr is pointer to rect. in screen coords. - if supplied the dialog will reposition relative to the rect.
+	CXeBaseDlg(UINT nIDTemplate, CXeViewManagerIF* pVwMgr, HWND hParentWnd, CRect* pRectPosScr = 0)
 			: CXeD2DWndBase(pVwMgr->GetUIcolors()), m_pVwMgr(pVwMgr), m_hDlgParentWnd(hParentWnd)
 	{
 		m_lpszTemplateName = MAKEINTRESOURCE(nIDTemplate);
-		_Init(pRectCell);
+		_Init(pRectPosScr);
 	}
-
-	CXeBaseDlg(const wchar_t* lpszTemplateName, CXeViewManagerIF* pVwMgr, HWND hParentWnd, CRect* pRectCell = 0)
+	CXeBaseDlg(const wchar_t* lpszTemplateName, CXeViewManagerIF* pVwMgr, HWND hParentWnd, CRect* pRectPosScr = 0)
 			: CXeD2DWndBase(pVwMgr->GetUIcolors()),
 			m_pVwMgr(pVwMgr), m_lpszTemplateName(lpszTemplateName), m_hDlgParentWnd(hParentWnd)
 	{
-		_Init(pRectCell);
+		_Init(pRectPosScr);
 	}
-
 	virtual ~CXeBaseDlg() {}
 
 protected:
-	void _Init(CRect* pRectCell)
+	void _Init(CRect* pRectPosScr)
 	{
 		XeASSERT(m_pVwMgr && m_xeUI && m_hDlgParentWnd);
 		if (m_hDlgParentWnd == ::GetDesktopWindow())
@@ -290,10 +292,10 @@ protected:
 			XeASSERT(FALSE);	// Desktop windows can't be a parent to a dialog.
 			m_hDlgParentWnd = NULL;
 		}
-		if (pRectCell)
+		if (pRectPosScr)
 		{
-			m_isRepositionDlgToRectCell = true;
-			m_rectCell = *pRectCell;
+			m_isRepositionDlgToRectPos = true;
+			m_rectPosScreen = *pRectPosScr;
 		}
 	}
 #pragma endregion ctor
@@ -374,7 +376,7 @@ protected:
 		return 0;
 	}
 
-	// Derived class overrides this - and then calls InitDialog.
+	// Derived class overrides this - and then calls _InitDialog.
 	virtual BOOL _OnInitDialog()
 	{
 		return _InitDialog({});
@@ -388,70 +390,42 @@ protected:
 
 	// Derived classes call this from within their own OnInitDialog member.
 	// If pRectCell was valid in ctor call - the dialog is repositioned now.
-	// m_formHelper->Initialize(...) is called here.
-	//    Note - derived classes can call m_formHelper->Initialize(...) before
-	//           calling this member. (to enumerate child controls.)
-	// m_formHelper->AutoSubclassControls() is called here.
-	BOOL _InitDialog(const std::vector<GlueCtrl>& glue_controls,
-		CSize sizeDefault = CSize(0, 0)/*,
-		CXeGridDataSource* pDS_grid1 = nullptr, CXeGridDataSource* pDS_grid2 = nullptr*/)
+	BOOL _InitDialog(const std::vector<GlueCtrl>& glue_controls, CSize sizeDefault = CSize(0, 0))
 	{
+		_SetGroupBoxesZorder();
+
+		m_glueControls.InitializeGlueControls(Hwnd(), glue_controls);
+
 		if (m_settingsName.size() && m_isSaveRecallDlgPos)
 		{
 			CXeUserSettings settings(m_settingsName);
 			int32_t nLastXpos, nLastYpos;
 			int32_t nMainWndCheckValue, nCalcCheckValue = GetMainWndCheckValue();
-			nLastXpos = settings.GetI32_or_Val(L"DlgXpos", -1);
-			nLastYpos = settings.GetI32_or_Val(L"DlgYpos", -1);
+			nLastXpos = settings.GetI32_or_Val(L"DlgXpos", INVALID_PIXEL_POS);
+			nLastYpos = settings.GetI32_or_Val(L"DlgYpos", INVALID_PIXEL_POS);
 			nMainWndCheckValue = settings.GetI32_or_Val(L"DlgPosCheckValue", 0);
-			if (nLastXpos >= 0 && nLastYpos >= 0 && nMainWndCheckValue == nCalcCheckValue)
+			int32_t nLastHeight = 0, nLastWidth = 0;
+			if (m_style.WS().hasThickBorder())
 			{
-				::SetWindowPos(Hwnd(), ::GetParent(Hwnd()), nLastXpos, nLastYpos, 0, 0,
-					SWP_NOCOPYBITS | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOSIZE);
+				nLastHeight = settings.GetI32_or_Val(L"DlgHeight", sizeDefault.cy);
+				nLastWidth = settings.GetI32_or_Val(L"DlgWidth", sizeDefault.cx);
 			}
-			else if (m_isRepositionDlgToRectCell)	// cell rect valid?
+			if (m_isRepositionDlgToRectPos)	// pos rect valid?
 			{
-				::SetWindowPos(Hwnd(), ::GetParent(Hwnd()), m_rectCell.left, m_rectCell.top, 0, 0,
-					SWP_NOCOPYBITS | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOSIZE);
+				_SetDlgPos(m_rectPosScreen.left, m_rectPosScreen.top, nLastWidth, nLastHeight);
+			}
+			else if (nLastXpos != INVALID_PIXEL_POS && nLastYpos != INVALID_PIXEL_POS
+					&& nMainWndCheckValue == nCalcCheckValue)
+			{
+				_SetDlgPos(nLastXpos, nLastYpos, nLastWidth, nLastHeight);
 			}
 		}
-		else if (m_isRepositionDlgToRectCell)	// dialog is used as a PopUp dialog in grid on a cell
+		else if (m_isRepositionDlgToRectPos)	// dialog is used as a PopUp dialog. Position relative to rect pos.
 		{
-			_SetDlgPosToGridCell(m_rectCell);
-		}
-
-		_SetGroupBoxesZorder();
-
-		m_glueControls.InitializeGlueControls(Hwnd(), glue_controls);
-
-		int32_t nLastHeight = 0, nLastWidth = 0;
-		if (m_style.WS().hasThickBorder() && m_settingsName.size())
-		{
-			CXeUserSettings settings(m_settingsName);
-			nLastHeight = settings.GetI32_or_Val(L"DlgHeight", sizeDefault.cy);
-			nLastWidth = settings.GetI32_or_Val(L"DlgWidth", sizeDefault.cx);
+			_SetDlgPos(m_rectPosScreen.left, m_rectPosScreen.top);
 		}
 
 		_AutoAddTooltips();
-
-		//if (pDS_grid1)
-		//{
-		//	m_pgrid = std::make_unique<CUGCtrl>(pDS_grid1,
-		//		pDS_grid1->GetDataGridSettingsName().c_str());
-		//	m_pgrid->AttachGrid(CWnd::FromHandle(Hwnd()), IDC_GRID);
-		//	m_pgrid->SetSH_Width(16);
-		//	m_pgrid->SetWindowPos(0, 0, 0, 0, 0,
-		//		SWP_DRAWFRAME | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
-		//}
-		//if (pDS_grid2)
-		//{
-		//	m_pgrid2 = std::make_unique<CUGCtrl>(pDS_grid2,
-		//		pDS_grid2->GetDataGridSettingsName().c_str());
-		//	m_pgrid2->AttachGrid(CWnd::FromHandle(Hwnd()), IDC_GRID2);
-		//	m_pgrid2->SetSH_Width(16);
-		//	m_pgrid2->SetWindowPos(0, 0, 0, 0, 0,
-		//		SWP_DRAWFRAME | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
-		//}
 
 		if (m_isDialogWantsClickOutsideMouseDownToCancel)
 		{
@@ -462,44 +436,39 @@ protected:
 		return TRUE;
 	}
 
-	void _SetDlgPosToGridCell(CRect& rectCell, int nDlgWidth = 0, int nDlgHeight = 0)
+	void _SetDlgPos(int xScr = INVALID_PIXEL_POS, int yScr = INVALID_PIXEL_POS,
+			int nDlgWidth = 0, int nDlgHeight = 0)
 	{	// call from OnInitDialog()
-		HMONITOR hMonitor;
-		hMonitor = ::MonitorFromRect(rectCell, MONITOR_DEFAULTTONEAREST);
-		MONITORINFO mi;
-		mi.cbSize = sizeof(mi);
-		::GetMonitorInfoW(hMonitor, &mi);
-		CRect rectDlg, rectMon = mi.rcWork;
-
+		CRect rectDlg, rectMon, rectDlgUnchanged;
 		::GetWindowRect(Hwnd(), rectDlg);
-		rectDlg.MoveToXY(rectCell.left, rectCell.bottom);
-
-		if (!nDlgWidth)	// Dialog width not specified - use current
-			nDlgWidth = rectDlg.Width();
-		else
-			rectDlg.right = rectDlg.left + nDlgWidth;
-		if (!nDlgHeight)	// Dialog height not specified - use current
-			nDlgHeight = rectDlg.Height();
-		else
-			rectDlg.bottom = rectDlg.top + nDlgHeight;
-
-		if (rectDlg.bottom > rectMon.bottom)
+		rectDlgUnchanged = rectDlg;
+		if (xScr != INVALID_PIXEL_POS && yScr != INVALID_PIXEL_POS)
 		{
-			rectDlg.OffsetRect(0, -(rectDlg.Height() + rectCell.Height()));
-			if (rectDlg.top < rectMon.top)
-			{
-				rectDlg.OffsetRect(0, (rectMon.top - rectDlg.top));
-			}
+			rectDlg.MoveToXY(xScr, yScr);
 		}
+		if (nDlgWidth > 0)
+		{
+			rectDlg.right = rectDlg.left + nDlgWidth;
+		}
+		if (nDlgHeight > 0)
+		{
+			rectDlg.bottom = rectDlg.top + nDlgHeight;
+		}
+		CMonitor mon = CMonitors::GetNearestMonitor(rectDlg.TopLeft());
+		mon.GetWorkAreaRect(&rectMon);
 
-		if (rectDlg.right > rectMon.right)
-			rectDlg.OffsetRect(-(rectDlg.right - rectMon.right), 0);
+		rectDlg = mon.AdjustRectOnScreen(rectDlg);
 
-		if (rectDlg.left < rectMon.left)
-			rectDlg.OffsetRect(rectMon.left - rectDlg.left, 0);
-
-		::SetWindowPos(Hwnd(), ::GetParent(Hwnd()), rectDlg.left, rectDlg.top, nDlgWidth, nDlgHeight,
-			SWP_NOCOPYBITS | SWP_NOZORDER | SWP_SHOWWINDOW);
+		UINT swp_flags = SWP_NOCOPYBITS | SWP_NOZORDER | SWP_SHOWWINDOW;
+		if (rectDlg.Size() == rectDlgUnchanged.Size())
+		{
+			swp_flags |= SWP_NOSIZE;
+		}
+		if (rectDlg.TopLeft() == rectDlgUnchanged.TopLeft())
+		{
+			swp_flags |= SWP_NOMOVE;
+		}
+		::SetWindowPos(Hwnd(), ::GetParent(Hwnd()), rectDlg.left, rectDlg.top, rectDlg.Width(), rectDlg.Height(), swp_flags);
 	}
 
 	// Call this AFTER Initialize to auto generate tooltips for controls.

@@ -612,14 +612,16 @@ protected:
 			_CreateControl(item, rc);
 		}
 
+		::ShowWindow(hWnd, SW_SHOW);
+
 		if (!_OnInitDialog())
 		{
 			return false;
 		}
 
-		::ShowWindow(hWnd, SW_SHOW);
-
 		DoTabToNextCtrl(false, hWnd, hWnd);	// Set focus to first control.
+
+		_RedrawDirectly();
 
 		return hWnd != 0;
 	}
@@ -1416,7 +1418,7 @@ protected:
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rc) override
 	{
-		pRT->FillRectangle(rc, GetBrush(CID::DialogBg));
+		pRT->Clear(m_xeUI->GetColorF(CID::DialogBg));
 	}
 
 	virtual LRESULT _OnSysCommand(WPARAM wParam, LPARAM lParam) override

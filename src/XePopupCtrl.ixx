@@ -116,6 +116,9 @@ public:
 		{
 			// Capture mouse messages - unless 'this' is a sub-menu (already captured).
 			::SetCapture(m_hwndOwner);
+
+			// Hide tooltip - if visible.
+			m_xeUI->HideTooltip();
 		}
 		::SetCursor(m_xeUI->GetAppCursor(false));
 

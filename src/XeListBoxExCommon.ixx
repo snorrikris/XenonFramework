@@ -913,12 +913,12 @@ protected:
 			}
 		}
 
+		pRT->PopAxisAlignedClip();
+
 		if (m_buttonsHlpr.m_hasButtons)
 		{
 			_DrawBottomButtons(pRT, m_isEnabled);
 		}
-
-		pRT->PopAxisAlignedClip();
 
 		if (m_hasVscroll && m_hasHscroll)	// Need to paint bottom right corner?
 		{
@@ -1899,7 +1899,10 @@ protected:
 			if (m_control_has_border)
 			{
 				++m_rcVSB.top;
-				--m_rcVSB.bottom;
+				if (!(!m_hasHscroll && m_buttonsHlpr.m_hasButtons))
+				{
+					--m_rcVSB.bottom;
+				}
 				--m_rcVSB.left;
 				--m_rcVSB.right;
 			}

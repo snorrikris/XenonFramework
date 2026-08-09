@@ -693,6 +693,8 @@ protected:
 
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcWnd) override
 	{
+		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg));
+
 		CRect rcReal = _GetRealClientRect(); // Not incl. buttons at bottom nor scrollbars
 		int xOffset = _GetHscrollInfo().nPos;
 		D2D1_RECT_F rcPaintF = RectFfromRect(rcReal);
@@ -707,8 +709,6 @@ protected:
 			rcClipSB.bottom = (float)m_rcHSB.top;
 		}
 		pRT->PushAxisAlignedClip(rcClipSB, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-
-		pRT->FillRectangle(rcPaintF, GetBrush(CID::CtrlBg));
 
 		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
 

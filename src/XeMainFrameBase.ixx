@@ -872,7 +872,7 @@ protected:
 	{
 		if (m_rcHsplitSideVw.IsRectEmpty() && m_rcHsplitView0.IsRectEmpty() && m_rcVsplit.IsRectEmpty())
 		{
-			pRT->FillRectangle(rcClient, GetBrush(CID::XTbBarBgCtrl));
+			pRT->Clear(m_xeUI->GetColorF(CID::XTbBarBgCtrl));
 		}
 		_DrawSplitter(pRT, m_rcHsplitSideVw);
 		_DrawSplitter(pRT, m_rcHsplitView0);

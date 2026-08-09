@@ -101,7 +101,7 @@ void CUGGrid::_PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient)
 	if ( m_GI->m_paintMode == FALSE )
 		return;
 
-	pRT->FillRectangle(rcClient, GetBrush(CID::GrdCellDefBg));
+	pRT->Clear(m_xeUI->GetColorF(CID::GrdCellDefBg));
 
 	//CClientDC dc(this);
 	//redraw the cells in any invalid region

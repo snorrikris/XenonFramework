@@ -472,7 +472,6 @@ protected:
 	void _DrawViewsListWndUI(ID2D1RenderTarget* pRT, D2D1_RECT_F rc)
 	{
 		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg)); // Fill background
-		//pRT->FillRectangle(rc, GetBrush(CID::CtrlBg));
 		int cxVw = (int)WidthOf(rc), cyVw = (int)HeightOf(rc);
 		int cyTitle = _GetViewsListTitleTextHeight();
 		int cyPath = _GetViewsListPathTextHeight();

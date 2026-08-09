@@ -175,7 +175,6 @@ protected:
 		rndr.m_bg_brush = GetBrush(CID::TT_Bg);
 		rndr.m_border_brush = GetBrush(CID::TT_BgBorder);
 
-		//pRT->FillRectangle(rc, rndr.m_bg_brush);
 		pRT->Clear(m_xeUI->GetColorF(CID::TT_Bg)); // Fill background
 
 		m_drawer->DrawPreparedOutput(rndr, &m_rcTipArea);

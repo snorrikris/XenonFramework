@@ -16,6 +16,7 @@ import Xe.D2DToolbarIF;
 import Xe.UserSettings_Changed;
 import Xe.Utils;
 import Xe.MainFrameIF;
+import Xe.Menu;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -101,6 +102,10 @@ public:
 
 	virtual void ProcessCommand(UINT uCmdId, UINT param) = 0;
 
+	// Add menu items to Tab context menu.
+	virtual void OnTabCtxMenuOpening(CXeMenu& menu, CXeFileVwIF* pView) = 0;
+
+	// Process command from Tab context menu.
 	virtual void OnTabCtxMenuCmd(UINT uCmdId, ETABVIEWID tabId, dsid_t datasourceId) = 0;
 
 	virtual CXeCancelEvent* DoWorkThreadWork(WorkThreadWorkCallbackFunc) = 0;

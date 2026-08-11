@@ -755,6 +755,9 @@ public:
 		}
 	}
 
+	virtual void OnTabCtxMenuOpening(CXeMenu& menu, CXeFileVwIF* pView) override
+	{
+	}
 	virtual void OnTabCtxMenuCmd(UINT uCmdId, ETABVIEWID tabId, dsid_t datasourceId) override
 	{
 	}

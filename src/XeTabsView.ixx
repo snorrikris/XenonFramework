@@ -1263,41 +1263,6 @@ public:
 		case ID__FULLFILEPATHTOCLIPBOARD:
 			menu_item.EnableItem(pView && pView->CanCopyInfoToClipboard(ECLIPBRDOP::eFULLPATH));
 			break;
-		//case ID__SAVEACOPYAS:	// Save a copy only supported for log files.
-		//	menu_item.EnableItem(dataSourceType == DSType::LOGFILE);
-		//	break;
-		//case ID__EXPORT_BOOKMARKS:	// Export bookmarks only supported for log files and event log files.
-		//	menu_item.EnableItem(false);
-		//	if (pView)
-		//	{
-		//		bool hasBookmarks = pView->GetConstFileContainerUI_IF()->GetNumberOfVisibleBookmarks() > 0;
-		//		menu_item.EnableItem(hasBookmarks);
-		//	}
-		//	break;
-		//case ID__SETFILECOLOR:	// Set file color only supported for log files.
-		//	menu_item.EnableItem(dataSourceType == DSType::LOGFILE);
-		//	break;
-		//case ID__OPEN_IN_NEW_INSTANCE:
-		//	menu_item.EnableItem(pView && pView->CanOpenInAnotherInstance() && GetTotalTabCount() > 1);
-		//	break;
-		//case ID__MOVE_TO_NEW_INSTANCE:
-		//	menu_item.EnableItem(pView && pView->CanOpenInAnotherInstance() && GetTotalTabCount() > 1);
-		//	break;
-		//case ID__IGNORE_TIME_JUMPS: {
-		//	if (pView)
-		//	{
-		//		const FileMetadata& md = pView->GetConstFileContainerUI_IF()->GetMetadata();
-		//		menu_item.EnableItem(md.m_hasTimeJumps);
-		//		if (md.m_isIgnoreTimeJumpsInUI)
-		//		{
-		//			menu_item.m_item_data.m_isChecked = 1;
-		//		}
-		//	}
-		//	else
-		//	{
-		//		menu_item.EnableItem(false);
-		//	}
-		//	} break;
 		}
 	}
 
@@ -1311,32 +1276,7 @@ protected:
 			UpdateMenuItem(menu_item, pView);
 		}
 
-		// Add submenus for "Open in another instance" and "Move to another instance".
-		//UINT uFirstOMid = 0, uLastOMid = 0;
-		//std::vector<OtherAppInfo> otherLVSs = GetAllOtherInstancesInfoes(m_xeUI->GetMainWindowHandle());
-		//bool canOpenMove = pView->CanOpenInAnotherInstance() && GetTotalTabCount() > 1;
-		//if (canOpenMove && otherLVSs.size() > 0)
-		//{
-		//	std::vector<ListBoxExItem> listOpen, listMove;
-		//	UINT idx = 0;
-		//	for (OtherAppInfo& info : otherLVSs)
-		//	{
-		//		info.menuIDopen = ID_STATE_CMD_LAST + idx;
-		//		info.menuIDmove = ID_STATE_CMD_LAST + idx + 1;
-		//		if (uFirstOMid == 0) { uFirstOMid = info.menuIDopen; }
-		//		uLastOMid = info.menuIDmove;
-		//		std::wstring str = L"Title: \"" + info.strWindowTitle + L"\"";
-		//		listOpen.push_back(ListBoxExItem(info.menuIDopen, str));
-		//		listMove.push_back(ListBoxExItem(info.menuIDmove, str));
-		//		idx += 2;
-		//	}
-		//	ListBoxExItem popup_open(0, L"Open in another instance", IsSeparator::no, IsChecked::no,
-		//		IsEnabled::yes, IsSubMenu::yes);
-		//	ListBoxExItem popup_move(0, L"Move to another instance", IsSeparator::no, IsChecked::no,
-		//		IsEnabled::yes, IsSubMenu::yes);
-		//	menu.AppendPopupMenu(0, popup_open, listOpen);
-		//	menu.AppendPopupMenu(0, popup_move, listMove);
-		//}
+		m_pVwMgr->OnTabCtxMenuOpening(menu, pView);
 
 		ClientToScreen(&pt);
 		UINT selItem = menu.ShowMenu(Hwnd(), pt, 0);
@@ -1345,14 +1285,7 @@ protected:
 			return;
 		}
 
-		//if (selItem >= uFirstOMid && selItem <= uLastOMid)
-		//{
-		//	_OnOpenMoveInAnotherInstance(selItem, pView, otherLVSs);
-		//	return;
-		//}
-
 		const CVwInfo* pTabInfo = m_listTabs->GetTab(pView);
-		//const FileMetadata& md = pView->GetConstFileContainerUI_IF()->GetMetadata();
 		dsid_t datasourceId = pView->GetDataSourceId();
 		switch (selItem)
 		{
@@ -1398,52 +1331,11 @@ protected:
 		case ID__FULLFILEPATHTOCLIPBOARD:
 			pView->OnCopyInfoToClipboard(ECLIPBRDOP::eFULLPATH);
 			break;
-
-		//case ID__OPEN_IN_NEW_INSTANCE:
-		//	_OnOpenMoveInNewInstance(false, pView);
-		//	break;
-		//case ID__MOVE_TO_NEW_INSTANCE:
-		//	_OnOpenMoveInNewInstance(true, pView);
-		//	break;
 		default:
 			m_pVwMgr->OnTabCtxMenuCmd(selItem, m_eTabVwId, datasourceId);
 			break;
 		}
 	}
-
-	//void _OnOpenMoveInNewInstance(bool isMove, CXeFileVwIF* pView)
-	//{
-	//	std::wstring strParams = L"\"/OPEN_NEW_INSTANCE\" \""
-	//		+ pView->GetConstFileContainerUI_IF()->GetMetadata().m_strPathName + L"\"";
-	//	if (RunAnotherInstance(strParams) && isMove)
-	//	{
-	//		_DeleteTabAndView(pView);
-	//	}
-	//}
-
-	//void _OnOpenMoveInAnotherInstance(UINT selMenuItemId, CXeFileVwIF* pView,
-	//	std::vector<OtherAppInfo>& otherLVSs)
-	//{
-	//	std::wstring strPathname = pView->GetConstFileContainerUI_IF()->GetMetadata().m_strPathName;
-	//	for (OtherAppInfo& info : otherLVSs)
-	//	{
-	//		if (selMenuItemId == info.menuIDopen)
-	//		{
-	//			// Open in another instance
-	//			SendCmdLineToAnotherInstance(info.hWnd, strPathname);
-	//			break;
-	//		}
-	//		else if (selMenuItemId == (info.menuIDmove))
-	//		{
-	//			// Move to another instance
-	//			if (SendCmdLineToAnotherInstance(info.hWnd, strPathname))
-	//			{
-	//				_DeleteTabAndView(pView);
-	//			}
-	//			break;
-	//		}
-	//	}
-	//}
 #pragma endregion Context_Menu
 
 #pragma region Tooltips

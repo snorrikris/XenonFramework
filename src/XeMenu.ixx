@@ -134,6 +134,10 @@ protected:
 
 	UpdateMenuCallbackFunc m_updateMenuCallback = nullptr;
 
+	// When 'this' is showing sub-menu = pointer to menu item that "owns" the sub-menu.
+	// Is = NULL when 'this' is not showing a sub-menu.
+	const ListBoxExItem* m_pCurrentSubMenu = nullptr;
+
 #pragma region Create
 public:
 	CXeMenu(CXeUIcolorsIF* pUIcolors, GetSubMenuCallbackFunc getSubMenu = nullptr)
@@ -470,6 +474,11 @@ protected:
 		{
 			const ListBoxExItem* pSelItem = m_cmn->GetItemDataAtIndexConst(item_idx);
 			CRect rcItemScr = m_cmn->GetItemScreenRect(item_idx);
+			if (m_pCurrentSubMenu)
+			{
+				//XeTRACE("Already showing sub-menu - ignoring the NF.\n");
+				return;
+			}
 			if (pSelItem && m_getSubMenuCallback)
 			{
 				int nSelIdx = nfCode == LB_EX_NOTIFY_SUBMENU_SELECTED_BY_KEYBOARD ? 0 : -1;
@@ -491,7 +500,9 @@ protected:
 		submenu->_UpdateShortcutKeyMap();
 		submenu->SetTopLevelMenuNavigationCallback(m_cmn->m_topLevelMenuNavigationCallback);
 		CRect rc = submenu->m_cmn->CalcPopupMenuSize(rcItemScr.right, rcItemScr.top);
+		m_pCurrentSubMenu = pSelItem;
 		submenu->ShowPopup(m_hParentWnd, rc, rcItemScr);
+		m_pCurrentSubMenu = nullptr;
 		m_cmn->m_nTopLevelMenuNavigationItemIndex = submenu->m_cmn->m_nTopLevelMenuNavigationItemIndex;
 		m_cmn->m_uSelectedItemCommandID = submenu->m_cmn->m_uSelectedItemCommandID;
 		if (submenu->m_cmn->m_isSelEndOk)

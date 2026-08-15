@@ -1275,6 +1275,13 @@ protected:
 		{
 			UpdateMenuItem(menu_item, pView);
 		}
+		for (auto& [uPopupId, list] : pSubMenu->m_sub_menus)
+		{
+			for (ListBoxExItem& menu_item : list)
+			{
+				UpdateMenuItem(menu_item, pView);
+			}
+		}
 
 		m_pVwMgr->OnTabCtxMenuOpening(menu, pView);
 

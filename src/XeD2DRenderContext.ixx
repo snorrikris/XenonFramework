@@ -572,7 +572,7 @@ class XeD2DBrushMap
 
 	ID2D1RenderTarget* m_pRT;
 
-	std::map<CID, ID2D1SolidColorBrush*> m_map;
+	std::map<uint32_t, ID2D1SolidColorBrush*> m_map;
 
 public:
 	XeD2DBrushMap(CXeUIcolorsIF* pUIcolors, ID2D1RenderTarget* pRT) : m_xeUI(pUIcolors), m_pRT(pRT) {}
@@ -586,15 +586,21 @@ public:
 
 	ID2D1SolidColorBrush* GetOrCreate(CID key)
 	{
-		if (m_map.contains(key))
+		uint32_t rgb = m_xeUI->GetColor(key);
+		return GetOrCreate(rgb);
+	}
+
+	ID2D1SolidColorBrush* GetOrCreate(uint32_t rgb)
+	{
+		if (m_map.contains(rgb))
 		{
-			return m_map.at(key);
+			return m_map.at(rgb);
 		}
 		else
 		{
-			if (_CreateSolidColorBrush(key))
+			if (_CreateSolidColorBrush(rgb))
 			{
-				return m_map.at(key);
+				return m_map.at(rgb);
 			}
 		}
 
@@ -607,14 +613,14 @@ public:
 	}
 
 protected:
-	bool _CreateSolidColorBrush(CID colorId)
+	bool _CreateSolidColorBrush(uint32_t rgb)
 	{
 		XeD2D1_COLOR_F col;
-		col.SetFromRGB(m_xeUI->GetColor(colorId), false);
+		col.SetFromRGB(rgb, false);
 		ID2D1SolidColorBrush* pBrush = nullptr;
 		HRESULT hr = m_pRT->CreateSolidColorBrush(col, &pBrush);
 		XeASSERT(hr == S_OK);
-		m_map[colorId] = pBrush;
+		m_map[rgb] = pBrush;
 		return hr == S_OK;
 	}
 };
@@ -659,6 +665,16 @@ public:
 			return nullptr;
 		}
 		return m_brushes->GetOrCreate(key);
+	}
+
+	ID2D1SolidColorBrush* GetBrush(uint32_t rgb)
+	{
+		XeASSERT(m_brushes.get());	// m_brushes is only valid during _Paint call
+		if (!m_brushes.get())
+		{
+			return nullptr;
+		}
+		return m_brushes->GetOrCreate(rgb);
 	}
 
 	static Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> GetD2SolidBrush(ID2D1RenderTarget* pRT, D2D1_COLOR_F cc)

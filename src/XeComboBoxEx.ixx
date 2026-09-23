@@ -90,8 +90,8 @@ public:
 				rcEdit.DeflateRect(1, 1);
 			}
 			m_edit->Create(WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, hWnd, rcEdit, uIDC_EDIT, nullptr);
-			m_edit->SetComboBoxKeyDownFilterCallback([this](UINT nChar, UINT nRepCnt, UINT nFlags)
-				{ return _EditCtrlKeyDownFilter(nChar, nRepCnt, nFlags); });
+			m_edit->SetComboBoxKeyDownFilterCallback([this](const MSG& msg)
+				{ return _EditCtrlKeyDownFilter(msg); });
 		}
 		return hWnd != 0;
 	}
@@ -400,13 +400,13 @@ protected:
 	virtual LRESULT _OnKeyDown(WPARAM wParam, LPARAM lParam) override
 	{
 		XeASSERT(::IsWindow(Hwnd()));
-		UINT nChar = (UINT)wParam;
-		UINT nRepCnt = (UINT)lParam & 0xFFFF;
-		UINT nFlags = (UINT)(lParam >> 16) & 0xFFFF;
-		if (_EditCtrlKeyDownFilter(nChar, nRepCnt, nFlags))
-		{
-			return 0;
-		}
+		//UINT nChar = (UINT)wParam;
+		//UINT nRepCnt = (UINT)lParam & 0xFFFF;
+		//UINT nFlags = (UINT)(lParam >> 16) & 0xFFFF;
+		//if (_EditCtrlKeyDownFilter(nChar, nRepCnt, nFlags))
+		//{
+		//	return 0;
+		//}
 		if (m_isStatic)
 		{
 			size_t num_items = m_listbox->OnGetCountMsg(0, 0);
@@ -460,8 +460,19 @@ protected:
 		return 0;
 	}
 
-	bool _EditCtrlKeyDownFilter(UINT nChar, UINT nRepCnt, UINT nFlags)
+	// Filter WM_KEYDOWN or WM_SYSKEYDOWN or WM_KEYUP or WM_SYSKEYUP or WM_CHAR
+	// Called from within the message loop (in the main app or modal dialog message loop)
+	// via CXeScintillaEditControl via CXeUIcolors via message loop in CXeD2DAppBase.
+	// Return true if message should be suppressed, false if message should be processed normally.
+	bool _EditCtrlKeyDownFilter(const MSG& msg)
 	{
+		if (msg.message != WM_KEYDOWN)
+		{
+			return false;
+		}
+		UINT nChar = (UINT)msg.wParam;
+		//UINT nRepCnt = (UINT)lParam & 0xFFFF;
+		//UINT nFlags = (UINT)(lParam >> 16) & 0xFFFF;
 		CXeShiftCtrlAltKeyHelper sca;
 		if (m_findUIcmdFunc)
 		{
@@ -684,6 +695,7 @@ protected:
 		{
 			LPCTSTR pStr = (LPCTSTR)lParam;
 			m_edit->SetTextSuppressEnChangeNotify(pStr);
+			m_listbox->OnSetCurSelMsg(-1, 0);
 			return TRUE;	// TRUE is the correct return value for this message.
 		}
 		return CB_ERR;	// No edit control

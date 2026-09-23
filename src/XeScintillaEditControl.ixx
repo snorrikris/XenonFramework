@@ -23,7 +23,7 @@ import Xe.ChronoTimer;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-typedef std::function<bool(UINT, UINT, UINT)> KeyDownFilterCallback;
+typedef std::function<bool(const MSG& msg)> KeyboardMessageFilterCallback;
 
 typedef std::function<void(std::vector<ListBoxExItem>&)> ExtendContextMenuCallback;
 
@@ -193,7 +193,7 @@ protected:
 
 	clock_t m_lastDblClickTicks = 0;
 
-	KeyDownFilterCallback m_comboBoxKeydownFilterFunc = nullptr;
+	KeyboardMessageFilterCallback m_comboBoxKeyboardFilterFunc = nullptr;
 
 	ExtendContextMenuCallback m_extendContextMenuFunc = nullptr;
 
@@ -267,9 +267,9 @@ public:
 
 	XeWindowStyle GetXeStyle() const { return m_style; }
 
-	void SetComboBoxKeyDownFilterCallback(KeyDownFilterCallback keyDownFilterFunc)
+	void SetComboBoxKeyDownFilterCallback(KeyboardMessageFilterCallback keyMsgFilterFunc)
 	{
-		m_comboBoxKeydownFilterFunc = keyDownFilterFunc;
+		m_comboBoxKeyboardFilterFunc = keyMsgFilterFunc;
 	}
 
 	void SetContextMenuCallbacks(ExtendContextMenuCallback extendCtxMenuCallback,
@@ -303,7 +303,7 @@ protected:
 		UINT uKey = (UINT)msg.wParam;
 		if (isSingleLineEditControl)
 		{
-			if (m_comboBoxKeydownFilterFunc && m_comboBoxKeydownFilterFunc(uKey, 0, 0))
+			if (m_comboBoxKeyboardFilterFunc && m_comboBoxKeyboardFilterFunc(msg))
 			{
 				return true;	// Suppress key (already handled by ComboBox parent control).
 			}

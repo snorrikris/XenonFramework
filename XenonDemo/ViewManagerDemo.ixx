@@ -112,11 +112,11 @@ public:
 	virtual void OnMainWindowCreate() override { CXeViewManager::OnMainWindowCreate(); }
 	virtual void OnMainWindowDestroy() override { CXeViewManager::OnMainWindowDestroy(); }
 	//virtual void Destroy() override { CXeViewManager::Destroy(); }
-	virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override { CXeViewManager::CreateTabViews(hMainWnd, pMainWndToolBar); }
+	//virtual void CreateTabViews(HWND hMainWnd, CXeD2DToolbarIF* pMainWndToolBar) override { CXeViewManager::CreateTabViews(hMainWnd, pMainWndToolBar); }
 	virtual bool AttachView(std::unique_ptr<CXeFileVwIF> view, CreateViewParams viewParams) override { return CXeViewManager::AttachView(std::move(view), viewParams); }
 	virtual void On_Timer_1S() override { CXeViewManager::On_Timer_1S(); }
-	virtual int GetTabViewHeight(int idx) override { return CXeViewManager::GetTabViewHeight(idx); }
-	virtual int RecalculateTabViewHeight(int idx, int cxAvailable) override { return CXeViewManager::RecalculateTabViewHeight(idx, cxAvailable); }
+	//virtual int GetTabViewHeight(int idx) override { return CXeViewManager::GetTabViewHeight(idx); }
+	//virtual int RecalculateTabViewHeight(int idx, int cxAvailable) override { return CXeViewManager::RecalculateTabViewHeight(idx, cxAvailable); }
 	virtual void SetFocusToCurrentView() override { CXeViewManager::SetFocusToCurrentView(); }
 	virtual void OnViewClosing(dsid_t dwDataSourceId) override { CXeViewManager::OnViewClosing(dwDataSourceId); }
 	virtual void OnViewClosed(dsid_t dwDataSourceId) override { CXeViewManager::OnViewClosed(dwDataSourceId); }
@@ -141,7 +141,7 @@ public:
 	virtual std::vector<CXeFileVwIF*> GetAllNonForegroundViews() override { return CXeViewManager::GetAllNonForegroundViews(); }
 	virtual std::vector<CXeFileVwIF*> GetAllViewsFromDataSourceIds(const std::vector<dsid_t>& dataSourceIds) override { return CXeViewManager::GetAllViewsFromDataSourceIds(dataSourceIds); }
 	virtual void SendMessageToAllViews(UINT uMessage, WPARAM wParam, LPARAM lParam) override { CXeViewManager::SendMessageToAllViews(uMessage, wParam, lParam); }
-	virtual CRect GetTabViewWindow(ETABVIEWID tabVwId) override { return CXeViewManager::GetTabViewWindow(tabVwId); }
+	//virtual CRect GetTabViewWindow(ETABVIEWID tabVwId) override { return CXeViewManager::GetTabViewWindow(tabVwId); }
 	virtual void ViewWithFocusChanged(dsid_t dwDataSourceId) override { CXeViewManager::ViewWithFocusChanged(dwDataSourceId); }
 	virtual void SetFocusToView(dsid_t dwDataSourceId) override { CXeViewManager::SetFocusToView(dwDataSourceId); }
 	virtual bool IsViewVisible(dsid_t dwDataSourceId) override { return CXeViewManager::IsViewVisible(dwDataSourceId); }
@@ -197,7 +197,7 @@ protected:
 
 	void _OpenFiles(const std::vector<std::wstring>& strPathNames, CreateViewParams viewParams)
 	{
-		CXeTabsView* pTabVw = _GetTabView(viewParams.eTabVwId);
+		CXeTabsViewIF* pTabVw = _GetTabView(viewParams.eTabVwId);
 		XeASSERT(pTabVw);
 		if (!pTabVw)
 		{

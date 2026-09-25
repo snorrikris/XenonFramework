@@ -24,22 +24,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\CeXDib.h">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\logging.h">
       <Filter>Source Files\XenonFramework</Filter>
     </ClInclude>
     <ClInclude Include="..\src\os_minimal.h">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\PPDrawManager.h">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\PPHtmlDrawer.h">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\PPTooltipDefs.h">
       <Filter>Source Files\XenonFramework</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Xe_res.h">
@@ -140,19 +128,10 @@
     <ClCompile Include="XenonDemo.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CeXDib.cpp">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\mfc_types.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Monitors.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\PPDrawManager.cpp">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\PPHtmlDrawer.cpp">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PPTooltip.ixx">
@@ -404,9 +383,6 @@
     <ClCompile Include="..\src\XeUItypesPID.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\XeTooltipIF.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\XeComboBoxEx.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
@@ -461,6 +437,18 @@
     <ClCompile Include="..\src\XeFormBase.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\XeMainFrameIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeTabsViewIF.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PPTooltipWindow.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PPHtmlDrawer.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\XeResource.rc2">
@@ -472,6 +460,7 @@
     <None Include="..\src\XeResource.rc">
       <Filter>Source Files\XenonFramework</Filter>
     </None>
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="XenonDemo.rc">

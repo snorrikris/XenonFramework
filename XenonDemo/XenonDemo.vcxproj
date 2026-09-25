@@ -137,12 +137,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\CeXDib.h" />
     <ClInclude Include="..\src\logging.h" />
     <ClInclude Include="..\src\os_minimal.h" />
-    <ClInclude Include="..\src\PPDrawManager.h" />
-    <ClInclude Include="..\src\PPHtmlDrawer.h" />
-    <ClInclude Include="..\src\PPTooltipDefs.h" />
     <ClInclude Include="..\src\UG\UGCBType.h" />
     <ClInclude Include="..\src\UG\UGCell.h" />
     <ClInclude Include="..\src\UG\UGCelTyp.h" />
@@ -176,12 +172,11 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\CeXDib.cpp" />
     <ClCompile Include="..\src\mfc_types.ixx" />
     <ClCompile Include="..\src\Monitors.ixx" />
-    <ClCompile Include="..\src\PPDrawManager.cpp" />
-    <ClCompile Include="..\src\PPHtmlDrawer.cpp" />
+    <ClCompile Include="..\src\PPHtmlDrawer.ixx" />
     <ClCompile Include="..\src\PPTooltip.ixx" />
+    <ClCompile Include="..\src\PPTooltipWindow.ixx" />
     <ClCompile Include="..\src\UG\UGCBType.cpp" />
     <ClCompile Include="..\src\UG\UGCell.cpp" />
     <ClCompile Include="..\src\UG\UGCelTyp.cpp" />
@@ -238,6 +233,7 @@
     <ClCompile Include="..\src\XeListBoxEx.ixx" />
     <ClCompile Include="..\src\XeListBoxExCommon.ixx" />
     <ClCompile Include="..\src\XeMainFrameBase.ixx" />
+    <ClCompile Include="..\src\XeMainFrameIF.ixx" />
     <ClCompile Include="..\src\XeMenu.ixx" />
     <ClCompile Include="..\src\XeMessageBoxDlg.ixx" />
     <ClCompile Include="..\src\XeMRUList.ixx" />
@@ -253,10 +249,10 @@
     <ClCompile Include="..\src\XeStringTools.ixx" />
     <ClCompile Include="..\src\XeTabsList.ixx" />
     <ClCompile Include="..\src\XeTabsView.ixx" />
+    <ClCompile Include="..\src\XeTabsViewIF.ixx" />
     <ClCompile Include="..\src\XeTheme.ixx" />
     <ClCompile Include="..\src\XeThemeEditorDlg.ixx" />
     <ClCompile Include="..\src\XeThemeIF.ixx" />
-    <ClCompile Include="..\src\XeTooltipIF.ixx" />
     <ClCompile Include="..\src\XeTreeCtrlEx.ixx" />
     <ClCompile Include="..\src\XeUIcolors.ixx" />
     <ClCompile Include="..\src\XeUIcolorsIF.ixx" />
@@ -286,6 +282,7 @@
     <ClCompile Include="XenonDemo.ixx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="..\src\XeResource.rc" />
     <ResourceCompile Include="XenonDemo.rc" />
   </ItemGroup>

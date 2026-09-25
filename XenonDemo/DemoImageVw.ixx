@@ -40,7 +40,7 @@ public:
 		return isOk;
 	}
 
-	virtual void SetFocusToView() override
+	virtual void SetFocusToView() const override
 	{
 		if (m_imgCtrl->GetSafeHwnd())
 		{

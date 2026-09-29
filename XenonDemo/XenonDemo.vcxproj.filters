@@ -30,9 +30,6 @@
     <ClInclude Include="..\src\os_minimal.h">
       <Filter>Source Files\XenonFramework</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Xe_res.h">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\XeAssert.h">
       <Filter>Source Files\XenonFramework</Filter>
     </ClInclude>
@@ -49,9 +46,6 @@
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
     <ClInclude Include="..\src\UG\UGCTprogress.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGCtrl.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
     <ClInclude Include="..\src\UG\UGCTsarw.h">

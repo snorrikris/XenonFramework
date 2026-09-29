@@ -144,7 +144,6 @@
     <ClInclude Include="..\src\UG\UGCelTyp.h" />
     <ClInclude Include="..\src\UG\UGCTarrw.h" />
     <ClInclude Include="..\src\UG\UGCTprogress.h" />
-    <ClInclude Include="..\src\UG\UGCtrl.h" />
     <ClInclude Include="..\src\UG\UGCTsarw.h" />
     <ClInclude Include="..\src\UG\UGCTurlbtn.h" />
     <ClInclude Include="..\src\UG\ugdefine.h" />
@@ -166,7 +165,6 @@
     <ClInclude Include="..\src\UG\XeGridDefs.h" />
     <ClInclude Include="..\src\XeAssert.h" />
     <ClInclude Include="..\src\XeResource.h" />
-    <ClInclude Include="..\src\Xe_res.h" />
     <ClInclude Include="..\vsrollinglog\VSRL.h" />
     <ClInclude Include="..\vsrollinglog\VSRL_IF.h" />
     <ClInclude Include="resource.h" />

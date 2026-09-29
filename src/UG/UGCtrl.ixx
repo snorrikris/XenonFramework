@@ -13,9 +13,9 @@ module;
 #include <vector>
 #include <string>
 #include <functional>
-#include <algorithm>
+//#include <algorithm>
 #include <d2d1.h>
-#include <dwrite.h>
+//#include <dwrite.h>
 #include <tchar.h>
 //namespace Gdiplus
 //{
@@ -24,7 +24,23 @@ module;
 //}
 //#include <gdiplus.h>
 
-import Xe.UIcolorsIF;
+// grid feature enable defines - rem out one or more of these defines 
+// to remove one or more features
+#define UG_ENABLE_MOUSEWHEEL
+//#define UG_ENABLE_PRINTING
+//#define UG_ENABLE_FINDDIALOG
+//#define UG_ENABLE_SCROLLHINTS
+
+#ifdef __AFXOLE_H__  //OLE must be included
+#define UG_ENABLE_DRAGDROP
+#endif
+
+#ifndef WS_EX_LAYOUTRTL
+#define WS_EX_LAYOUTRTL		0x00400000L
+#endif // WS_EX_LAYOUTRTL
+
+
+//import Xe.UIcolorsIF;
 #include "ugdefine.h"
 #include "UGDtaSrc.h"
 #include "ugptrlst.h"
@@ -37,15 +53,15 @@ import Xe.UIcolorsIF;
 //#include "UGEditBase.h"
 #include "UGEdit.h"
 //#include "UGMEdit.h"
-#include "UGMemMan.h"
-#include "UGDrwHnt.h"
+//#include "UGMemMan.h"
+//#include "UGDrwHnt.h"
 #include "UGMultiS.h"
 #include "uggdinfo.h"
 #include "XeGridDefs.h"
 //#include "..\PPTooltip.h"
 //#include "..\XSuperTooltip.h"
 #include "UGGrid.h"
-#include "UGCell.h"
+//#include "UGCell.h"
 #include "UGTopHdg.h"
 #include "ugvscrol.h"
 #include "ughscrol.h"
@@ -59,21 +75,38 @@ import Xe.UIcolorsIF;
 //#ifdef UG_ENABLE_PRINTING
 //#undef UG_ENABLE_PRINTING
 //#endif
-#pragma warning(disable:5202)
+
+#include "..\GridDefs.h"
+
+//#include "..\CustomWndMsgs.h"
+
+//#pragma warning(disable:5201)
+//#pragma warning(disable:4091)
+
+export module Xe.Grid;
+
+//#pragma warning(default:4091)
+//#pragma warning(default:5201)
+
+
+//#pragma warning(disable:5202)
 import Xe.Helpers;
 //import Xe.HelpersMFC;
 
-#include <vector>
+//#include <vector>
 import Xe.GridDataSource;
 import Xe.ColorPicker;
 import Xe.UserSettings;
 import Xe.StringTools;
 
-#include "..\GridDefs.h"
+import Xe.Menu;
+import Xe.GridDataSource;
+import Xe.UIcolorsIF;
+import Xe.D2DWndBase;
+//import Xe.LogDefs;
+import Xe.DefData;
 
-#include "UGCtrl.h"
-
-//#include "..\CustomWndMsgs.h"
+//#include "UGCtrl.h"
 
 #define ID_EDIT_FIND                    0xE124
 
@@ -82,17 +115,7 @@ import Xe.StringTools;
 //#undef THIS_FILE
 //static char THIS_FILE[] = __FILE__;
 //#endif
-#pragma warning(default:5202)
-
-#pragma warning(disable:5201)
-#pragma warning(disable:4091)
-
-export module Xe.Grid;
-
-export CUGCtrl;
-
-#pragma warning(default:4091)
-#pragma warning(default:5201)
+//#pragma warning(default:5202)
 
 export constexpr UINT NM_GRID_CELL_CHANGED = 0x1000;
 
@@ -111,10 +134,135 @@ export struct NMGRID : public NMHDR
 	}
 };
 
-module :private;
+//class CUGCtrl;
 
-CUGCtrl::CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
-	GridNotifyCallbackFunc gridNotifyCallback /*= nullptr*/) : CXeD2DCtrlBase(pDS->m_xeUI)
+// Helper class to set grid edit cell in progress flag in current data source.
+//class CSetGridEditInProgressFlagInDataSource
+//{
+//public:
+//	// Constructor sets flag.
+//	CSetGridEditInProgressFlagInDataSource(CUGCtrl* pGrid)
+//	{
+//		XeASSERT(pGrid);
+//		m_pGrid = pGrid;
+//		m_pDSrc = pGrid->GetDataSource();
+//		XeASSERT(m_pDSrc);
+//		if (m_pDSrc)
+//			m_pDSrc->SetGridEditInProgressFlag();
+//	}
+//
+//	// Destructor clears flag.
+//	~CSetGridEditInProgressFlagInDataSource()
+//	{
+//		if (m_pDSrc)
+//			m_pDSrc->SetGridEditInProgressFlag(FALSE);
+//	}
+//
+//private:
+//	CUGCtrl* m_pGrid;
+//	CXeGridDataSource* m_pDSrc;
+//};
+
+export class CUGCtrl : public CXeD2DCtrlBase
+{
+protected:
+	structGridSelection m_gridsel;	// grid selection data
+
+	std::wstring m_strRegSectionName;
+
+	CXeGridDataSource* m_pInitialDataSource = nullptr;
+
+	int m_nMaxLen;		// maximum text length accepted from user input (0 = unlimited)
+	//CPen* m_ppenWvBorder;
+	CUGSortArrowType m_sortarrowcell;
+	CUGUrlBtnType m_urlbtncell;
+	POINT m_ptLastLbtnDnMousePos;	// Last position in client coords. when L button down.
+	//  Set to -1000000, -1000000 when L btn goes up.
+	//  Used to implement drag start operation.
+
+	GridNotifyCallbackFunc m_GridNotifyCallback = nullptr;
+
+	OnEditFinishedCallbackFunc m_onEditFinishedCallback = nullptr;
+
+public:
+	int m_contructorResults;
+
+	//***** internal classes *****
+
+	//data source list
+	CUGDataSource** m_dataSrcList;
+	int					m_dataSrcListLength;
+	int					m_dataSrcListMaxLength;
+
+	//CUGPtrList			*m_fontList;
+	//CUGPtrList			*m_bitmapList;
+	CUGPtrList* m_cellTypeList;
+	CUGPtrList* m_cellStylesList;
+	CUGPtrList* m_validateList;
+	CUGPtrList* m_displayFormatList;
+
+	//standard cell types
+	CUGCellType			m_normalCellType;
+	std::unique_ptr<CUGDropListType> m_dropListType;
+	CUGCheckBoxType		m_checkBoxType;
+	CUGArrowType		m_arrowType;
+	CUGProgressType		m_progressType;
+
+
+	//#ifdef UG_ENABLE_PRINTING
+	//CUGPrint*			m_CUGPrint;
+	//#endif
+
+	//popup menu
+	std::unique_ptr<CXeMenu> m_menu;
+	int					m_menuCol;
+	long				m_menuRow;
+	int					m_menuSection;
+
+
+	//grid info list / sheet variables
+	CUGGridInfo** m_GIList;
+	int m_currentSheet;
+	int m_numberSheets;
+
+
+	//update enable/disable flag
+	BOOL m_enableUpdate;
+
+	//current sheet 
+	CUGGridInfo* m_GI;
+
+	//child window classes
+	CUGGrid* m_CUGGrid;
+	CUGTopHdg* m_CUGTopHdg;
+	CUGSideHdg* m_CUGSideHdg;
+	//CUGCnrBtn			*m_CUGCnrBtn;
+
+	CUGVScroll* m_CUGVScroll;
+	CUGHScroll* m_CUGHScroll;
+
+	bool m_isComponentsCreated = false;
+
+	//scroll hint window
+	//#ifdef UG_ENABLE_SCROLLHINTS
+	//CUGHint				*m_CUGHint;
+	//#endif
+
+	//tabs
+	//CUGTab				*m_CUGTab;
+
+	//tracking topmost window
+	//CWnd				*m_trackingWnd;
+
+	//default edit control
+	CUGEdit			m_defEditCtrl;
+	//CUGMaskedEdit	m_defMaskedEditCtrl;
+
+	BOOL m_fCancelNext_OnEditContinue;
+
+
+CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
+	GridNotifyCallbackFunc gridNotifyCallback = nullptr) : CXeD2DCtrlBase(pDS->m_xeUI)
 {
 	XeASSERT(pDS && pDS->m_xeUI);
 	m_xeUI = pDS->m_xeUI;
@@ -323,7 +471,7 @@ CUGCtrl::CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
 Destructor
 	clean up all memory that was allocated
 ****************************************************/
-CUGCtrl::~CUGCtrl()
+virtual ~CUGCtrl()
 {
 	// Note DS deleted by view
 
@@ -409,13 +557,25 @@ CUGCtrl::~CUGCtrl()
 
 }
 
+// data source - note pointer is always valid - see ctor.
+CXeGridDataSource* GetDataSource() { XeASSERT(m_pInitialDataSource); return m_pInitialDataSource; }
+//DSType GetDataSourceType() { return GetDataSource()->GetDataSourceType(); }
+dsid_t GetDataSourceId() { return GetDataSource()->GetDataSourceId(); }
+structGridSelection& GetGridSelData() { return m_gridsel; };
+
+bool _NotifyParentView(stGridNotifyData& nfData)
+{
+	if (m_GridNotifyCallback) { return m_GridNotifyCallback(nfData); }
+	return false;
+}
+
 /***************************************************
 Message Map
 	Processes default windows messages
 ****************************************************/
 //const UINT ugmsg_FindDialog = RegisterWindowMessage(FINDMSGSTRING);
 
-LRESULT CUGCtrl::_OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+virtual LRESULT _OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override
 {
 	return CXeD2DWndBase::_OnOtherMessage(hWnd, uMsg, wParam, lParam);
 }
@@ -448,7 +608,7 @@ LRESULT CUGCtrl::_OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 /***************************************************
 OnEraseBkgnd
 ****************************************************/
-//BOOL CUGCtrl::OnEraseBkgnd( CDC* pDC )
+//BOOL OnEraseBkgnd( CDC* pDC )
 //{
 //	UNREFERENCED_PARAMETER(pDC);
 //	return 1;
@@ -460,7 +620,7 @@ This function is called when system colors are changed
 It then notifies all of the cell type classes, so
 they can update themselves
 ****************************************************/
-//void CUGCtrl::OnSysColorChange() 
+//void OnSysColorChange() 
 //{
 //	CWnd::OnSysColorChange();
 //
@@ -487,8 +647,8 @@ OnHScroll
 	pass all scroll messages over to the scroll child
 	window
 ****************************************************/
-//void CUGCtrl::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
-LRESULT CUGCtrl::_OnHScroll(WPARAM wParam, LPARAM lParam)
+//void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+virtual LRESULT _OnHScroll(WPARAM wParam, LPARAM lParam) override
 {
 	//UNREFERENCED_PARAMETER(*pScrollBar);
 	UINT nSBCode = LOWORD(wParam);
@@ -503,8 +663,8 @@ OnVScroll
 	pass all scroll messages over to the scroll child
 	window
 ****************************************************/
-//void CUGCtrl::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
-LRESULT CUGCtrl::_OnVScroll(WPARAM wParam, LPARAM lParam)
+//void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
+virtual LRESULT _OnVScroll(WPARAM wParam, LPARAM lParam) override
 {
 	//UNREFERENCED_PARAMETER(*pScrollBar);
 	UINT nSBCode = LOWORD(wParam);
@@ -529,8 +689,8 @@ OnSize
 	window sizes. This includes the Grid, Headings
 	and Scroll bars, tabs, etc.
 ****************************************************/
-//void CUGCtrl::OnSize(UINT nType, int cx, int cy) 
-LRESULT CUGCtrl::_OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
+//void OnSize(UINT nType, int cx, int cy) 
+virtual LRESULT _OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam) override
 {
 	//UNREFERENCED_PARAMETER(nType);
 	//UNREFERENCED_PARAMETER(cx);
@@ -546,7 +706,7 @@ LRESULT CUGCtrl::_OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	return CXeD2DWndBase::_OnSize(hWnd, wParam, lParam);
 }
 
-LRESULT CUGCtrl::_OnGetDlgCode(WPARAM wParam, LPARAM lParam)
+virtual LRESULT _OnGetDlgCode(WPARAM wParam, LPARAM lParam) override
 {
 	return DLGC_WANTALLKEYS | DLGC_WANTARROWS;
 }
@@ -565,7 +725,7 @@ Return
 	0 - if the messsage was processed
 	1 - if the message was not processed
 ****************************************************/
-LRESULT CUGCtrl::OnCellTypeMessage(WPARAM wParam, LPARAM lParam){
+LRESULT OnCellTypeMessage(WPARAM wParam, LPARAM lParam){
 
 	CUGCellType* ct = GetCellType((int)wParam);
 	if(ct == NULL)
@@ -584,7 +744,7 @@ EditCancel
 		UG_SUCCESS	success
 		UG_ERROR	error
 ****************************************************/
-int CUGCtrl::EditCancel(){
+int EditCancel(){
 
 	if(m_GI->m_editInProgress == FALSE)
 		return UG_SUCCESS;
@@ -615,7 +775,7 @@ int CUGCtrl::EditCancel(){
 		TRUE - if successful
 		FALSE - if the current editing must continue
 ****************************************************/
-int CUGCtrl::EditCtrlFinished(LPCTSTR string,BOOL cancelFlag,
+int EditCtrlFinished(LPCTSTR string,BOOL cancelFlag,
 							  BOOL continueFlag,int continueCol,
 							  long continueRow){
 	
@@ -789,7 +949,7 @@ AdjustComponentSizes
 	Return
 		none
 ****************************************************/
-void CUGCtrl::AdjustComponentSizes()
+void AdjustComponentSizes()
 {
 	int loop;
 	RECT rect;
@@ -942,7 +1102,7 @@ OnCreate
 		This function retrieves the control's parent's 
 		font, then creates the child windows
 ****************************************************/
-//int CUGCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+//int OnCreate(LPCREATESTRUCT lpCreateStruct) 
 //{
 //	if (CWnd::OnCreate(lpCreateStruct) == -1)
 //		return -1;
@@ -963,7 +1123,7 @@ OnDestroy
 		We will use this handler to destroy
 		tool tip window.
 ****************************************************/
-//void CUGCtrl::OnDestroy() 
+//void OnDestroy() 
 //{
 //	CWnd::OnDestroy();
 //
@@ -984,7 +1144,7 @@ CreateChildWindows
 		(child windows include the grid, headings and
 		scroll bars).
 ****************************************************/
-BOOL CUGCtrl::CreateChildWindows(){
+BOOL CreateChildWindows(){
 
 	RECT rect ={0,0,0,0};
 
@@ -1031,8 +1191,8 @@ OnPaint
 		that is not covered by one of the child windows
 		(such as the bottom right corner)
 ****************************************************/
-//void CUGCtrl::OnPaint() 
-void CUGCtrl::_PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient)
+//void OnPaint() 
+virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 {
 	if ( m_GI->m_paintMode == FALSE )
 		return;
@@ -1064,7 +1224,7 @@ void CUGCtrl::_PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient)
 	}
 }
 
-//void CUGCtrl::OnNcPaint()
+//void OnNcPaint()
 //{
 //	CRect rcW, rcC;
 //	GetWindowRect(&rcW);
@@ -1092,7 +1252,7 @@ void CUGCtrl::_PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient)
 //	// Do not call CStatic::OnNcPaint() for painting messages
 //}
 
-//BOOL CUGCtrl::PreTranslateMessage(MSG * pMsg)
+//BOOL PreTranslateMessage(MSG * pMsg)
 //{
 //	if (m_xtooltip->RelayEvent(pMsg))
 //		return TRUE;	// Message was processed by tooltip and should not be dipatched.
@@ -1106,14 +1266,14 @@ PreCreateWindow
 		This routine makes sure that certian window
 		styles are used
 ****************************************************/
-//BOOL CUGCtrl::PreCreateWindow(CREATESTRUCT& cs) 
+//BOOL PreCreateWindow(CREATESTRUCT& cs) 
 //{
 //	cs.style |= WS_CLIPCHILDREN;
 //	return CWnd::PreCreateWindow(cs);
 //}
 /************************************************
 *************************************************/
-//UINT CUGCtrl::OnGetDlgCode() 
+//UINT OnGetDlgCode() 
 //{
 //	return DLGC_WANTALLKEYS|DLGC_WANTARROWS;
 //}
@@ -1123,8 +1283,8 @@ OnSetFocus
 	Purpose
 		Sets the focus to the grid child window
 ****************************************************/
-//void CUGCtrl::OnSetFocus(CWnd* pOldWnd) 
-LRESULT CUGCtrl::_OnSetFocus(HWND hOldWnd)
+//void OnSetFocus(CWnd* pOldWnd) 
+virtual LRESULT _OnSetFocus(HWND hOldWnd) override
 {
 	//UNREFERENCED_PARAMETER(*pOldWnd);
 	m_CUGGrid->SetFocus();
@@ -1133,7 +1293,7 @@ LRESULT CUGCtrl::_OnSetFocus(HWND hOldWnd)
 }
 /***************************************************
 ****************************************************/
-BOOL CUGCtrl::CreateGrid(DWORD dwStyle, DWORD dwExStyle, const CRect& rect, HWND hParentWnd, UINT nID)
+BOOL CreateGrid(DWORD dwStyle, DWORD dwExStyle, const CRect& rect, HWND hParentWnd, UINT nID)
 {
 	//BOOL rt = Create((LPCTSTR)NULL,(LPCTSTR)_T(""),(DWORD) dwStyle, (const RECT&) rect, 
 	//	CWnd::FromHandle(hParentWnd),(UINT) nID, (CCreateContext*)NULL);
@@ -1182,7 +1342,7 @@ AttachGrid
 		Make sure the OnSetup(); function has been called
 		before the dialog is opened, otherwise it will fail
 ****************************************************/
-//BOOL CUGCtrl::AttachGrid(CWnd * wnd,UINT ID)
+//BOOL AttachGrid(CWnd * wnd,UINT ID)
 //{
 //	// Disable drawing while the grid is initializing
 //	m_GI->m_paintMode = FALSE;
@@ -1255,7 +1415,7 @@ CalcTopRow
 		the TopRow if needed (m_maxTopRow). This function
 		is called internally
 ****************************************************/
-void CUGCtrl::CalcTopRow(){
+void CalcTopRow(){
 	
 	long oldMaxRow = m_GI->m_maxTopRow;
 
@@ -1297,7 +1457,7 @@ CalcLeftCol
 		left column if needed (m_maxLeftCol). This function
 		is called internally
 ****************************************************/
-void CUGCtrl::CalcLeftCol(){
+void CalcLeftCol(){
 
 	//calc the max left col
 	int col;
@@ -1332,7 +1492,7 @@ AdjustTopRow
 		is in within view. This function is called
 		internally
 ****************************************************/
-void CUGCtrl::AdjustTopRow(){
+void AdjustTopRow(){
 
 	//if the top row is greater then set it equal
 	if(m_GI->m_topRow > m_GI->m_dragRow){
@@ -1372,7 +1532,7 @@ AdjustLeftCol
 		col is in view. This function is called 
 		internally
 ****************************************************/
-void CUGCtrl::AdjustLeftCol(){
+void AdjustLeftCol(){
 
 	//if the left col row is greater then set it equal
 	if(m_GI->m_leftCol > m_GI->m_dragCol){
@@ -1403,7 +1563,7 @@ Update
 		windows - each child window is then responsible for
 		checking all variables that affect it.
 ****************************************************/
-void CUGCtrl::Update(){
+void Update(){
 
 	if(!m_enableUpdate)
 		return;
@@ -1427,7 +1587,7 @@ Moved
 		-Processes movements for the multiple-selection class
 		-stores the current cell
 ****************************************************/
-void CUGCtrl::Moved()
+void Moved()
 {
 	//call the multiselect manager
 	if(m_GI->m_multiSelectFlag && !m_GI->m_editInProgress){
@@ -1604,7 +1764,7 @@ GetCellType
 		found then the default cell type pointer
 		is returned
 ****************************************************/
-CUGCellType* CUGCtrl::GetCellType(int type){
+CUGCellType* GetCellType(int type){
 
 	if(type <= 0)
 		return &m_normalCellType;
@@ -1622,7 +1782,7 @@ GetCellType
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::GetCellType(CUGCellType* type){
+int GetCellType(CUGCellType* type){
 	
 	return m_cellTypeList->GetPointerIndex((void*)type);
 }
@@ -1638,7 +1798,7 @@ GetCellType
 		found then the default cell type pointer
 		is returned
 ****************************************************/
-CUGCellType * CUGCtrl::GetCellType(int col,long row)
+CUGCellType * GetCellType(int col,long row)
 {
 	m_GI->m_cell.ClearAll();
 
@@ -1669,7 +1829,7 @@ VerifyTopRow
 	Return
 
 ****************************************************/
-int CUGCtrl::VerifyTopRow(long* newRow){
+int VerifyTopRow(long* newRow){
 
 	if(*newRow > m_GI->m_maxTopRow)
 		*newRow = m_GI->m_maxTopRow;
@@ -1684,7 +1844,7 @@ int CUGCtrl::VerifyTopRow(long* newRow){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::VerifyCurrentRow(long* newRow){
+int VerifyCurrentRow(long* newRow){
 
 	if(*newRow >= m_GI->m_numberRows){
 
@@ -1739,7 +1899,7 @@ int CUGCtrl::VerifyCurrentRow(long* newRow){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::VerifyLeftCol(int* newCol){
+int VerifyLeftCol(int* newCol){
 
 	if(*newCol > m_GI->m_maxLeftCol)
 		*newCol = m_GI->m_maxLeftCol;
@@ -1755,7 +1915,7 @@ int CUGCtrl::VerifyLeftCol(int* newCol){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::VerifyCurrentCol(int* newCol){
+int VerifyCurrentCol(int* newCol){
 
 	if(*newCol >= m_GI->m_numberCols){
 		if(m_GI->m_dragCol == m_GI->m_numberCols -1)
@@ -1813,7 +1973,7 @@ MoveTopRow
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::MoveTopRow(int flag)
+int MoveTopRow(int flag)
 {
 	// Prevent this function from processing if grid's view scrolling
 	// is not possible (number of rows is equal or less than zero).
@@ -1893,7 +2053,7 @@ AdjustTopRow
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::AdjustTopRow(long adjust){
+int AdjustTopRow(long adjust){
 	return SetTopRow(m_GI->m_topRow + adjust);
 }
 
@@ -1911,7 +2071,7 @@ MoveCurrentRow
 	UG_SUCCESS	success
 
 ****************************************************/
-int CUGCtrl::MoveCurrentRow(int flag){
+int MoveCurrentRow(int flag){
 	
 	switch(flag){
 
@@ -1972,7 +2132,7 @@ AdjustCurrentRow
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::AdjustCurrentRow(long adjust){
+int AdjustCurrentRow(long adjust){
 	return GotoRow(m_GI->m_dragRow + adjust);
 }
 
@@ -1987,7 +2147,7 @@ GotoRow
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GotoRow(long row){
+int GotoRow(long row){
 	
 	if(m_GI->m_moveType == 0){  //keyboard
 		if(GetKeyState(VK_SHIFT) >=0 && GetKeyState(VK_CONTROL) >=0)
@@ -2020,7 +2180,7 @@ int CUGCtrl::GotoRow(long row){
 	return UG_SUCCESS;
 }
 
-int CUGCtrl::GotoRowEx(long row)
+int GotoRowEx(long row)
 {
 	m_GI->m_moveType = 1;
 	int result = GotoRow(row);
@@ -2040,7 +2200,7 @@ UG_ERROR	out of range
 2			OnCanMove did not allow the procedure
 UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GotoRowAndAdjustYpos(long row, int Y)
+int GotoRowAndAdjustYpos(long row, int Y)
 {
 	SetPaintMode(FALSE);
 
@@ -2110,7 +2270,7 @@ int CUGCtrl::GotoRowAndAdjustYpos(long row, int Y)
 	return result;
 }
 
-int CUGCtrl::GotoRowAndAdjustYposEx(long row, int Y)
+int GotoRowAndAdjustYposEx(long row, int Y)
 {
 	ClearSelections();
 	m_GI->m_moveType = 1;	// L button
@@ -2123,7 +2283,7 @@ int CUGCtrl::GotoRowAndAdjustYposEx(long row, int Y)
 	return result;
 }
 
-int CUGCtrl::GotoRowAndAdjustYposVcenterEx(long row)
+int GotoRowAndAdjustYposVcenterEx(long row)
 {
 	CRect rcClient;
 	GetClientRect(rcClient);
@@ -2133,7 +2293,7 @@ int CUGCtrl::GotoRowAndAdjustYposVcenterEx(long row)
 	return GotoRowAndAdjustYposEx(row, Ydesired);
 }
 
-int CUGCtrl::GotoLastRow()
+int GotoLastRow()
 {
 	m_GI->m_moveType = 1;
 	int result = GotoRow(m_GI->m_numberRows - 1);	// Goto last row.
@@ -2152,7 +2312,7 @@ SetTopRow
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::SetTopRow(long row){
+int SetTopRow(long row){
 
 	if(row == m_GI->m_topRow)
 		return UG_SUCCESS;
@@ -2183,7 +2343,7 @@ MoveLeftCol
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::MoveLeftCol(int flag)
+int MoveLeftCol(int flag)
 {
 	// Prevent this function from processing if grid's view scrolling
 	// is not possible (number of columns is equal or less than zero).
@@ -2245,7 +2405,7 @@ AdjustLeftCol
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::AdjustLeftCol(int adjust){
+int AdjustLeftCol(int adjust){
 	return SetLeftCol(m_GI->m_leftCol + adjust);
 }
 /***************************************************
@@ -2261,7 +2421,7 @@ MoveCurrentCol
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::MoveCurrentCol(int flag){
+int MoveCurrentCol(int flag){
 
 	switch(flag){
 
@@ -2317,7 +2477,7 @@ AdjustCurrentCol
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::AdjustCurrentCol(int adjust){
+int AdjustCurrentCol(int adjust){
 	return GotoCol(m_GI->m_dragCol + adjust);
 }
 /***************************************************
@@ -2330,7 +2490,7 @@ GotoCol
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GotoCol(int col){
+int GotoCol(int col){
 
 	if(m_GI->m_moveType == 0){  //keyboard
 		if(GetKeyState(VK_SHIFT) >=0 && GetKeyState(VK_CONTROL) >=0)
@@ -2374,7 +2534,7 @@ SetLeftCol
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::SetLeftCol(int col){
+int SetLeftCol(int col){
 
 	if(col == m_GI->m_leftCol)
 		return UG_SUCCESS;
@@ -2404,7 +2564,7 @@ GotoCell
 	2			OnCanMove did not allow the procedure
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GotoCell(int col,long row)
+int GotoCell(int col,long row)
 {	
 	if(col == m_GI->m_dragCol && row == m_GI->m_dragRow)
 	{
@@ -2455,7 +2615,7 @@ UG_ERROR	out of range
 2			OnCanMove did not allow the procedure
 UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GotoCellEx(int col, long row)
+int GotoCellEx(int col, long row)
 {
 	if (m_GI->m_enableJoins)
 		GetJoinStartCell(&col, &row);
@@ -2482,7 +2642,7 @@ int CUGCtrl::GotoCellEx(int col, long row)
 	return UG_SUCCESS;
 }
 
-void CUGCtrl::HScroll(UINT nSBCode, UINT nPos)
+void HScroll(UINT nSBCode, UINT nPos)
 {
 	m_CUGHScroll->HScroll(nSBCode, nPos);
 }
@@ -2497,7 +2657,7 @@ GetCellFromPoint
 	UG_ERROR	co-ords do not fall on a cell
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GetCellFromPoint(int x,int y,int *ptcol,long *ptrow){
+int GetCellFromPoint(int x,int y,int *ptcol,long *ptrow){
 	
 	RECT rect;	
 	return GetCellFromPoint(x,y,ptcol,ptrow,&rect);
@@ -2516,7 +2676,7 @@ GetCellFromPoint
 	UG_ERROR	co-ords do not fall on a cell
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GetCellFromPoint(int px,int py,int *ptcol,long *ptrow,RECT *rect){
+int GetCellFromPoint(int px,int py,int *ptcol,long *ptrow,RECT *rect){
 
 	int ptsFound = 0;
 
@@ -2582,7 +2742,7 @@ int CUGCtrl::GetCellFromPoint(int px,int py,int *ptcol,long *ptrow,RECT *rect){
 /***************************************************
 Does not take cell joining into account
 ****************************************************/
-int CUGCtrl::GetAbsoluteCellFromPoint(int x,int y,int *ptcol,long *ptrow){
+int GetAbsoluteCellFromPoint(int x,int y,int *ptcol,long *ptrow){
 
 	int tempJoinFlag = m_GI->m_enableJoins;
 
@@ -2602,12 +2762,12 @@ GetCellRect
 	UG_ERROR	co-ords out of range
 	UG_SUCCESS	success
 ****************************************************/
-int CUGCtrl::GetCellRect(int col,long row,RECT *rect){
+int GetCellRect(int col,long row,RECT *rect){
 	return GetCellRect(&col,&row,rect);	
 }
 /***************************************************
 GetCellRect
-int CUGCtrl::GetCellRect(int *col,long *row,RECT *rect);
+int GetCellRect(int *col,long *row,RECT *rect);
 
 	Purpose
 		Returns the rectangle of the given cell relative 
@@ -2630,7 +2790,7 @@ int CUGCtrl::GetCellRect(int *col,long *row,RECT *rect);
 		UG_SUCCESS	success
 		UG_ERROR	cell not visible
 ****************************************************/
-int CUGCtrl::GetCellRect(int *col,long *row,RECT *rect)
+int GetCellRect(int *col,long *row,RECT *rect)
 {
 	if ( *col < 0 )
 		return m_CUGSideHdg->GetCellRect( col, row, rect );
@@ -2709,7 +2869,7 @@ int CUGCtrl::GetCellRect(int *col,long *row,RECT *rect)
 GetRangeRect
 	returns the rectangle for a range of cells
 ****************************************************/
-int CUGCtrl::GetRangeRect(int startCol,long startRow,int endCol,long endRow,RECT *rect){
+int GetRangeRect(int startCol,long startRow,int endCol,long endRow,RECT *rect){
 
 
 	int x;
@@ -2773,7 +2933,7 @@ returns UG_SUCCESS if the specified cell is part of
 a block, also returns the col and row of the starting
 cell of that block
 ****************************************************/
-int CUGCtrl::GetJoinStartCell(int *col,long *row){
+int GetJoinStartCell(int *col,long *row){
 	return GetJoinStartCell(col,row,&m_GI->m_cell);
 }
 /***************************************************
@@ -2781,7 +2941,7 @@ returns UG_SUCCESS if the specified cell is part of
 a block, also returns the col and row of the starting
 cell of that block
 ****************************************************/
-int CUGCtrl::GetJoinStartCell(int *col,long *row,CUGCell *cell){
+int GetJoinStartCell(int *col,long *row,CUGCell *cell){
 	
 	if(m_GI->m_enableJoins == FALSE)
 		return UG_ERROR;
@@ -2812,7 +2972,7 @@ and ending cells of that block
 col and row point to a cell within the join on input
 and contain the start cell on output if successful
 ****************************************************/
-int CUGCtrl::GetJoinRange(int *col,long *row,int *col2,long *row2){
+int GetJoinRange(int *col,long *row,int *col2,long *row2){
 
 	if(m_GI->m_enableJoins == FALSE)
 		return UG_ERROR;
@@ -2849,7 +3009,7 @@ EnableJoins
 		UG_SUCCESS(0)	- success
 		UG_ERROR(1)		- error 
 ****************************************************/
-int CUGCtrl::EnableJoins(BOOL state){
+int EnableJoins(BOOL state){
 	if(state)
 		m_GI->m_enableJoins = TRUE;
 	else
@@ -2865,7 +3025,7 @@ EnableCellOverLap
 		UG_SUCCESS(0)	- success
 		UG_ERROR(1)		- error 
 ****************************************************/
-//int CUGCtrl::EnableCellOverLap(BOOL state){
+//int EnableCellOverLap(BOOL state){
 //	if(state)
 //		m_GI->m_enableCellOverLap = TRUE;
 //	else
@@ -2881,7 +3041,7 @@ EnableColSwapping
 		UG_SUCCESS(0)	- success
 		UG_ERROR(1)		- error 
 ****************************************************/
-int CUGCtrl::EnableColSwapping(BOOL state){
+int EnableColSwapping(BOOL state){
 	if(state)
 		m_GI->m_enableColSwapping = TRUE;
 	else
@@ -2898,7 +3058,7 @@ EnableExcelBorders
 		UG_SUCCESS(0)	- success
 		UG_ERROR(1)		- error 
 ****************************************************/
-int CUGCtrl::EnableExcelBorders(BOOL state){
+int EnableExcelBorders(BOOL state){
 	if(state)
 		m_GI->m_enableExcelBorders = TRUE;
 	else
@@ -2923,7 +3083,7 @@ EnableScrollOnParialCells
 	Return
 		UG_SUCCESS(0)	- this function will never fail
 ****************************************************/
-int CUGCtrl::EnableScrollOnParialCells( BOOL state )
+int EnableScrollOnParialCells( BOOL state )
 {
 	m_GI->m_bScrollOnParialCells = state;
 
@@ -2948,7 +3108,7 @@ StartEdit
 	UG_ERROR	editing not allowed
 	UG_SUCCESS	success
 ****************************************************/
-int	CUGCtrl::StartEdit(){
+int	StartEdit(){
 	return StartEdit(m_GI->m_currentCol,m_GI->m_currentRow,0);
 }
 /***************************************************
@@ -2967,7 +3127,7 @@ StartEdit
 	UG_ERROR	editing not allowed
 	UG_SUCCESS	success
 ****************************************************/
-int	CUGCtrl::StartEdit(int key){
+int	StartEdit(int key){
 
 	return StartEdit(m_GI->m_currentCol,m_GI->m_currentRow,key);
 }
@@ -2989,7 +3149,7 @@ StartEdit
 	2			could not move to cell
 	UG_SUCCESS	success
 ****************************************************/
-int	CUGCtrl::StartEdit(int col,long row,int key)
+int	StartEdit(int col,long row,int key)
 {
 	// Do not allow to continue if the edit is already started
 	if (m_GI->m_editInProgress == TRUE )
@@ -3144,7 +3304,7 @@ ContinueEdit
 	UG_ERROR	editing not allowed
 	UG_SUCCESS	success
 ****************************************************/
-int	CUGCtrl::ContinueEdit(int adjustCol,long adjustRow){
+int	ContinueEdit(int adjustCol,long adjustRow){
 	UNREFERENCED_PARAMETER(adjustCol);
 	UNREFERENCED_PARAMETER(adjustRow);
 	return UG_SUCCESS;
@@ -3165,7 +3325,7 @@ GetCell
 		UG_SUCCESS	success
 		UG_ERROR	cell not found
 ****************************************************/
-int CUGCtrl::GetCell(int col,long row,CUGCell * cell){
+int GetCell(int col,long row,CUGCell * cell){
 
 	if(col >= m_GI->m_numberCols)
 		return UG_ERROR;
@@ -3199,7 +3359,7 @@ GetCellIndirect
 		UG_SUCCESS	success
 		UG_ERROR	cell not found
 ****************************************************/
-int	CUGCtrl::GetCellIndirect(int col,long row,CUGCell *cell){
+int	GetCellIndirect(int col,long row,CUGCell *cell){
 	
 	if (col >= m_GI->m_numberCols)
 		return UG_ERROR;
@@ -3247,7 +3407,9 @@ int	CUGCtrl::GetCellIndirect(int col,long row,CUGCell *cell){
 	return UG_SUCCESS;
 }
 
-int CUGCtrl::GetRowLineCount(long row)
+int OnGetRowLineCount(long row) { return 1; };
+
+int GetRowLineCount(long row)
 {
 	if (row >= m_GI->m_numberRows)
 		return UG_SUCCESS;
@@ -3267,7 +3429,7 @@ SetCell
 	UG_SUCCESS	success
 	UG_ERROR	cell not found
 ****************************************************/
-int	CUGCtrl::SetCell(int col,long row,CUGCell *cell){
+int	SetCell(int col,long row,CUGCell *cell){
 
 	// make sure that the column specified is within range
 	if ( col < ( m_GI->m_numberSideHdgCols * -1 ) || col > m_GI->m_numberCols )
@@ -3297,7 +3459,7 @@ int	CUGCtrl::SetCell(int col,long row,CUGCell *cell){
 
 /***************************************************
 ****************************************************/
-int	CUGCtrl::GetColTranslation(int col){
+int	GetColTranslation(int col){
 
 	if(col <0 || col >= m_GI->m_numberCols)
 		return col;
@@ -3306,7 +3468,7 @@ int	CUGCtrl::GetColTranslation(int col){
 }
 /***************************************************
 ****************************************************/
-int	CUGCtrl::SetColTranslation(int col,int transCol){
+int	SetColTranslation(int col,int transCol){
 	
 	if(col <0 || col >= m_GI->m_numberCols)
 		return UG_ERROR;
@@ -3323,7 +3485,7 @@ DeleteCell
 	UG_SUCCESS  success
 	UG_ERROR	cell no found
 ****************************************************/
-int	CUGCtrl::DeleteCell(int col,long row){
+int	DeleteCell(int col,long row){
 
 	//find the datasource
 	CUGDataSource * ds = NULL;
@@ -3347,7 +3509,7 @@ SetColDefault
 		UG_SUCCESS success
 		UG_ERROR	fail
 ****************************************************/
-int	CUGCtrl::SetColDefault(int col,CUGCell *cell){
+int	SetColDefault(int col,CUGCell *cell){
 
 	if(col <0 || col >= m_GI->m_numberCols)
 		return UG_ERROR;
@@ -3368,7 +3530,7 @@ SetGridDefault
 		UG_SUCCESS success
 		UG_ERROR	fail
 ****************************************************/
-int	CUGCtrl::SetGridDefault(CUGCell *cell){
+int	SetGridDefault(CUGCell *cell){
 
 	cell->CopyInfoTo(m_GI->m_gridDefaults);
 	
@@ -3384,7 +3546,7 @@ GetColDefault
 		UG_SUCCESS  success
 		UG_ERROR	fail
 ****************************************************/
-int	CUGCtrl::GetColDefault(int col,CUGCell *cell){
+int	GetColDefault(int col,CUGCell *cell){
 	
 	if(col <0 || col >= m_GI->m_numberCols)
 		return UG_ERROR;
@@ -3402,7 +3564,7 @@ GetGridDefault
 		UG_SUCCESS  success
 		UG_ERROR	fail
 ****************************************************/
-int	CUGCtrl::GetGridDefault(CUGCell *cell){
+int	GetGridDefault(CUGCell *cell){
 	cell->CopyInfoFrom(m_GI->m_gridDefaults);
 	return UG_SUCCESS;
 }
@@ -3420,7 +3582,7 @@ SetHeadingDefault
 		UG_SUCCESS  success
 		UG_ERROR	fail
 ****************************************************/
-int	CUGCtrl::SetHeadingDefault(CUGCell *cell){
+int	SetHeadingDefault(CUGCell *cell){
 	m_GI->m_hdgDefaults->CopyInfoFrom(cell);
 	return UG_SUCCESS;
 }
@@ -3434,14 +3596,14 @@ GetHeadingDefault
 		UG_SUCCESS  success
 		UG_ERROR	fail
 ****************************************************/
-int	CUGCtrl::GetHeadingDefault(CUGCell *cell){
+int	GetHeadingDefault(CUGCell *cell){
 	cell->CopyInfoFrom(m_GI->m_hdgDefaults);
 	return UG_SUCCESS;
 }
 
 /***************************************************
 ****************************************************/
-int	CUGCtrl::JoinCells(int startCol,long startRow,int endCol,long endRow){
+int	JoinCells(int startCol,long startRow,int endCol,long endRow){
 
 	if(startCol > endCol)
 		return UG_ERROR;
@@ -3477,7 +3639,7 @@ int	CUGCtrl::JoinCells(int startCol,long startRow,int endCol,long endRow){
 
 /***************************************************
 ****************************************************/
-int	CUGCtrl::UnJoinCells(int col,long row){
+int	UnJoinCells(int col,long row){
 	
 	int endCol;
 	long endRow;
@@ -3497,7 +3659,7 @@ int	CUGCtrl::UnJoinCells(int col,long row){
 
 /***************************************************
 ****************************************************/
-int	CUGCtrl::DuplicateCell(int destCol,long destRow, int srcCol, long srcRow){
+int	DuplicateCell(int destCol,long destRow, int srcCol, long srcRow){
 
 	CUGCell cell;
 
@@ -3511,7 +3673,7 @@ int	CUGCtrl::DuplicateCell(int destCol,long destRow, int srcCol, long srcRow){
 
 /***************************************************
 ****************************************************/
-int	CUGCtrl::QuickGetText(int col,long row, std::wstring*string){
+int	QuickGetText(int col,long row, std::wstring*string){
 
 	XeASSERT(string);
 
@@ -3523,7 +3685,7 @@ int	CUGCtrl::QuickGetText(int col,long row, std::wstring*string){
 }
 /***************************************************
 ****************************************************/
-LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
+LPCTSTR	QuickGetText(int col,long row)
 {
 	m_GI->m_cell.ClearAll();
 	GetCellIndirect(col,row,&m_GI->m_cell);
@@ -3531,7 +3693,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 }
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetText(int col,long row,LPCTSTR string)
+//int	QuickSetText(int col,long row,LPCTSTR string)
 //{
 //	ASSERT(string);
 //
@@ -3543,7 +3705,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetNumber(int col,long row,double number)
+//int	QuickSetNumber(int col,long row,double number)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3553,7 +3715,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetMask(int col,long row,LPCTSTR string)
+//int	QuickSetMask(int col,long row,LPCTSTR string)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3563,7 +3725,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetLabelText(int col,long row,LPCTSTR string)
+//int	QuickSetLabelText(int col,long row,LPCTSTR string)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3574,7 +3736,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetTextColor(int col,long row,COLORREF color)
+//int	QuickSetTextColor(int col,long row,COLORREF color)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3584,7 +3746,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetHTextColor(int col,long row,COLORREF color)
+//int	QuickSetHTextColor(int col,long row,COLORREF color)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3595,7 +3757,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetBackColor(int col,long row,COLORREF color)
+//int	QuickSetBackColor(int col,long row,COLORREF color)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3605,7 +3767,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetHBackColor(int col,long row,COLORREF color)
+//int	QuickSetHBackColor(int col,long row,COLORREF color)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3615,7 +3777,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetBitmap(int col,long row,CBitmap * bitmap)
+//int	QuickSetBitmap(int col,long row,CBitmap * bitmap)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3625,12 +3787,12 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetBitmap(int col,long row,int index){
+//int	QuickSetBitmap(int col,long row,int index){
 //	return QuickSetBitmap(col,row,GetBitmap(index));
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetFont(int col,long row,CFont * font)
+//int	QuickSetFont(int col,long row,CFont * font)
 //{
 //	ASSERT(font);
 //
@@ -3642,14 +3804,14 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetFont(int col,long row,int index)
+//int	QuickSetFont(int col,long row,int index)
 //{
 //	return QuickSetFont(col,row,GetFont(index));
 //}
 
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetAlignment(int col,long row,short align)
+//int	QuickSetAlignment(int col,long row,short align)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3660,7 +3822,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetBorder(int col,long row,short border)
+//int	QuickSetBorder(int col,long row,short border)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3670,7 +3832,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetBorderColor(int col,long row,CPen *pen)
+//int	QuickSetBorderColor(int col,long row,CPen *pen)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3680,7 +3842,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 //}
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetCellType(int col,long row,long type)
+//int	QuickSetCellType(int col,long row,long type)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3691,7 +3853,7 @@ LPCTSTR	CUGCtrl::QuickGetText(int col,long row)
 
 /***************************************************
 ****************************************************/
-//int	CUGCtrl::QuickSetCellTypeEx(int col,long row,long typeEx)
+//int	QuickSetCellTypeEx(int col,long row,long typeEx)
 //{
 //	m_GI->m_cell.ClearAll();
 //	GetCell(col,row,&m_GI->m_cell);
@@ -3709,7 +3871,7 @@ Return
 	this may be caused if part or all of the range is 
 	outside of the grids total column/row range
 ****************************************************/
-//int	CUGCtrl::QuickSetRange(int startCol,long startRow,int endCol,long endRow,
+//int	QuickSetRange(int startCol,long startRow,int endCol,long endRow,
 //						   CUGCell *cell){
 //
 //	int error = UG_SUCCESS;
@@ -3737,7 +3899,7 @@ SetNumberRow
 		UG_SUCCESS  success
 		UG_ERROR	fail
 ****************************************************/
-int	CUGCtrl::SetNumberRows(long rows,BOOL redraw){
+int	SetNumberRows(long rows,BOOL redraw = TRUE){
 	
 	//range checking
 	if(rows <0)
@@ -3811,7 +3973,7 @@ int	CUGCtrl::SetNumberRows(long rows,BOOL redraw){
 GetNumberRow
 	Returns the number of rows
 ****************************************************/
-long CUGCtrl::GetNumberRows(){
+long GetNumberRows(){
 
 	return m_GI->m_numberRows;
 }
@@ -3823,7 +3985,7 @@ SetNumberCols
 		UG_SUCCESS  success
 		UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::SetNumberCols(int cols,BOOL redraw){
+int SetNumberCols(int cols,BOOL redraw = TRUE){
 	
 	//range checking
 	if(cols <0 || cols > 32000)
@@ -3893,7 +4055,7 @@ GetNumberCols
 	Returns the number of columns that are currently
 	set
 ****************************************************/
-int CUGCtrl::GetNumberCols(){
+int GetNumberCols(){
 	return m_GI->m_numberCols;
 }
 /***************************************************
@@ -3905,7 +4067,7 @@ SetColWidth
 		UG_ERROR	specifed col is out of range
 					or a negative width
 ***************************************************/
-int CUGCtrl::SetColWidth(int col,int width, bool notify /*= true*/)
+int SetColWidth(int col,int width, bool notify = true)
 {
 	if ( col <0 || col >= m_GI->m_numberCols )
 	{
@@ -3958,7 +4120,7 @@ GetColWidth
 		UG_SUCCESS	success
 		UG_ERROR	specifed col is out of range
 ***************************************************/
-int CUGCtrl::GetColWidth(int col,int *width){
+int GetColWidth(int col,int *width){
 	
 	if( col >= m_GI->m_numberCols )
 		return UG_ERROR;
@@ -3983,7 +4145,7 @@ int CUGCtrl::GetColWidth(int col,int *width){
 /***************************************************
 GetColWidth
 ***************************************************/
-int CUGCtrl::GetColWidth(int col){
+int GetColWidth(int col){
 
 	if(col <0 || col >= m_GI->m_numberCols)
 		return 0;
@@ -4000,7 +4162,7 @@ SetDefColWidth
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ***************************************************/
-int CUGCtrl::SetDefColWidth(int width){
+int SetDefColWidth(int width){
 
 	if(width <0)
 		return UG_ERROR;
@@ -4026,7 +4188,7 @@ BestFit
 					bit2: use average width (UG_BESTFIT_AVERAGE)
 	Return
 ****************************************************/
-int CUGCtrl::BestFit(int startCol,int endCol,int CalcRange,int flag){
+int BestFit(int startCol,int endCol,int CalcRange,int flag){
 
 	if(startCol < (m_GI->m_numberSideHdgCols *-1))
 		return UG_ERROR;
@@ -4139,7 +4301,7 @@ FitToWindow
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::FitToWindow(int startCol,int endCol){
+int FitToWindow(int startCol,int endCol){
 
 	RECT rect;
 	int screenwidth;
@@ -4202,7 +4364,7 @@ SetDefRowHeight
 	UG_ERROR	fail
 
 ***************************************************/
-int CUGCtrl::SetDefRowHeight(int height){
+int SetDefRowHeight(int height){
 
 	if(height <1 || height > 1024)
 		return UG_ERROR;
@@ -4232,7 +4394,7 @@ SetUniformRowHeight
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ***************************************************/
-int CUGCtrl::SetUniformRowHeight(int flag){
+int SetUniformRowHeight(int flag){
 
 	//uniform row height on
 	if(flag){
@@ -4267,7 +4429,7 @@ SetRowHeight
 	UG_SUCCESS	success
 	UG_ERROR	fail  - out of range
 ***************************************************/
-int CUGCtrl::SetRowHeight( long row,int height )
+int SetRowHeight( long row,int height )
 {
 	if( row < 0 || row >= m_GI->m_numberRows )
 	{
@@ -4323,7 +4485,7 @@ GetRowHeight
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ***************************************************/
-int CUGCtrl::GetRowHeight(long row,int *height)
+int GetRowHeight(long row,int *height)
 {
 	if( row >= m_GI->m_numberRows )
 		return UG_ERROR;
@@ -4350,7 +4512,7 @@ int CUGCtrl::GetRowHeight(long row,int *height)
 	Params
 	Return
 ***************************************************/
-int CUGCtrl::GetRowHeight(long row){
+int GetRowHeight(long row){
 	
 	if(row < 0 || row >= m_GI->m_numberRows)
 		return 0;
@@ -4362,7 +4524,7 @@ int CUGCtrl::GetRowHeight(long row){
 	//return m_GI->m_rowHeights[row];
 }
 
-int CUGCtrl::GetNonUniformRowHeight(long row)
+int GetNonUniformRowHeight(long row)
 {
 	XeASSERT(FALSE);	// not supported
 	return m_GI->m_defRowHeight;
@@ -4385,7 +4547,7 @@ int CUGCtrl::GetNonUniformRowHeight(long row)
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::InsertCol(int col){
+int	InsertCol(int col){
 
 	//find the datasource
 	CUGDataSource * ds = NULL;
@@ -4427,7 +4589,7 @@ int	CUGCtrl::InsertCol(int col){
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::AppendCol(){
+int	AppendCol(){
 
 	//find the datasource
 	CUGDataSource * ds = NULL;
@@ -4445,7 +4607,7 @@ int	CUGCtrl::AppendCol(){
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::DeleteCol(int col){
+int	DeleteCol(int col){
 	
 	if(GetNumberCols() <= 0)
 		return UG_ERROR;
@@ -4486,7 +4648,7 @@ int	CUGCtrl::DeleteCol(int col){
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::InsertRow(long row){
+int	InsertRow(long row){
 
 	if(row > m_GI->m_numberRows)
 		return UG_ERROR;
@@ -4506,7 +4668,7 @@ int	CUGCtrl::InsertRow(long row){
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::AppendRow(){
+int	AppendRow(){
 	
 	int rt = m_GI->m_defDataSource->AppendRow();
 	if(rt == UG_SUCCESS){
@@ -4519,7 +4681,7 @@ int	CUGCtrl::AppendRow(){
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::DeleteRow(long row){
+int	DeleteRow(long row){
 
 	if(row < 0 || row >= m_GI->m_numberRows)
 		return UG_ERROR;
@@ -4535,7 +4697,7 @@ int	CUGCtrl::DeleteRow(long row){
 	Params
 	Return
 ***************************************************/
-//int CUGCtrl::FindDialog(){
+//int FindDialog(){
 //	
 //	if(m_GI->m_findDialogRunning != FALSE)
 //		return UG_ERROR;
@@ -4561,7 +4723,7 @@ int	CUGCtrl::DeleteRow(long row){
 	Params
 	Return
 ***************************************************/
-//int CUGCtrl::ReplaceDialog(){
+//int ReplaceDialog(){
 //	
 //	if(m_GI->m_findDialogRunning != FALSE)
 //		return UG_ERROR;
@@ -4586,7 +4748,7 @@ int	CUGCtrl::DeleteRow(long row){
 	Params
 	Return
 ***************************************************/
-//int CUGCtrl::FindInAllCols(BOOL state){
+//int FindInAllCols(BOOL state){
 //	if(state)
 //		m_GI->m_findInAllCols = TRUE;
 //	else
@@ -4599,7 +4761,7 @@ int	CUGCtrl::DeleteRow(long row){
 	Params
 	Return
 ***************************************************/
-//LRESULT CUGCtrl::ProcessFindDialog(WPARAM, LPARAM)
+//LRESULT ProcessFindDialog(WPARAM, LPARAM)
 //{
 //	BOOL bFoundSomething = FALSE;
 //	
@@ -4687,7 +4849,7 @@ int	CUGCtrl::DeleteRow(long row){
 	Params
 	Return
 ***************************************************/
-//int CUGCtrl::FindFirst(CString *string,int *col,long *row,long flags){
+//int FindFirst(CString *string,int *col,long *row,long flags){
 //
 //	*col = m_GI->m_colInfo[*col].colTranslation;
 //	return m_GI->m_defDataSource->FindFirst(string,col,row,flags);
@@ -4697,7 +4859,7 @@ int	CUGCtrl::DeleteRow(long row){
 	Params
 	Return
 ***************************************************/
-//int CUGCtrl::FindNext(CString *string,int *col,long *row,int flags){
+//int FindNext(CString *string,int *col,long *row,int flags){
 //	*col = m_GI->m_colInfo[*col].colTranslation;
 //
 //	return m_GI->m_defDataSource->FindNext(string,col,row,flags);
@@ -4708,7 +4870,7 @@ int	CUGCtrl::DeleteRow(long row){
 	Params
 	Return
 ***************************************************/
-int CUGCtrl::SortBy(int col,int flag){
+int SortBy(int col,int flag = UG_SORT_ASCENDING){
 
 	int cols[1];
 	cols[0] = col;
@@ -4720,7 +4882,7 @@ int CUGCtrl::SortBy(int col,int flag){
 	Params
 	Return
 ***************************************************/
-int CUGCtrl::SortBy(int *cols,int num,int flag){
+int SortBy(int *cols,int num,int flag = UG_SORT_ASCENDING){
 	
 	// perform data column translation
 	for(int loop = 0;loop < num;loop++)
@@ -4746,7 +4908,7 @@ SetTH_Height
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ***************************************************/
-int	CUGCtrl::SetTH_Height(int height)
+int	SetTH_Height(int height)
 {
 	if (m_GI->SetTH_HeightValue(height) == UG_ERROR)
 		return UG_ERROR;
@@ -4759,7 +4921,7 @@ int	CUGCtrl::SetTH_Height(int height)
 GetTH_Height
 	Returns the height of the top heading
 ***************************************************/
-int	CUGCtrl::GetTH_Height(){
+int	GetTH_Height(){
 	return m_GI->m_topHdgHeight;
 }
 /***************************************************
@@ -4771,7 +4933,7 @@ SetSH_Width
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ***************************************************/
-int	CUGCtrl::SetSH_Width(int width){
+int	SetSH_Width(int width){
 
 	if(width <0 || width >1024)
 		return UG_ERROR;
@@ -4801,7 +4963,7 @@ int	CUGCtrl::SetSH_Width(int width){
 GetSH_Width
 	Returns the width of the side heading
 ***************************************************/
-int	CUGCtrl::GetSH_Width(){
+int	GetSH_Width(){
 	return m_GI->m_sideHdgWidth;
 }
 /***************************************************
@@ -4812,7 +4974,7 @@ SetVS_Width
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ***************************************************/
-int	CUGCtrl::SetVS_Width(int width){
+int	SetVS_Width(int width){
 	
 	if(width <0 || width > 1024)
 		return UG_ERROR;
@@ -4827,7 +4989,7 @@ int	CUGCtrl::SetVS_Width(int width){
 GetVS_Width
 	returns the width of the vertical scroll bar
 ***************************************************/
-int	CUGCtrl::GetVS_Width(){
+int	GetVS_Width(){
 	return m_GI->m_vScrollWidth;
 }
 /***************************************************
@@ -4838,7 +5000,7 @@ SetHVS_Height
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ***************************************************/
-int	CUGCtrl::SetHS_Height(int height){
+int	SetHS_Height(int height){
 
 	if(height <0 || height > 1024)
 		return UG_ERROR;
@@ -4853,7 +5015,7 @@ int	CUGCtrl::SetHS_Height(int height){
 GetHS_Height
 	returns the height of the horizontal scroll bar
 ***************************************************/
-int	CUGCtrl::GetHS_Height(){
+int	GetHS_Height(){
 	return m_GI->m_hScrollHeight;
 }
 /***************************************************
@@ -4868,7 +5030,7 @@ SetCurrentCellMode
 		    the current cell is highlighted
 		   (a value of three is for both)
 ***************************************************/
-int	CUGCtrl::SetCurrentCellMode(int mode){
+int	SetCurrentCellMode(int mode){
 	
 	if(mode < 0 || mode > 3)
 		return UG_ERROR;
@@ -4887,7 +5049,7 @@ SetHightlightRow
 
 			FALSE: standard cell hightlighting
 ***************************************************/
-int	CUGCtrl::SetHighlightRow(int mode, BOOL bExtend){
+int	SetHighlightRow(int mode, BOOL bExtend = TRUE){
 
 	if(mode){
 		m_GI->m_highlightRowFlag = TRUE;
@@ -4921,7 +5083,7 @@ SetMultiSelectMode
 	'mode'  TRUE or FALSE
 
 ***************************************************/
-int	CUGCtrl::SetMultiSelectMode(int mode){
+int	SetMultiSelectMode(int mode){
 
 	m_GI->m_multiSelectFlag = mode;
 
@@ -4946,7 +5108,7 @@ Set3DHeight
 	UG_ERROR	fail - out of range
 
 ***************************************************/
-int	CUGCtrl::Set3DHeight(int height){
+int	Set3DHeight(int height){
 
 	if(height <1 || height > 16)
 		return UG_ERROR;
@@ -4963,7 +5125,7 @@ SetPaintMode
 	not try and update itself
 ***************************************************/
 //#pragma NOTE("SK MOD - added fRedraw parameter")
-int	CUGCtrl::SetPaintMode(int mode, BOOL fRedraw /*= TRUE*/){
+int	SetPaintMode(int mode, BOOL fRedraw = TRUE){
 
 	if(mode){
 		m_GI->m_paintMode = TRUE;
@@ -4980,7 +5142,7 @@ int	CUGCtrl::SetPaintMode(int mode, BOOL fRedraw /*= TRUE*/){
 GetPaintMode
 	Returns the current paint mode
 ***************************************************/
-int	CUGCtrl::GetPaintMode(){
+int	GetPaintMode(){
 	return m_GI->m_paintMode;
 }
 
@@ -4989,7 +5151,7 @@ int	CUGCtrl::GetPaintMode(){
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::SetVScrollMode(int mode){
+int	SetVScrollMode(int mode){
 
 	m_GI->m_vScrollMode = mode;
 	m_CUGVScroll->Update();
@@ -5001,7 +5163,7 @@ int	CUGCtrl::SetVScrollMode(int mode){
 	Params
 	Return
 ***************************************************/
-int	CUGCtrl::SetHScrollMode(int mode){
+int	SetHScrollMode(int mode){
 
 	m_GI->m_hScrollMode = mode;
 	m_CUGHScroll->Update();
@@ -5012,7 +5174,7 @@ int	CUGCtrl::SetHScrollMode(int mode){
 GetCurrentCol
 	Returns the current column within the grid
 ***************************************************/
-int	CUGCtrl::GetCurrentCol(){
+int	GetCurrentCol(){
 	
 	return m_GI->m_currentCol;
 }
@@ -5020,7 +5182,7 @@ int	CUGCtrl::GetCurrentCol(){
 GetCurrentRow
 	Returns the curent row within the grid
 ***************************************************/
-long CUGCtrl::GetCurrentRow(){
+long GetCurrentRow(){
 
 	return m_GI->m_currentRow;
 }
@@ -5028,7 +5190,7 @@ long CUGCtrl::GetCurrentRow(){
 GetLeftCol
 	Returns the left visible column within the grid
 ***************************************************/
-int	CUGCtrl::GetLeftCol(){
+int	GetLeftCol(){
 	
 	return m_GI->m_leftCol;
 }
@@ -5036,7 +5198,7 @@ int	CUGCtrl::GetLeftCol(){
 GetRightCol
 	Returns the right visible column within the grid
 ***************************************************/
-int	CUGCtrl::GetRightCol(){
+int	GetRightCol(){
 	
 	return m_GI->m_rightCol;
 
@@ -5045,14 +5207,14 @@ int	CUGCtrl::GetRightCol(){
 GetTopRow
 	Returns the top visible row within the grid
 ***************************************************/
-long CUGCtrl::GetTopRow(){
+long GetTopRow(){
 	return m_GI->m_topRow;
 }
 /***************************************************
 GetBottomRow
 	Returns the bottom visible row within the grid
 ***************************************************/
-long CUGCtrl::GetBottomRow(){
+long GetBottomRow(){
 
 	return m_GI->m_bottomRow;
 }
@@ -5067,7 +5229,7 @@ long CUGCtrl::GetBottomRow(){
 RedrawAll
 	Redraws all child windows
 ***************************************************/
-int CUGCtrl::RedrawAll(){
+int RedrawAll(){
 	Update();
 	return UG_SUCCESS;
 }
@@ -5075,7 +5237,7 @@ int CUGCtrl::RedrawAll(){
 RedrawCell
 	Redraws the specified cell within the grid
 ***************************************************/
-int CUGCtrl::RedrawCell(int col,long row){
+int RedrawCell(int col,long row){
 	if(col < 0){
 		m_CUGSideHdg->RedrawAll();
 		//m_CUGSideHdg->Invalidate();
@@ -5093,7 +5255,7 @@ int CUGCtrl::RedrawCell(int col,long row){
 RedrawRow
 	Redraws the specfied row within the grid
 ***************************************************/
-int CUGCtrl::RedrawRow(long row){
+int RedrawRow(long row){
 	m_CUGGrid->RedrawRow(row);
 	return UG_SUCCESS;
 }
@@ -5101,7 +5263,7 @@ int CUGCtrl::RedrawRow(long row){
 RedrawCol
 	Redraws the specified column within the grid
 ***************************************************/
-int CUGCtrl::RedrawCol(int col){
+int RedrawCol(int col){
 	m_CUGGrid->RedrawCol(col);
 	return UG_SUCCESS;
 }
@@ -5110,7 +5272,7 @@ RedrawRange
 	Redraws the specified range of cells within the
 	grid
 ***************************************************/
-int CUGCtrl::RedrawRange(int startCol,long startRow,int endCol,long endRow){
+int RedrawRange(int startCol,long startRow,int endCol,long endRow){
 	m_CUGGrid->RedrawRange(startCol,startRow,endCol,endRow);
 	return UG_SUCCESS;
 }
@@ -5121,7 +5283,7 @@ TempDisableFocusRect
 	rectangle, for the next time the grid is drawn.
 	Then it will be reset.
 ***************************************************/
-void CUGCtrl::TempDisableFocusRect(){
+void TempDisableFocusRect(){
 	m_CUGGrid->TempDisableFocusRect();
 }
 
@@ -5145,7 +5307,7 @@ AddCellType
 
 	-1 error
 ***************************************************/
-long CUGCtrl::AddCellType(CUGCellType *celltype){
+long AddCellType(CUGCellType *celltype){
 
 	if(celltype == NULL)
 		return -1;
@@ -5167,7 +5329,7 @@ RemoveCellType
 	cell type list. It does not delete the cell type
 	class
 ****************************************************/
-int CUGCtrl::RemoveCellType(int index){
+int RemoveCellType(int index){
 
 	CUGCellType* pCellType = (CUGCellType*) m_cellTypeList->GetPointer(index);
 	if (NULL != pCellType) delete pCellType;
@@ -5190,7 +5352,7 @@ ClearSelections
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ****************************************************/
-int CUGCtrl::ClearSelections(){
+int ClearSelections(){
 
 	m_GI->m_multiSelect->ClearAll();
 
@@ -5208,7 +5370,7 @@ Select
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ****************************************************/
-int CUGCtrl::Select(int col,long row){
+int Select(int col,long row){
 	m_GI->m_multiSelect->StartBlock(col,row);
 	m_GI->m_multiSelect->EndBlock(col,row);
 	RedrawCell(col,row);
@@ -5216,7 +5378,7 @@ int CUGCtrl::Select(int col,long row){
 }
 /***************************************************
 ****************************************************/
-BOOL CUGCtrl::IsSelected(int col,long row,int *blockNum){
+BOOL IsSelected(int col,long row,int *blockNum = NULL){
 	return m_GI->m_multiSelect->IsSelected(col,row,blockNum);
 }
 
@@ -5229,7 +5391,7 @@ SelectRange
 	UG_SUCCESS	success
 	UG_ERROR	fail - out of range
 ****************************************************/
-int CUGCtrl::SelectRange(int startCol,long startRow,int endCol,long endRow)
+int SelectRange(int startCol,long startRow,int endCol,long endRow)
 {
 	if( m_GI->m_multiSelectFlag & 3 )
 	{
@@ -5255,7 +5417,7 @@ EnumFirstSelected
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::EnumFirstSelected(int *col,long *row){
+int EnumFirstSelected(int *col,long *row){
 
 	return m_GI->m_multiSelect->EnumFirstSelected(col,row);
 }
@@ -5269,7 +5431,7 @@ EnumNextSelected
 	UG_SUCCESS	success
 	UG_ERROR	no more items selected
 ****************************************************/
-int CUGCtrl::EnumNextSelected(int *col,long *row){
+int EnumNextSelected(int *col,long *row){
 	
 	return m_GI->m_multiSelect->EnumNextSelected(col,row);
 }
@@ -5282,7 +5444,7 @@ EnumFirstBlock
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::EnumFirstBlock(int *startCol,long *startRow,int *endCol,long *endRow){
+int EnumFirstBlock(int *startCol,long *startRow,int *endCol,long *endRow){
 
 	return m_GI->m_multiSelect->EnumFirstBlock( startCol, startRow, endCol, endRow );
 }
@@ -5294,7 +5456,7 @@ EnumNextBlock
 	UG_SUCCESS	success
 	UG_ERROR	no more items selected
 ****************************************************/
-int CUGCtrl::EnumNextBlock(int *startCol,long *startRow,int *endCol,long *endRow){
+int EnumNextBlock(int *startCol,long *startRow,int *endCol,long *endRow){
 	
 	return m_GI->m_multiSelect->EnumNextBlock( startCol, startRow, endCol, endRow );
 }
@@ -5308,7 +5470,7 @@ CopySelected
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::CopySelected(){
+int CopySelected(){
 
 	return CopySelected(FALSE);
 }
@@ -5322,7 +5484,7 @@ CopySelected
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::CopySelected(int cutFlag){
+int CopySelected(int cutFlag){
 	
 	int rt;
 	std::wstring  clipString = L"";
@@ -5342,7 +5504,7 @@ int CUGCtrl::CopySelected(int cutFlag){
 }
 /***************************************************
 ****************************************************/
-void CUGCtrl::CreateSelectedString(std::wstring& string,int cutFlag){
+void CreateSelectedString(std::wstring& string,int cutFlag){
 	
 	int rt; 
 	int col;
@@ -5397,7 +5559,7 @@ CutSelected
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::CutSelected(){
+int CutSelected(){
 	
 	return CopySelected(TRUE);	
 }
@@ -5409,7 +5571,7 @@ CopyToClipBoard
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::CopyToClipBoard(std::wstring* string){
+int CopyToClipBoard(std::wstring* string){
 	
 	//std::wstring str(*string->GetString());
 	CopyTextToClipboardW(*string);
@@ -5424,7 +5586,7 @@ CopyFromClipBoard
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::CopyFromClipBoard(std::wstring* string){
+int CopyFromClipBoard(std::wstring* string){
 
 	HGLOBAL hg;          //memory handle
 	LPWSTR data;          //memory pointer
@@ -5463,7 +5625,7 @@ Paste
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::Paste(){
+int Paste(){
 	
 	std::wstring string;
 
@@ -5483,7 +5645,7 @@ Paste
 	UG_SUCCESS	success
 	UG_ERROR	fail
 ****************************************************/
-int CUGCtrl::Paste(std::wstring&string){
+int Paste(std::wstring&string){
 	
 	int		col		= m_GI->m_currentCol;
 	long	row		= m_GI->m_currentRow;
@@ -5572,7 +5734,7 @@ return
 	-1 failure
 	otherwise datasource index number is returned
 ****************************************************/
-int CUGCtrl::AddDataSource(CUGDataSource * ds)
+int AddDataSource(CUGDataSource * ds)
 {
 	if(ds == NULL)
 		return -1;
@@ -5628,7 +5790,7 @@ GetDataSource
 		NULL - failure
 		otherwise the pointer to the datasource
 ****************************************************/
-CUGDataSource * CUGCtrl::GetDataSource(int index){
+CUGDataSource * GetDataSource(int index){
 
 	if(index <0 || index > m_dataSrcListLength)
 		return NULL;
@@ -5652,7 +5814,7 @@ SetDefDataSource
 		UG_SUCCESS	- success
 		UG_ERROR	- failure
 ****************************************************/
-int CUGCtrl::SetDefDataSource(int index){
+int SetDefDataSource(int index){
 	
 	if(index <0 || index > m_dataSrcListLength)
 		return UG_ERROR;
@@ -5683,7 +5845,7 @@ GetDefDataSource
 	Return
 		default data source index
 ****************************************************/
-int CUGCtrl::GetDefDataSource(){
+int GetDefDataSource(){
 	return m_GI->m_defDataSourceIndex;
 }
 /***************************************************
@@ -5698,7 +5860,7 @@ RemoveDataSource
 		UG_SUCCESS	- success
 		UG_ERROR	- failure
 ****************************************************/
-int CUGCtrl::RemoveDataSource(int index){
+int RemoveDataSource(int index){
 	
 	if(index <= 0 || index > m_dataSrcListLength)
 		return UG_ERROR;
@@ -5715,7 +5877,7 @@ int CUGCtrl::RemoveDataSource(int index){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetGridUsingDataSource(int index){
+int SetGridUsingDataSource(int index){
 
 	CUGDataSource * ds= GetDataSource(index);
 
@@ -5741,7 +5903,7 @@ int CUGCtrl::SetGridUsingDataSource(int index){
 	Params
 	Return
 ****************************************************/
-CXeMenu * CUGCtrl::GetPopupMenu()
+CXeMenu * GetPopupMenu()
 {
 	return m_menu.get();
 }
@@ -5750,7 +5912,7 @@ CXeMenu * CUGCtrl::GetPopupMenu()
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::EmptyMenu(){
+int EmptyMenu(){
 	
 	m_menu->Clear();
 	
@@ -5761,7 +5923,7 @@ int CUGCtrl::EmptyMenu(){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::AddMenuItem(int ID,LPCTSTR string){
+//int AddMenuItem(int ID,LPCTSTR string){
 //
 //	if(lstrlen(string) == 0 || ID == -1){
 //		if(m_menu->AppendMenu(MF_SEPARATOR,0,_T("")) != FALSE)
@@ -5779,7 +5941,7 @@ int CUGCtrl::EmptyMenu(){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::RemoveMenuItem(int ID){
+//int RemoveMenuItem(int ID){
 //	
 //	if(m_menu->DeleteMenu(ID,MF_BYCOMMAND) != FALSE)
 //		return UG_SUCCESS;
@@ -5791,7 +5953,7 @@ int CUGCtrl::EmptyMenu(){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::EnableMenu(BOOL state){
+int EnableMenu(BOOL state){
 	
 	if(state)
 		m_GI->m_enablePopupMenu = TRUE;
@@ -5811,7 +5973,7 @@ UseHints
 	Return
 		UG_SUCCESS, this function will never fail
 ****************************************************/
-int CUGCtrl::UseHints(BOOL state)
+int UseHints(BOOL state)
 {
 	if ( state )
 	{
@@ -5844,7 +6006,7 @@ int CUGCtrl::UseHints(BOOL state)
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::UseVScrollHints(BOOL state){
+int UseVScrollHints(BOOL state){
 	if(state){
 		m_GI->m_enableVScrollHints = TRUE;
 		//m_CUGVScroll->EnableToolTips(TRUE);
@@ -5860,7 +6022,7 @@ int CUGCtrl::UseVScrollHints(BOOL state){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::UseHScrollHints(BOOL state){
+int UseHScrollHints(BOOL state){
 	if(state){
 		m_GI->m_enableHScrollHints = TRUE;
 		//m_CUGHScroll->EnableToolTips(TRUE);
@@ -5872,23 +6034,23 @@ int CUGCtrl::UseHScrollHints(BOOL state){
 	return UG_SUCCESS;
 }
 
-//LRESULT CUGCtrl::OnMouseLeave(WPARAM wparam, LPARAM lparam)
+//LRESULT OnMouseLeave(WPARAM wparam, LPARAM lparam)
 //{
 //	m_bTrackMouseLeave = FALSE;
 //	m_xtooltip->HideTooltip();
 //	return 0;
 //}
 //
-//LRESULT CUGCtrl::OnMouseHover(WPARAM wparam, LPARAM lparam)
+//LRESULT OnMouseHover(WPARAM wparam, LPARAM lparam)
 //{
 //	return 0;
 //}
 //
-//void CUGCtrl::OnPPToolTipNotify(NMHDR * pNotifyStruct, LRESULT * result)
+//void OnPPToolTipNotify(NMHDR * pNotifyStruct, LRESULT * result)
 //{
 //}
 //
-//void CUGCtrl::OnPPTTNF_NeedTT(NMHDR * pNotifyStruct, LRESULT * result)
+//void OnPPTTNF_NeedTT(NMHDR * pNotifyStruct, LRESULT * result)
 //{
 //	NM_PPTOOLTIP_NEED_TT *pNeedTT = (NM_PPTOOLTIP_NEED_TT *)pNotifyStruct;
 //	*result = 0;
@@ -5991,25 +6153,25 @@ AddTab - int AddTab(LPCTSTR label,long ID);
 		UG_SUCCESS  - success
 		UG_ERROR	- error
 ****************************************************/
-//int CUGCtrl::AddTab( CString label, long ID )
+//int AddTab( CString label, long ID )
 //{
 //	return m_CUGTab->AddTab(label,ID);
 //}
 /****************************************************
 *****************************************************/
-//int CUGCtrl::InsertTab( int pos, CString label, long ID )
+//int InsertTab( int pos, CString label, long ID )
 //{
 //	return m_CUGTab->InsertTab(pos,label,ID);
 //}
 /****************************************************
 *****************************************************/
-//int CUGCtrl::DeleteTab( long ID )
+//int DeleteTab( long ID )
 //{
 //	return m_CUGTab->DeleteTab(ID);
 //}
 /****************************************************
 *****************************************************/
-//int CUGCtrl::SetTabWidth( int width )
+//int SetTabWidth( int width )
 //{
 //	m_GI->m_tabWidth = width;
 //	return UG_SUCCESS;
@@ -6019,7 +6181,7 @@ AddTab - int AddTab(LPCTSTR label,long ID);
 	Params
 	Return
 *****************************************************/
-//int CUGCtrl::SetCurrentTab( long ID )
+//int SetCurrentTab( long ID )
 //{
 //	if( m_CUGTab->SetCurrentTab(ID) == UG_SUCCESS )
 //	{
@@ -6033,7 +6195,7 @@ AddTab - int AddTab(LPCTSTR label,long ID);
 	Params
 	Return
 *****************************************************/
-//int CUGCtrl::GetCurrentTab()
+//int GetCurrentTab()
 //{
 //	return m_CUGTab->GetCurrentTab();
 //}
@@ -6042,7 +6204,7 @@ AddTab - int AddTab(LPCTSTR label,long ID);
 	Params
 	Return
 *****************************************************/
-//int CUGCtrl::SetTabBackColor( long ID, COLORREF color )
+//int SetTabBackColor( long ID, COLORREF color )
 //{
 //	return m_CUGTab->SetTabBackColor(ID,color);
 //}
@@ -6051,7 +6213,7 @@ AddTab - int AddTab(LPCTSTR label,long ID);
 	Params
 	Return
 *****************************************************/
-//int CUGCtrl::SetTabTextColor( long ID, COLORREF color )
+//int SetTabTextColor( long ID, COLORREF color )
 //{
 //	return m_CUGTab->SetTabTextColor(ID,color);
 //}
@@ -6060,7 +6222,7 @@ AddTab - int AddTab(LPCTSTR label,long ID);
 	Params
 	Return
 *****************************************************/
-int CUGCtrl::SetNumberSheets(int numSheets)
+int SetNumberSheets(int numSheets)
 {
 	if(numSheets < 1 || numSheets > 1024)
 		return UG_ERROR;
@@ -6137,7 +6299,7 @@ int CUGCtrl::SetNumberSheets(int numSheets)
 	return UG_SUCCESS;
 }
 
-int CUGCtrl::DeleteCurrentSheet( BOOL update )
+int DeleteCurrentSheet( BOOL update = TRUE)
 {
 	if( m_numberSheets <= 1 )	// check to see if more than one sheet in grid
 		return UG_ERROR;
@@ -6173,7 +6335,7 @@ int CUGCtrl::DeleteCurrentSheet( BOOL update )
 	Params
 	Return
 *****************************************************/
-int CUGCtrl::GetNumberSheets(){
+int GetNumberSheets(){
 	return m_numberSheets;
 }
 
@@ -6182,7 +6344,7 @@ int CUGCtrl::GetNumberSheets(){
 	Params
 	Return
 *****************************************************/
-int CUGCtrl::SetSheetNumber(int index,BOOL update){
+int SetSheetNumber(int index,BOOL update = TRUE){
 
 	//check to see if the number is valid
 	if(index <0 || index >= m_numberSheets)
@@ -6238,7 +6400,7 @@ int CUGCtrl::SetSheetNumber(int index,BOOL update){
 	Params
 	Return
 *****************************************************/
-int CUGCtrl::GetSheetNumber(){
+int GetSheetNumber(){
 	return m_currentSheet;
 }
 
@@ -6255,7 +6417,7 @@ SetTH_NumberRows - int SetTH_NumberRows(int rows)
 		UG_SUCCESS	success		
 		UG_ERROR	invalid number of rows
 ****************************************************/
-int	CUGCtrl::SetTH_NumberRows(int rows){
+int	SetTH_NumberRows(int rows){
 	
 	//range checking
 	if(rows < 1 || rows > 64)
@@ -6290,7 +6452,7 @@ SetTH_RowHeight
 	Top heading rows start from -1 then -2 and so on
 	-1 row is the one closest to the grid it self
 ****************************************************/
-int	CUGCtrl::SetTH_RowHeight(int row,int height)
+int	SetTH_RowHeight(int row,int height)
 {	
 	//translate the row number into a 0 based positive index
 	row = (row * -1) -1;
@@ -6317,7 +6479,7 @@ int	CUGCtrl::SetTH_RowHeight(int row,int height)
 	Params
 	Return
 ****************************************************/
-int	CUGCtrl::SetSH_NumberCols(int cols){
+int	SetSH_NumberCols(int cols){
 
 	//range checking
 	if(cols < 1 || cols > 64)
@@ -6352,7 +6514,7 @@ SetSH_ColWidth
 	Params
 	Return
 ****************************************************/
-int	CUGCtrl::SetSH_ColWidth(int col,int width)
+int	SetSH_ColWidth(int col,int width)
 {
 	//translate the col number into a 0 based positive index
 	col = (col * -1) -1;
@@ -6379,7 +6541,7 @@ int	CUGCtrl::SetSH_ColWidth(int col,int width)
 	Params
 	Return
 ****************************************************/
-void CUGCtrl::SetLockRowHeight(){
+void SetLockRowHeight(){
 
 	if(m_GI->m_numLockRows <1)
 		return;
@@ -6396,7 +6558,7 @@ void CUGCtrl::SetLockRowHeight(){
 	Params
 	Return
 ****************************************************/
-void CUGCtrl::SetLockColWidth(){
+void SetLockColWidth(){
 
 	if(m_GI->m_numLockCols <1)
 		return;
@@ -6413,7 +6575,7 @@ void CUGCtrl::SetLockColWidth(){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetArrowCursor(HCURSOR cursor){
+int SetArrowCursor(HCURSOR cursor){
 	if(cursor == NULL)
 		return UG_ERROR;
 	//m_GI->m_arrowCursor = cursor;
@@ -6426,7 +6588,7 @@ int CUGCtrl::SetArrowCursor(HCURSOR cursor){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetWESizingCursor(HCURSOR cursor){
+int SetWESizingCursor(HCURSOR cursor){
 	if(cursor == NULL)
 		return UG_ERROR;
 	m_GI->m_WEResizseCursor = cursor;
@@ -6438,7 +6600,7 @@ int CUGCtrl::SetWESizingCursor(HCURSOR cursor){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetNSSizingCursor(HCURSOR cursor){
+int SetNSSizingCursor(HCURSOR cursor){
 	if(cursor == NULL)
 		return UG_ERROR;
 	m_GI->m_NSResizseCursor = cursor;
@@ -6458,7 +6620,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnSetFocus(int section){
+void OnSetFocus(int section){
 	int curcol = GetCurrentCol();
 	int currow = GetCurrentRow();
 	RedrawCell(-1, currow);
@@ -6475,7 +6637,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnKillFocus(int section)
+void OnKillFocus(int section)
 {
 	int curcol = GetCurrentCol();
 	int currow = GetCurrentRow();
@@ -6483,7 +6645,7 @@ void CUGCtrl::OnKillFocus(int section)
 	RedrawCell(curcol, -1);
 }
 
-void CUGCtrl::OnKillFocus(int section, HWND hNewWnd)
+void OnKillFocus(int section, HWND hNewWnd)
 {
 	UNREFERENCED_PARAMETER(hNewWnd);
 	// For backwards compatibility call older version
@@ -6498,7 +6660,7 @@ drag and drop
 
 /*********************************************
 **********************************************/
-//int CUGCtrl::StartDragDrop(){
+//int StartDragDrop(){
 //	
 //	ReleaseCapture();
 //	
@@ -6574,7 +6736,7 @@ drag and drop
 /*********************************************
 COleDropTarget
 **********************************************/
-//int CUGCtrl::DragDropTarget(BOOL state){
+//int DragDropTarget(BOOL state){
 //
 //	if(state == FALSE){
 //		m_dropTarget.Revoke();
@@ -6594,7 +6756,7 @@ Return:
 	DROPEFFECT_NONE - no drag and drop
 	DROPEFFECT_COPY - allow drag and drop for copying
 ****************************************************/
-DROPEFFECT  CUGCtrl::OnDragEnter(COleDataObject* pDataObject){
+DROPEFFECT  OnDragEnter(COleDataObject* pDataObject){
 	UNREFERENCED_PARAMETER(*pDataObject);
 	return DROPEFFECT_NONE;
 }
@@ -6607,7 +6769,7 @@ DROPEFFECT  CUGCtrl::OnDragEnter(COleDataObject* pDataObject){
 //		DROPEFFECT_NONE - no drag and drop
 //		DROPEFFECT_COPY - allow drag and drop for copying
 ****************************************************/
-DROPEFFECT  CUGCtrl::OnDragOver(COleDataObject* pDataObject,int col,long row){
+DROPEFFECT  OnDragOver(COleDataObject* pDataObject,int col,long row){
 	UNREFERENCED_PARAMETER(*pDataObject);
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
@@ -6622,7 +6784,7 @@ DROPEFFECT  CUGCtrl::OnDragOver(COleDataObject* pDataObject,int col,long row){
 //		DROPEFFECT_NONE - no drag and drop
 //		DROPEFFECT_COPY - allow drag and drop for copying
 ****************************************************/
-DROPEFFECT  CUGCtrl::OnDragDrop(COleDataObject* pDataObject,int col,long row){
+DROPEFFECT  OnDragDrop(COleDataObject* pDataObject,int col,long row){
 	UNREFERENCED_PARAMETER(*pDataObject);
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
@@ -6636,7 +6798,7 @@ OnSetup
 	is created or attached to a dialog item.
 	It can be used to initially setup the grid
 ****************************************************/
-void CUGCtrl::OnSetup()
+void OnSetup()
 {
 	//SetDoubleBufferMode(TRUE);
 
@@ -6681,7 +6843,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnSheetSetup(int sheetNumber)
+void OnSheetSetup(int sheetNumber)
 {
 	//*** initialize new sheet info. structure
 		// Initialize GridSize
@@ -6732,7 +6894,7 @@ Return:
 	TRUE - to allow the move
 	FALSE - to prevent new cell from gaining focus
 ****************************************************/
-int CUGCtrl::OnCanMove(int oldcol,long oldrow,int newcol,long newrow){
+int OnCanMove(int oldcol,long oldrow,int newcol,long newrow){
 	// show SH for current row as BLUE
 	if (oldrow != newrow)
 	{
@@ -6763,7 +6925,7 @@ Return:
 	TRUE - to allow for the scroll
 	FALSE - to prevent the view from scrolling
 ****************************************************/
-int CUGCtrl::OnCanViewMove(int oldcol,long oldrow,int newcol,long newrow){
+int OnCanViewMove(int oldcol,long oldrow,int newcol,long newrow){
 	UNREFERENCED_PARAMETER(oldcol);
 	UNREFERENCED_PARAMETER(oldrow);
 	UNREFERENCED_PARAMETER(newcol);
@@ -6783,7 +6945,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnHitBottom(long numrows,long rowspast,long rowsfound){
+void OnHitBottom(long numrows,long rowspast,long rowsfound){
 	UNREFERENCED_PARAMETER(numrows);
 	UNREFERENCED_PARAMETER(rowspast);
 	UNREFERENCED_PARAMETER(rowsfound);
@@ -6798,7 +6960,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnHitTop(long numrows,long rowspast){
+void OnHitTop(long numrows,long rowspast){
 	UNREFERENCED_PARAMETER(numrows);
 	UNREFERENCED_PARAMETER(rowspast);
 }
@@ -6814,7 +6976,7 @@ Return:
 	TRUE - to allow sizing
 	FALSE - to prevent sizing
 ****************************************************/
-int CUGCtrl::OnCanSizeCol(int col){
+int OnCanSizeCol(int col){
 	UNREFERENCED_PARAMETER(col);
 	return TRUE;
 }
@@ -6829,7 +6991,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnColSizing(int col,int *width){
+void OnColSizing(int col,int *width){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(*width);
 }
@@ -6844,7 +7006,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnColSized(int col,int *width){
+void OnColSized(int col,int *width){
 	//SendDataGridColWidthChangedMessage(col, *width);
 }
 
@@ -6859,7 +7021,7 @@ Return:
 	TRUE - to allow sizing
 	FALSE - to prevent sizing
 ****************************************************/
-int  CUGCtrl::OnCanSizeRow(long row){
+int  OnCanSizeRow(long row){
 	UNREFERENCED_PARAMETER(row);
 	return FALSE;
 }
@@ -6874,7 +7036,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnRowSizing(long row,int *height){
+void OnRowSizing(long row,int *height){
 	if (*height < 10)
 		*height = 10;
 }
@@ -6889,7 +7051,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnRowSized(long row,int *height){
+void OnRowSized(long row,int *height){
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*height);
 }
@@ -6903,7 +7065,7 @@ Return:
 	TRUE - to allow sizing
 	FALSE - to prevent sizing
 ****************************************************/
-int CUGCtrl::OnCanSizeSideHdg(){
+int OnCanSizeSideHdg(){
 	return TRUE;
 }
 
@@ -6916,7 +7078,7 @@ Return:
 	TRUE - to allow sizing
 	FALSE - to prevent sizing
 ****************************************************/
-int CUGCtrl::OnCanSizeTopHdg(){
+int OnCanSizeTopHdg(){
 	return FALSE;
 }
 
@@ -6929,7 +7091,7 @@ Return:
 	TRUE - to accept current new size
 	FALSE - to stop sizing, the size is either too large or too small
 ****************************************************/
-int CUGCtrl::OnSideHdgSizing(int *width){
+int OnSideHdgSizing(int *width){
 	if (*width < 10)
 		*width = 10;
 	return TRUE;
@@ -6944,7 +7106,7 @@ Return:
 	TRUE - to accept current new size
 	FALSE - to stop sizing, the size is either too large or too small
 ****************************************************/
-int CUGCtrl::OnTopHdgSizing(int *height){
+int OnTopHdgSizing(int *height){
 	if (*height < 10)
 		*height = 10;
 	return TRUE;
@@ -6959,7 +7121,7 @@ Return:
 	TRUE - to accept new size
 	FALSE - to revert to old size
 ****************************************************/
-int CUGCtrl::OnSideHdgSized(int *width){
+int OnSideHdgSized(int *width){
 	//SendDataGridColWidthChangedMessage(-1, *width);
 	return 0;
 }
@@ -6973,12 +7135,15 @@ Return:
 	TRUE - to accept new size
 	FALSE - to revert to old size
 ****************************************************/
-int CUGCtrl::OnTopHdgSized(int *height){
+int OnTopHdgSized(int *height){
 	UNREFERENCED_PARAMETER(*height);
 	return 0;
 }
 
-void CUGCtrl::OnColRowSizeFinished()
+int GetGridNumCols() { return GetDataSource()->GetGridTblInfo().GetNumColumns(); }
+int GetGridNumRows() { return GetDataSource()->GetNumRows(); }
+
+void OnColRowSizeFinished()
 {
 	GetGridSizeFromGrid();
 	CGridTblInfo& tblInfo = GetDataSource()->GetGridTblInfo();
@@ -6995,7 +7160,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnColChange(int oldcol,int newcol){
+void OnColChange(int oldcol,int newcol){
 	UNREFERENCED_PARAMETER(oldcol);
 	UNREFERENCED_PARAMETER(newcol);
 }
@@ -7009,7 +7174,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnRowChange(long oldrow,long newrow){
+void OnRowChange(long oldrow,long newrow){
 	UNREFERENCED_PARAMETER(oldrow);
 	UNREFERENCED_PARAMETER(newrow);
 }
@@ -7023,7 +7188,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnCellChange(int oldcol,int newcol,long oldrow,long newrow)
+void OnCellChange(int oldcol,int newcol,long oldrow,long newrow)
 {
 	HWND hWnd = Hwnd();
 	HWND hWndParent = ::GetParent(hWnd);
@@ -7042,7 +7207,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnLeftColChange(int oldcol,int newcol){
+void OnLeftColChange(int oldcol,int newcol){
 	UNREFERENCED_PARAMETER(oldcol);
 	UNREFERENCED_PARAMETER(newcol);
 }
@@ -7057,7 +7222,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnTopRowChange( long oldrow, long newrow )
+void OnTopRowChange( long oldrow, long newrow )
 {
 	UNREFERENCED_PARAMETER(oldrow);
 	UNREFERENCED_PARAMETER(newrow);
@@ -7080,7 +7245,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnViewMoved( int nScrolDir, long oldPos, long newPos )
+void OnViewMoved( int nScrolDir, long oldPos, long newPos )
 {
 	UNREFERENCED_PARAMETER(nScrolDir);
 	UNREFERENCED_PARAMETER(oldPos);
@@ -7100,7 +7265,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnLClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
+void OnLClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
 	if (!updn)	// Left mouse button up? Clear last Lbtn dn. pos.
 		m_ptLastLbtnDnMousePos.x = m_ptLastLbtnDnMousePos.y = -1000000;
 
@@ -7126,7 +7291,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnRClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
+void OnRClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(updn);
@@ -7146,7 +7311,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnDClicked(int col,long row,RECT *rect,POINT *point,BOOL processed){
+void OnDClicked(int col,long row,RECT *rect,POINT *point,BOOL processed){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*rect);
@@ -7166,7 +7331,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnMouseMove(int col,long row,POINT *point,UINT nFlags,BOOL processed){
+void OnMouseMove(int col,long row,POINT *point,UINT nFlags,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*point);
@@ -7200,7 +7365,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnTH_LClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
+void OnTH_LClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed = 0){
 	if (updn || row < -1 || !SortingEnabled())
 		return;
 
@@ -7248,7 +7413,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnTH_RClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
+void OnTH_RClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(updn);
@@ -7269,7 +7434,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnTH_DClicked(int col,long row,RECT *rect,POINT *point,BOOL processed){
+void OnTH_DClicked(int col,long row,RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*rect);
@@ -7290,7 +7455,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnSH_LClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
+void OnSH_LClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(*rect);
 	UNREFERENCED_PARAMETER(*point);
 	UNREFERENCED_PARAMETER(processed);
@@ -7341,7 +7506,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnSH_RClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed){
+void OnSH_RClicked(int col,long row,int updn,RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(updn);
@@ -7361,7 +7526,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnSH_DClicked(int col,long row,RECT *rect,POINT *point,BOOL processed){
+void OnSH_DClicked(int col,long row,RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*rect);
@@ -7381,7 +7546,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnCB_LClicked(int updn,RECT *rect,POINT *point,BOOL processed){
+void OnCB_LClicked(int updn,RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(updn);
 	UNREFERENCED_PARAMETER(*rect);
 	UNREFERENCED_PARAMETER(*point);
@@ -7400,7 +7565,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnCB_RClicked(int updn,RECT *rect,POINT *point,BOOL processed){
+void OnCB_RClicked(int updn,RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(updn);
 	UNREFERENCED_PARAMETER(*rect);
 	UNREFERENCED_PARAMETER(*point);
@@ -7418,7 +7583,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnCB_DClicked(RECT *rect,POINT *point,BOOL processed){
+void OnCB_DClicked(RECT *rect,POINT *point,BOOL processed = 0){
 	UNREFERENCED_PARAMETER(*rect);
 	UNREFERENCED_PARAMETER(*point);
 	UNREFERENCED_PARAMETER(processed);
@@ -7434,7 +7599,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnKeyDown(UINT *vcKey,BOOL processed){
+void OnKeyDown(UINT *vcKey,BOOL processed){
 	// Allow data source first chance to process the keyboard command
 	eGridAction action = eGridAction::NO_ACTION;
 	if (GetDataSource()->ProcessKeydownMessage((int)*vcKey, action, m_gridsel))
@@ -7503,12 +7668,12 @@ void CUGCtrl::OnKeyDown(UINT *vcKey,BOOL processed){
 	}
 }
 
-void CUGCtrl::OnEditFind()
+void OnEditFind()
 {
 	//_NotifyParentView(_GetNotifyData(eGridNfShowFind));
 }
 
-void CUGCtrl::_UpdateMenuCallback(CXeMenu* pMenu, size_t top_level_index)
+void _UpdateMenuCallback(CXeMenu* pMenu, size_t top_level_index)
 {
 	XeASSERT(pMenu);
 	if (pMenu)
@@ -7526,20 +7691,20 @@ void CUGCtrl::_UpdateMenuCallback(CXeMenu* pMenu, size_t top_level_index)
 	}
 }
 
-stGridNotifyData CUGCtrl::_GetNotifyData(EGRIDOP eOp, int col, long row, int section)
+stGridNotifyData _GetNotifyData(EGRIDOP eOp, int col = -1, long row = -1, int section = UG_GRID)
 {
 	stGridNotifyData nfData(eOp, col, col, row, section, 0, m_gridsel, ::GetParent(Hwnd()));
 	return nfData;
 }
 
-stGridNotifyData CUGCtrl::_GetNotifyDataFlag(EGRIDOP eOp, bool bFlag)
+stGridNotifyData _GetNotifyDataFlag(EGRIDOP eOp, bool bFlag)
 {
 	stGridNotifyData nfData = _GetNotifyData(eOp);
 	nfData.m_bFlag = bFlag;
 	return nfData;
 }
 
-void CUGCtrl::SetGridFromDataSource(BOOL fRedraw /*= TRUE*/)
+void SetGridFromDataSource(BOOL fRedraw = TRUE)
 {
 	SetPaintMode(FALSE);
 	SetNumberCols(GetGridNumCols(), FALSE);
@@ -7558,7 +7723,7 @@ void CUGCtrl::SetGridFromDataSource(BOOL fRedraw /*= TRUE*/)
 		_RedrawDirectly();
 }
 
-void CUGCtrl::GetGridSizeFromGrid()
+void GetGridSizeFromGrid()
 {
 	int nNumTHrows = 1;
 	if (GetDataSource()->HasGridHeader())
@@ -7576,7 +7741,7 @@ void CUGCtrl::GetGridSizeFromGrid()
 	}
 }
 
-void CUGCtrl::SetGridSizeToGrid()
+void SetGridSizeToGrid()
 {
 	//******* Set the total height of the top heading 
 	int nTHrowHeight = m_xeUI->GetValue(UIV::s_cyGridTH_RowHeight);
@@ -7607,7 +7772,7 @@ void CUGCtrl::SetGridSizeToGrid()
 	RedrawAll();
 }
 
-BOOL CUGCtrl::ClipboardOperation(UINT uOperation)
+BOOL ClipboardOperation(UINT uOperation)
 {	// clipboard operations relating to the cell currently in edit mode 
 	//   or the entire grid if no cell is currently in edit mode
 	switch (uOperation)
@@ -7651,7 +7816,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnKeyUp(UINT *vcKey,BOOL processed){
+void OnKeyUp(UINT *vcKey,BOOL processed){
 	UNREFERENCED_PARAMETER(*vcKey);
 	UNREFERENCED_PARAMETER(processed);
 }
@@ -7666,7 +7831,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnCharDown(UINT *vcKey,BOOL processed){
+void OnCharDown(UINT *vcKey,BOOL processed){
 	UNREFERENCED_PARAMETER(*vcKey);
 	UNREFERENCED_PARAMETER(processed);
 }
@@ -7687,7 +7852,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnGetCell(int col,long row,CUGCell *cell){
+void OnGetCell(int col,long row,CUGCell *cell){
 	GetDataSource()->GetCellForGrid(col, row, cell, m_gridsel);
 }
 
@@ -7702,7 +7867,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnSetCell(int col,long row,CUGCell *cell){
+void OnSetCell(int col,long row,CUGCell *cell){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*cell);
@@ -7721,7 +7886,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnDataSourceNotify(int ID,long msg,long param){
+void OnDataSourceNotify(int ID,long msg,long param){
 	UNREFERENCED_PARAMETER(ID);
 	UNREFERENCED_PARAMETER(msg);
 	UNREFERENCED_PARAMETER(param);
@@ -7742,7 +7907,7 @@ Return:
 	TRUE - to allow celltype event
 	FALSE - to disallow the celltype event
 ****************************************************/
-int CUGCtrl::OnCellTypeNotify(long ID,int col,long row,long msg,long long param){
+int OnCellTypeNotify(long ID,int col,long row,long msg,long long param){
 	switch (ID)
 	{
 	case UGCT_CHECKBOX:
@@ -7773,32 +7938,38 @@ int CUGCtrl::OnCellTypeNotify(long ID,int col,long row,long msg,long long param)
 	return TRUE;
 }
 
-int CUGCtrl::OnCheckbox(long ID, int col, long row, long msg, long long param)
+int OnCheckbox(long ID, int col, long row, long msg, long long param)
 {
-	CSetGridEditInProgressFlagInDataSource geipfids(this);// Destructor clears flag.
+	//CSetGridEditInProgressFlagInDataSource geipfids(this);// Destructor clears flag.
+	CXeGridDataSource* pDSrc = GetDataSource();
+	XeASSERT(pDSrc);
+	if (pDSrc) { pDSrc->SetGridEditInProgressFlag(); }
 
 	CUGCell cell;
 	GetCell(col, row, &cell);
 	int nCellTypeIndex = cell.GetCellType();
 	int nParam = cell.GetParam();
-
+	int result = TRUE;
 	if (msg == UGCT_CHECKBOXSET)
 	{
 		int nFieldType, nMaxLen;
-		if (GetDataSource()->FieldEditOK(col, row, nFieldType, nMaxLen))
+		if (pDSrc && pDSrc->FieldEditOK(col, row, nFieldType, nMaxLen))
 		{
 			std::wstring str = (param) ? L"x" : L"";
 			eGridAction action = eGridAction::REDRAW_ROW;
-			BOOL fEditOK = GetDataSource()->ProcessEdit(col, row, str.c_str(), action, Hwnd());
+			BOOL fEditOK = pDSrc->ProcessEdit(col, row, str.c_str(), action, Hwnd());
 			ProcessAfterEditAction(fEditOK, action, col, row);
-			return TRUE;
 		}
-		return FALSE;
+		else
+		{
+			result = FALSE;
+		}
 	}
-	return TRUE;
+	if (pDSrc) { pDSrc->SetGridEditInProgressFlag(FALSE); }
+	return result;
 }
 
-int CUGCtrl::OnDropList(long ID, int col, long row, long msg, long long param)
+int OnDropList(long ID, int col, long row, long msg, long long param)
 {
 	CUGCell cell;
 	GetCell(col, row, &cell);
@@ -7861,7 +8032,7 @@ Return:
 	TRUE - to allow the edit to start
 	FALSE - to prevent the edit from starting
 ****************************************************/
-int CUGCtrl::OnEditStart(int col, long row,HWND edit){
+int OnEditStart(int col, long row,HWND edit){
 	CXeGridDataSource* pDSrc = GetDataSource();
 	CGridTblInfo& tblinfo = pDSrc->GetGridTblInfo();
 
@@ -7966,7 +8137,7 @@ Return:
 	TRUE - to accept pressed key
 	FALSE - to do not accept the key
 ****************************************************/
-int CUGCtrl::OnEditVerify(int col,long row,HWND edit,UINT *vcKey){
+int OnEditVerify(int col,long row,HWND edit,UINT *vcKey){
 	if (m_nMaxLen > 0 && ::GetWindowTextLengthW(m_GI->m_editCtrl) >= m_nMaxLen)
 	{
 		if (*vcKey == VK_DELETE || *vcKey == VK_BACK || *vcKey == 0x7F)
@@ -7984,7 +8155,7 @@ OnEditKeyDown and OnEditKeyUp
 	A custom edit control will need to be developed
 	that sends these notifications.
 ****************************************************/
-int CUGCtrl::OnEditKeyDown(int col,long row,HWND edit,UINT *vcKey){
+int OnEditKeyDown(int col,long row,HWND edit,UINT *vcKey){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*edit);
@@ -7992,7 +8163,7 @@ int CUGCtrl::OnEditKeyDown(int col,long row,HWND edit,UINT *vcKey){
 	return TRUE;
 }
 
-int CUGCtrl::OnEditKeyUp(int col,long row,HWND edit,UINT *vcKey){
+int OnEditKeyUp(int col,long row,HWND edit,UINT *vcKey){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*edit);
@@ -8012,7 +8183,7 @@ Return:
 	TRUE - to allow the edit it proceede
 	FALSE - to force the user back to editing of that same cell
 ****************************************************/
-int CUGCtrl::OnEditFinish(int col, long row,HWND edit,LPCTSTR string,BOOL cancelFlag)
+int OnEditFinish(int col, long row,HWND edit,LPCTSTR string,BOOL cancelFlag)
 {
 	BOOL fRet;
 	while (TRUE)
@@ -8044,7 +8215,7 @@ int CUGCtrl::OnEditFinish(int col, long row,HWND edit,LPCTSTR string,BOOL cancel
 	return fRet;
 }
 
-void CUGCtrl::RefreshGrid(BOOL fHeaderAndTabOnly /*= FALSE*/)
+void RefreshGrid(BOOL fHeaderAndTabOnly = FALSE)
 {
 	if (!fHeaderAndTabOnly)
 		RedrawAll();
@@ -8053,7 +8224,10 @@ void CUGCtrl::RefreshGrid(BOOL fHeaderAndTabOnly /*= FALSE*/)
 		RedrawCell(0, -2);
 }
 
-void CUGCtrl::ProcessAfterEditAction(BOOL fEditOK, eGridAction& action, int col, long row)
+// Set callback function that is called after user has edited a cell.
+void SetOnEditFinishedCallback(OnEditFinishedCallbackFunc callback) { m_onEditFinishedCallback = callback; }
+
+void ProcessAfterEditAction(BOOL fEditOK, eGridAction& action, int col, long row)
 {
 	if (action == eGridAction::REDRAW_ROW && fEditOK)
 		RedrawRow(GetCurrentRow());
@@ -8074,7 +8248,7 @@ void CUGCtrl::ProcessAfterEditAction(BOOL fEditOK, eGridAction& action, int col,
 	}
 }
 
-void CUGCtrl::UpdateRowCount()
+void UpdateRowCount()
 {
 	SetNumberRows(GetGridNumRows(), TRUE);
 }
@@ -8091,7 +8265,7 @@ Return:
 	TRUE - allow the edit to continue
 	FALSE - to prevent the move, the edit will be stopped
 ****************************************************/
-int CUGCtrl::OnEditContinue(int oldcol,long oldrow,int* newcol,long* newrow){
+int OnEditContinue(int oldcol,long oldrow,int* newcol,long* newrow){
 	if (m_fCancelNext_OnEditContinue)
 	{
 		m_fCancelNext_OnEditContinue = FALSE;
@@ -8115,7 +8289,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnMenuCommand(int col,long row,int section,int item){
+void OnMenuCommand(int col,long row,int section,int item){
 	eGridAction action = eGridAction::NO_ACTION;
 	stGridNotifyData nfData = _GetMenuNotifyData(EGRIDOP::eGridNfMenuCmd, col, row, section, item);
 	switch (section)
@@ -8166,7 +8340,7 @@ void CUGCtrl::OnMenuCommand(int col,long row,int section,int item){
 	}
 }
 
-stGridNotifyData CUGCtrl::_GetMenuNotifyData(EGRIDOP eOp, int col, long row, int section, int menuCmdId)
+stGridNotifyData _GetMenuNotifyData(EGRIDOP eOp, int col, long row, int section, int menuCmdId)
 {
 	stGridNotifyData nfData = _GetNotifyData(eOp, col, row, section);
 	nfData.m_menuCmdId = menuCmdId;
@@ -8186,7 +8360,7 @@ Return:
 	TRUE - to allow menu to show
 	FALSE - to prevent the menu from poping up
 ****************************************************/
-int CUGCtrl::OnMenuStart(int col,long row,int section){
+int OnMenuStart(int col,long row,int section){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(row);
 
@@ -8225,7 +8399,13 @@ int CUGCtrl::OnMenuStart(int col,long row,int section){
 	return TRUE;
 }
 
-int CUGCtrl::GetSelection(BOOL* pfEntireRowsSelected /*= 0*/)
+void OnMenuEnd(int col, long row, int section) {};
+
+// sorting support
+BOOL SortingEnabled() { return FALSE; /*m_gridSize.m_fSortingEnabled;*/ }
+//void EnableSorting(BOOL fSortingEnabled = TRUE) { m_gridSize.m_fSortingEnabled = fSortingEnabled; }
+
+int GetSelection(BOOL* pfEntireRowsSelected = 0)
 {
 	// return number of cells selected and selection in member variables when selection is valid
 	// return 0 when invalid or no selection
@@ -8277,8 +8457,8 @@ int CUGCtrl::GetSelection(BOOL* pfEntireRowsSelected /*= 0*/)
 	return m_gridsel.m_nNumCellsSelected;
 }
 
-void CUGCtrl::SetSelection(BOOL fSelectAll /*= TRUE*/, int nStartCol /*= -1*/,
-	long nStartRow /*= -1*/, int nEndCol /*= -1*/, long nEndRow /*= -1*/)
+void SetSelection(BOOL fSelectAll = TRUE, int nStartCol = -1, long nStartRow = -1,
+	int nEndCol = -1, long nEndRow = -1)
 {
 	ClearSelections();
 	int lastcol = (GetNumberCols() - 1), lastrow = (GetNumberRows() - 2);
@@ -8315,7 +8495,7 @@ void CUGCtrl::SetSelection(BOOL fSelectAll /*= TRUE*/, int nStartCol /*= -1*/,
 	m_gridsel.m_nEndRow = nEndRow;
 }
 
-BOOL CUGCtrl::CopySelectionToClipboard(BOOL fTH /*= TRUE*/, BOOL fSH /*= FALSE*/)
+BOOL CopySelectionToClipboard(BOOL fTH = TRUE, BOOL fSH = FALSE)
 {
 	CXeWaitCursor wait(m_xeUI);
 	//CWaitCursor wait;
@@ -8338,8 +8518,7 @@ BOOL CUGCtrl::CopySelectionToClipboard(BOOL fTH /*= TRUE*/, BOOL fSH /*= FALSE*/
 	return TRUE;
 }
 
-BOOL CUGCtrl::CopySelectionToString(std::wstring& strSel, BOOL fTH /*= TRUE*/,
-	BOOL fSH /*= FALSE*/)
+BOOL CopySelectionToString(std::wstring& strSel, BOOL fTH = TRUE, BOOL fSH = FALSE)
 {
 	strSel = L"";
 	int temprow, numcells;
@@ -8392,7 +8571,7 @@ Params
 Return
 	<none>
 ****************************************************/
-int CUGCtrl::HideCurrentCell()
+int HideCurrentCell()
 {	
 	ClearSelections();
 
@@ -8420,7 +8599,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-//void CUGCtrl::OnScreenDCSetup(CDC *dc,CDC *db_dc,int section){
+//void OnScreenDCSetup(CDC *dc,CDC *db_dc,int section){
 //	UNREFERENCED_PARAMETER(*dc);
 //	UNREFERENCED_PARAMETER(*db_dc);
 //	UNREFERENCED_PARAMETER(section);
@@ -8440,7 +8619,7 @@ Return:
 	value equal to zero to identify that the cell1 and cell2 are equal
 	value greater than zero to identify that the cell1 comes after cell2
 ****************************************************/
-int CUGCtrl::OnSortEvaluate(CUGCell *cell1,CUGCell *cell2,int flags){
+int OnSortEvaluate(CUGCell *cell1,CUGCell *cell2,int flags){
 
 	// if one of the cells is NULL, do not compare its text
 	if ( cell1 == NULL && cell2 == NULL )
@@ -8491,7 +8670,7 @@ int CUGCtrl::OnSortEvaluate(CUGCell *cell1,CUGCell *cell2,int flags){
 	Return
 0:off  1:on  2:on-squared 3:on-cubed
 ****************************************************/
-int CUGCtrl::SetBallisticMode(int mode){	
+int SetBallisticMode(int mode){	
 
 	if(mode <0 || mode >3)
 		return UG_ERROR;
@@ -8507,7 +8686,7 @@ int CUGCtrl::SetBallisticMode(int mode){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetBallisticDelay(int milisec){
+int SetBallisticDelay(int milisec){
 
 	if(milisec < 0 || milisec > 32000)
 		return UG_ERROR;
@@ -8533,7 +8712,7 @@ SetKeyBallisticMode
 		UG_ERROR - invalid mode number
 		UG_SUCCESS - success
 ****************************************************/
-int CUGCtrl::SetBallisticKeyMode(int mode){
+int SetBallisticKeyMode(int mode){
 
 	if(mode <0 || mode > 1000)
 		return UG_ERROR;
@@ -8556,7 +8735,7 @@ SetKeyBallisticDelay
 		UG_ERROR - invalid time
 		UG_SUCCESS - success
 ****************************************************/
-int CUGCtrl::SetBallisticKeyDelay(int milisec){
+int SetBallisticKeyDelay(int milisec){
 
 	if(milisec < 0)
 		return UG_ERROR;
@@ -8572,7 +8751,7 @@ SetDoubleBufferMode
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::SetDoubleBufferMode(int mode)
+//int SetDoubleBufferMode(int mode)
 //{
 //	m_CUGGrid->SetDoubleBufferMode(mode);
 //
@@ -8594,7 +8773,7 @@ SetGridLayout
 		UG_SUCCESS - upon success, or
 		UG_ERROR - when layout mode cannot be changed
 ****************************************************/
-//int CUGCtrl::SetGridLayout( int layoutMode )
+//int SetGridLayout( int layoutMode )
 //{
 //	// Determine if the layout specified is same
 //	// as current layout
@@ -8635,7 +8814,7 @@ SetGridLayout
 ToggleLayout
 	is a helper function to the SetGridLayout
 ****************************************************/
-//void CUGCtrl::ToggleLayout( CWnd *pWnd )
+//void ToggleLayout( CWnd *pWnd )
 //{
 //	if ( pWnd != NULL )
 //	{
@@ -8666,7 +8845,7 @@ LockColumns
 		UG_SUCCESS	- success
 		UG_ERROR	- numCols was out of range
 ****************************************************/
-int CUGCtrl::LockColumns(int numCols){
+int LockColumns(int numCols){
 	
 	//do range checking
 	if(numCols <0 || numCols > m_GI->m_numberCols)
@@ -8708,7 +8887,7 @@ LockRows
 		UG_SUCCESS	- success
 		UG_ERROR	- numRows was out of range
 ****************************************************/
-int CUGCtrl::LockRows(int numRows){
+int LockRows(int numRows){
 	
 	//do range checking
 	if(numRows <0 || numRows > m_GI->m_numberRows)
@@ -8748,7 +8927,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnAdjustComponentSizes(RECT *grid,RECT *topHdg,RECT *sideHdg,
+void OnAdjustComponentSizes(RECT *grid,RECT *topHdg,RECT *sideHdg,
 		RECT *cnrBtn,RECT *vScroll,RECT *hScroll,RECT *tabs){
 	UNREFERENCED_PARAMETER(*grid);
 	UNREFERENCED_PARAMETER(*topHdg);
@@ -8768,7 +8947,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-//void CUGCtrl::OnDrawFocusRect(CDC *dc,RECT *rect){
+//void OnDrawFocusRect(CDC *dc,RECT *rect){
 //
 //	int col=GetCurrentCol();
 //	int row=GetCurrentRow();
@@ -8794,7 +8973,7 @@ Params:
 Return:
 	RGB value representing the color of choice
 ****************************************************/
-//COLORREF CUGCtrl::OnGetDefBackColor(int section){
+//COLORREF OnGetDefBackColor(int section){
 ////#pragma NOTE("SKMOD to support custom colors")
 //	if(section == UG_GRID)
 //		return m_xeUI->GetColor(CID::GrdPaperBg);
@@ -8812,7 +8991,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-//void CUGCtrl::DrawExcelFocusRect(CDC *dc,RECT *rect){
+//void DrawExcelFocusRect(CDC *dc,RECT *rect){
 //	
 //	BOOL innerRectOnly = FALSE;
 //	BOOL hideTop = FALSE;
@@ -9017,7 +9196,7 @@ Return
 	2			- OnStartMenu did not allow the menu to appear
 	3			- menu failed
 ****************************************************/
-int CUGCtrl::StartMenu(int col,long row,POINT *point,int section){
+int StartMenu(int col,long row,POINT *point,int section){
 
 	if(!m_GI->m_enablePopupMenu)
 		return UG_ERROR;
@@ -9044,8 +9223,8 @@ int CUGCtrl::StartMenu(int col,long row,POINT *point,int section){
 	Params
 	Return
 ****************************************************/
-//BOOL CUGCtrl::OnCommand(WPARAM wParam, LPARAM lParam) 
-LRESULT CUGCtrl::_OnWmCommand(WORD wSource, WORD wID, HWND sender)
+//BOOL OnCommand(WPARAM wParam, LPARAM lParam) 
+virtual LRESULT _OnWmCommand(WORD wSource, WORD wID, HWND sender) override
 {
 	//int ID = LOWORD(wParam);
 
@@ -9070,7 +9249,7 @@ SetMargin
 		UG_SUCCESS(0)	- success
 		UG_ERROR(1)		- error 
 ****************************************************/
-int CUGCtrl::SetMargin(int pixels){
+int SetMargin(int pixels){
 	
 	if(pixels < 0)
 		return UG_ERROR;
@@ -9085,7 +9264,7 @@ int CUGCtrl::SetMargin(int pixels){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::AddFont(LPCTSTR fontName,int height,int weight){
+//int AddFont(LPCTSTR fontName,int height,int weight){
 //
 //	return AddFont(height,0,0,0,weight,0,0,0,0,0,0,0,0,fontName);
 //}
@@ -9095,7 +9274,7 @@ int CUGCtrl::SetMargin(int pixels){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::AddFont(int height,int width,int escapement,int orientation, 
+//int AddFont(int height,int width,int escapement,int orientation, 
 //			int weight,BYTE italic,BYTE underLine,BYTE strikeOut, 
 //			BYTE charSet,BYTE outputPrecision,BYTE clipPrecision, 
 //			BYTE quality,BYTE pitchAndFamily,LPCTSTR fontName){
@@ -9132,7 +9311,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::AddFontIndirect( LOGFONT lgFont )
+//int AddFontIndirect( LOGFONT lgFont )
 //{
 //	int lfBaseSize = sizeof(LOGFONT) - LF_FACESIZE;
 //	//int count,loop;
@@ -9173,7 +9352,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::RemoveFont(int index){
+//int RemoveFont(int index){
 //
 //	//decrement the use count
 //	int count = m_fontList->GetParam(index) - 1;
@@ -9194,7 +9373,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::ClearAllFonts(){
+//int ClearAllFonts(){
 //
 //	m_fontList->EmptyList();
 //
@@ -9206,7 +9385,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//CFont * CUGCtrl::GetFont(int index){
+//CFont * GetFont(int index){
 //	
 //	return (CFont *)m_fontList->GetPointer(index);
 //}
@@ -9216,7 +9395,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::SetDefFont(CFont *font){
+//int SetDefFont(CFont *font){
 //
 //	if(font == NULL)
 //		return UG_ERROR;
@@ -9231,7 +9410,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::SetDefFont(int index){
+//int SetDefFont(int index){
 //
 //	CFont * font = (CFont *)m_fontList->GetPointer(index);
 //	if(font == NULL)
@@ -9247,7 +9426,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::AddBitmap( UINT resourceID,LPCTSTR resourceName ){
+//int AddBitmap( UINT resourceID,LPCTSTR resourceName ){
 //
 //	CBitmap * bitmap = new CBitmap();
 //	if(resourceName == NULL)
@@ -9263,7 +9442,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::AddBitmap( LPCTSTR fileName){
+//int AddBitmap( LPCTSTR fileName){
 //
 //	BITMAPFILEHEADER	m_bmfh;
 //	BITMAPINFOHEADER	m_bmih;
@@ -9333,7 +9512,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::RemoveBitmap(int index){
+//int RemoveBitmap(int index){
 //
 //	CBitmap* bitmap = (CBitmap*) m_bitmapList->GetPointer(index);
 //	if (NULL != bitmap) delete bitmap;
@@ -9346,7 +9525,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::ClearAllBitmaps(){
+//int ClearAllBitmaps(){
 //
 //	m_bitmapList->EmptyList();
 //
@@ -9357,7 +9536,7 @@ AddFontIndirect
 	Params
 	Return
 ****************************************************/
-//CBitmap* CUGCtrl::GetBitmap(int index){
+//CBitmap* GetBitmap(int index){
 //
 //	return (CBitmap *)m_bitmapList->GetPointer(index);
 //
@@ -9372,7 +9551,7 @@ Return:
 	TRUE - to allow for the swap to take place
 	FALSE - to disallow the swap
 ****************************************************/
-BOOL CUGCtrl::OnColSwapStart(int col){
+BOOL OnColSwapStart(int col){
 
 	UNREFERENCED_PARAMETER(col);
 	return TRUE;
@@ -9389,7 +9568,7 @@ Return:
 	TRUE - to allow for the swap to take place
 	FALSE - to disallow the swap
 ****************************************************/
-BOOL CUGCtrl::OnCanColSwap(int fromCol,int toCol){
+BOOL OnCanColSwap(int fromCol,int toCol){
 	
 	UNREFERENCED_PARAMETER(fromCol);
 	UNREFERENCED_PARAMETER(toCol);
@@ -9405,7 +9584,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-void CUGCtrl::OnColSwapped(int fromCol,int toCol){
+void OnColSwapped(int fromCol,int toCol){
 	UNREFERENCED_PARAMETER(fromCol);
 	UNREFERENCED_PARAMETER(toCol);
 }
@@ -9415,7 +9594,7 @@ void CUGCtrl::OnColSwapped(int fromCol,int toCol){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
+int MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 
 	//check the instert before flag		
 	if(insertBefore == FALSE)
@@ -9484,7 +9663,7 @@ int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 //to print the entire range, using the current
 //print scale and options
 //****************************************************/
-//int CUGCtrl::PrintInit(CDC * pDC, CPrintDialog* pPD, int startCol,long startRow,
+//int PrintInit(CDC * pDC, CPrintDialog* pPD, int startCol,long startRow,
 //			  int endCol,long endRow){
 //
 //	return m_CUGPrint->PrintInit(pDC,pPD,startCol,startRow,endCol,endRow);
@@ -9495,7 +9674,7 @@ int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 //	Params
 //	Return
 //****************************************************/
-//int CUGCtrl::PrintPage(CDC * pDC, int pageNum){
+//int PrintPage(CDC * pDC, int pageNum){
 //
 //	return m_CUGPrint->PrintPage(pDC,pageNum);
 //}
@@ -9514,7 +9693,7 @@ int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 //	UG_SUCCESS - success
 //	UG_ERROR - error
 //****************************************************/
-//int CUGCtrl::PrintSetMargin(int whichMargin,int size){
+//int PrintSetMargin(int whichMargin,int size){
 //	return m_CUGPrint->PrintSetMargin(whichMargin,size);
 //}
 //
@@ -9523,7 +9702,7 @@ int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 //	Params
 //	Return
 //****************************************************/
-//int CUGCtrl::PrintSetScale(int scale){
+//int PrintSetScale(int scale){
 //	
 //	return m_CUGPrint->PrintSetScale(scale);
 //}
@@ -9550,7 +9729,7 @@ int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 //	UG_SUCCESS - success
 //	UG_ERROR - error
 //****************************************************/
-//int CUGCtrl::PrintSetOption(int option,long param){
+//int PrintSetOption(int option,long param){
 //	
 //	return m_CUGPrint->PrintSetOption(option,param);
 //}
@@ -9560,7 +9739,7 @@ int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 //	Params
 //	Return
 //****************************************************/
-//int CUGCtrl::PrintGetOption(int option,long *param){
+//int PrintGetOption(int option,long *param){
 //	
 //	return m_CUGPrint->PrintGetOption(option,param);
 //}
@@ -9572,7 +9751,7 @@ int CUGCtrl::MoveColPosition(int fromCol,int toCol,BOOL insertBefore){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetNewTopHeadingClass(CUGTopHdg * topHeading){
+int SetNewTopHeadingClass(CUGTopHdg * topHeading){
 
 	if(m_CUGTopHdg != NULL)
 		delete m_CUGTopHdg;
@@ -9589,7 +9768,7 @@ int CUGCtrl::SetNewTopHeadingClass(CUGTopHdg * topHeading){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetNewSideHeadingClass(CUGSideHdg * sideHeading){
+int SetNewSideHeadingClass(CUGSideHdg * sideHeading){
 
 	if(m_CUGSideHdg!= NULL)
 		delete m_CUGSideHdg;
@@ -9606,7 +9785,7 @@ int CUGCtrl::SetNewSideHeadingClass(CUGSideHdg * sideHeading){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetNewGridClass(CUGGrid * grid){
+int SetNewGridClass(CUGGrid * grid){
 
 	if(m_CUGGrid != NULL)
 		delete m_CUGGrid;
@@ -9624,7 +9803,7 @@ int CUGCtrl::SetNewGridClass(CUGGrid * grid){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetNewMultiSelectClass(CUGMultiSelect * multiSelect){
+int SetNewMultiSelectClass(CUGMultiSelect * multiSelect){
 
 	if(m_GI->m_multiSelect != NULL)
 		delete m_GI->m_multiSelect;
@@ -9641,7 +9820,7 @@ int CUGCtrl::SetNewMultiSelectClass(CUGMultiSelect * multiSelect){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::SetNewTabClass(CUGTab * tab){
+//int SetNewTabClass(CUGTab * tab){
 //
 //	if(m_CUGTab != NULL)
 //		delete m_CUGTab;
@@ -9658,7 +9837,7 @@ int CUGCtrl::SetNewMultiSelectClass(CUGMultiSelect * multiSelect){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetNewVScrollClass(CUGVScroll * scroll){
+int SetNewVScrollClass(CUGVScroll * scroll){
 
 	if(m_CUGVScroll != NULL)
 		delete m_CUGVScroll;
@@ -9675,7 +9854,7 @@ int CUGCtrl::SetNewVScrollClass(CUGVScroll * scroll){
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::SetNewHScrollClass(CUGHScroll * scroll){
+int SetNewHScrollClass(CUGHScroll * scroll){
 
 	if(m_CUGHScroll != NULL)
 		delete m_CUGHScroll;
@@ -9692,7 +9871,7 @@ int CUGCtrl::SetNewHScrollClass(CUGHScroll * scroll){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::SetNewEditClass(CWnd * edit){
+//int SetNewEditClass(CWnd * edit){
 //
 //	m_GI->m_editCtrl = edit;
 //
@@ -9704,7 +9883,7 @@ int CUGCtrl::SetNewHScrollClass(CUGHScroll * scroll){
 	Params
 	Return
 ****************************************************/
-//CWnd * CUGCtrl::GetEditClass(){
+//CWnd * GetEditClass(){
 //	
 //	return m_GI->m_editCtrl;
 //
@@ -9715,7 +9894,7 @@ int CUGCtrl::SetNewHScrollClass(CUGHScroll * scroll){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::SetNewMaskedEditClass(CWnd * edit){
+//int SetNewMaskedEditClass(CWnd * edit){
 //
 //	m_GI->m_maskedEditCtrl = edit;
 //
@@ -9727,7 +9906,7 @@ int CUGCtrl::SetNewHScrollClass(CUGHScroll * scroll){
 	Params
 	Return
 ****************************************************/
-//CWnd * CUGCtrl::GetMaskedEditClass(){
+//CWnd * GetMaskedEditClass(){
 //	
 //	return m_GI->m_maskedEditCtrl;
 //
@@ -9738,7 +9917,7 @@ int CUGCtrl::SetNewHScrollClass(CUGHScroll * scroll){
 	Params
 	Return
 ****************************************************/
-//int CUGCtrl::SetTrackingWindow(CWnd *wnd){
+//int SetTrackingWindow(CWnd *wnd){
 //	
 //	if(wnd == NULL)
 //		return UG_ERROR;
@@ -9755,7 +9934,7 @@ Params
 	mode - 0 normal, 1 stay close
 Return
 ****************************************************/
-//int CUGCtrl::SetTrackingWindowMode(int mode){
+//int SetTrackingWindowMode(int mode){
 //	
 //	m_GI->m_trackingWndMode = mode;
 //	return UG_SUCCESS;
@@ -9765,7 +9944,7 @@ Return
 	Params
 	Return
 ****************************************************/
-//void CUGCtrl::MoveTrackingWindow(){
+//void MoveTrackingWindow(){
 //
 //	if(m_trackingWnd == NULL)
 //		return;
@@ -9855,7 +10034,7 @@ Params:
 Return:
 	<none>
 ****************************************************/
-//void CUGCtrl::OnTrackingWindowMoved(RECT *origRect,RECT *newRect){
+//void OnTrackingWindowMoved(RECT *origRect,RECT *newRect){
 //	UNREFERENCED_PARAMETER(*origRect);
 //	UNREFERENCED_PARAMETER(*newRect);
 //}
@@ -9865,7 +10044,7 @@ Return:
 	Params
 	Return
 ****************************************************/
-int CUGCtrl::EnableUpdate(BOOL state){
+int EnableUpdate(BOOL state){
 	
 	m_enableUpdate = state;
 
@@ -9882,7 +10061,7 @@ Return:
 	TRUE - to show the hint
 	FALSE - to prevent the hint from showing
 ****************************************************/
-int CUGCtrl::OnHint(int col,long row,int section, TOOLTIP_SETTINGS &ttSettings){
+int OnHint(int col,long row,int section, TOOLTIP_SETTINGS &ttSettings){
 	if (section == UG_SIDEHEADING)
 	{
 		return FALSE;
@@ -9917,7 +10096,7 @@ Return:
 	TRUE - to show the hint
 	FALSE - to prevent the hint from showing
 ****************************************************/
-int CUGCtrl::OnVScrollHint(long row, std::wstring*string){
+int OnVScrollHint(long row, std::wstring*string){
 	UNREFERENCED_PARAMETER(row);
 	UNREFERENCED_PARAMETER(*string);
 	return TRUE;
@@ -9933,13 +10112,13 @@ Return:
 	TRUE - to show the hint
 	FALSE - to prevent the hint from showing
 ****************************************************/
-int CUGCtrl::OnHScrollHint(int col, std::wstring*string){
+int OnHScrollHint(int col, std::wstring*string){
 	UNREFERENCED_PARAMETER(col);
 	UNREFERENCED_PARAMETER(*string);
 	return TRUE;
 }
 
-LRESULT CUGCtrl::MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT, HWND hWnd, int section)
+LRESULT MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT, HWND hWnd, int section)
 {
 	int col;
 	long row;
@@ -9998,7 +10177,7 @@ LRESULT CUGCtrl::MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT, HWND hWnd, int
 	return 0;
 }
 
-void CUGCtrl::HideTooltip()
+void HideTooltip()
 {
 	m_xeUI->HideTooltip();
 }
@@ -10011,7 +10190,7 @@ Params
 			2, user sizing is allowed, and updates are
 				performed in real-time
 ****************************************************/
-int CUGCtrl::SetUserSizingMode(int mode){
+int SetUserSizingMode(int mode){
 	
 	m_GI->m_userSizingMode = mode;
 
@@ -10019,7 +10198,7 @@ int CUGCtrl::SetUserSizingMode(int mode){
 }
 /***************************************************
 ****************************************************/
-int CUGCtrl::SetColDataSource(int col,int dataSrcIndex){
+int SetColDataSource(int col,int dataSrcIndex){
 
 	if(dataSrcIndex < 0 || dataSrcIndex > m_dataSrcListLength)
 		return UG_ERROR;
@@ -10032,7 +10211,7 @@ int CUGCtrl::SetColDataSource(int col,int dataSrcIndex){
 
 /***************************************************
 ****************************************************/
-int CUGCtrl::SetColDataSource(int col,CUGDataSource * dataSrc){
+int SetColDataSource(int col,CUGDataSource * dataSrc){
 	
 	if(col < 0 || col >= m_GI->m_numberCols)
 		return UG_ERROR;
@@ -10048,7 +10227,7 @@ int CUGCtrl::SetColDataSource(int col,CUGDataSource * dataSrc){
 	to let us change text of a control on a common dialog
 	(e.g. m_findReplaceDialog)
 ****************************************************/
-//BOOL CALLBACK CUGCtrl::ModifyDlgItemText(HWND hWnd, LPARAM lParam){
+//BOOL CALLBACK ModifyDlgItemText(HWND hWnd, LPARAM lParam){
 //	// if the text of the window passed in matches the
 //	// text of the first CSring in the array pair pointed
 //	// to by lParam, set the text to the 2nd CString 
@@ -10073,7 +10252,7 @@ int CUGCtrl::SetColDataSource(int col,CUGDataSource * dataSrc){
 	are discarded or saved, when the edit control 
 	loses focus.
 ****************************************************/
-int CUGCtrl::SetCancelMode( BOOL bCancel )
+int SetCancelMode( BOOL bCancel )
 {
 	m_GI->m_bCancelMode = bCancel ? TRUE : FALSE;
 
@@ -10086,12 +10265,12 @@ int CUGCtrl::SetCancelMode( BOOL bCancel )
 	control are discraded when the edit control
 	loses the focus to another window
 ****************************************************/
-BOOL CUGCtrl::GetCancelMode()
+BOOL GetCancelMode()
 {
 	return m_GI->m_bCancelMode;
 }
 
-//CXeScrollBarMarkers* CUGCtrl::GetScrollBarCtrl(int nBar) const
+//CXeScrollBarMarkers* GetScrollBarCtrl(int nBar) const
 //{
 ////#pragma NOTE("SKMOD to support CXeScrollBar")
 //	if(nBar==SB_HORZ)
@@ -10100,7 +10279,7 @@ BOOL CUGCtrl::GetCancelMode()
 //		return (CXeScrollBarMarkers*)m_CUGVScroll;
 //}
 
-//CSize CUGCtrl::CalcTextSize(CString& strText)
+//CSize CalcTextSize(CString& strText)
 //{
 //	CSize szTxt;
 //	CFont* pCellFont = m_xeUI->GetFont(EXE_FONT::eUI_Font);
@@ -10118,4 +10297,6 @@ BOOL CUGCtrl::GetCancelMode()
 //	ReleaseDC(pDC);
 //	return szTxt;
 //}
+
+};
 

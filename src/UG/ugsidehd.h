@@ -22,7 +22,7 @@
 *************************************************************************/
 #ifndef _ugsidehd_H_
 #define _ugsidehd_H_
-#include <memory>
+//#include <memory>
 #include "UGCell.h"
 #include "UGDrwHnt.h"
 

@@ -17,6 +17,7 @@ module;
 #include <d2d1.h>
 //#include <dwrite.h>
 #include <tchar.h>
+#include <memory>
 //namespace Gdiplus
 //{
 //	using std::min;

@@ -11,7 +11,7 @@
 #ifndef _ugvscrol_H_
 #define _ugvscrol_H_
 
-#include <list>
+//#include <list>
 import Xe.ScrollBar;
 class CUGGridInfo;
 

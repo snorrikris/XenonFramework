@@ -9,7 +9,8 @@
 #include "../os_minimal.h"
 #include <string>
 #include <d2d1.h>
-#include <dwrite.h>
+//#include <dwrite.h>
+#include <memory>
 
 import Xe.UIcolorsIF;
 #include "ugdefine.h"

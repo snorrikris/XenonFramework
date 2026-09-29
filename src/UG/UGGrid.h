@@ -23,8 +23,8 @@
 #define ON_WM_MOUSEWHEEL
 #endif
 
-#include <memory>
-#include "ugdrwhnt.h"
+//#include <memory>
+//#include "ugdrwhnt.h"
 
 import Xe.D2DWndBase;
 

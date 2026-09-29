@@ -48,7 +48,7 @@
 #ifndef _UGDLType_H_
 #define _UGDLType_H_
 
-#include <memory>
+//#include <memory>
 #include "UGCelTyp.h"
 import Xe.UIcolorsIF;
 import Xe.ListBoxExCommon;

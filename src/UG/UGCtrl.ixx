@@ -41,12 +41,11 @@ module;
 #endif // WS_EX_LAYOUTRTL
 
 
-//import Xe.UIcolorsIF;
 #include "ugdefine.h"
-#include "UGDtaSrc.h"
+//#include "UGDtaSrc.h"
 #include "ugptrlst.h"
-#include "UGCell.h"
-#include "UGCelTyp.h"
+//#include "UGCell.h"
+//#include "UGCelTyp.h"
 #include "ugdltype.h"
 #include "ugcbtype.h"
 #include "ugctarrw.h"
@@ -57,7 +56,7 @@ module;
 //#include "UGMemMan.h"
 //#include "UGDrwHnt.h"
 #include "UGMultiS.h"
-#include "uggdinfo.h"
+//#include "uggdinfo.h"
 #include "XeGridDefs.h"
 //#include "..\PPTooltip.h"
 //#include "..\XSuperTooltip.h"
@@ -108,6 +107,11 @@ import Xe.D2DWndBase;
 import Xe.DefData;
 
 //#include "UGCtrl.h"
+
+import Xe.UGDtaSrc;
+import Xe.UGCell;
+import Xe.UGCelTyp;
+import Xe.UGGridInfo;
 
 #define ID_EDIT_FIND                    0xE124
 

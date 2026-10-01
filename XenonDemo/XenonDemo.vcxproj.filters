@@ -36,12 +36,6 @@
     <ClInclude Include="..\src\UG\UGCBType.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UG\UGCell.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGCelTyp.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\UG\UGCTarrw.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
@@ -63,21 +57,6 @@
     <ClInclude Include="..\src\UG\UGDrwHnt.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UG\UGDtaSrc.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\ugformat.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\uggdinfo.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGGrid.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\ughscrol.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\UG\UGMemMan.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
@@ -87,16 +66,7 @@
     <ClInclude Include="..\src\UG\ugptrlst.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UG\ugsidehd.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\UG\ugstruct.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGTopHdg.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\ugvscrol.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
     <ClInclude Include="..\src\UG\XeGridDefs.h">
@@ -308,12 +278,6 @@
     <ClCompile Include="..\src\UG\UGCBType.cpp">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\UG\UGCell.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGCelTyp.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\UG\UGCTarrw.cpp">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
@@ -335,21 +299,6 @@
     <ClCompile Include="..\src\UG\UGDrwHnt.cpp">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\UG\UGDtaSrc.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\ugformat.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\uggdinfo.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGGrid.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\ughscrol.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\UG\UGMemMan.cpp">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
@@ -357,15 +306,6 @@
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UG\ugptrlst.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\ugsidehd.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGTopHdg.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\ugvscrol.cpp">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
     <ClCompile Include="MainWnd.ixx">
@@ -450,6 +390,30 @@
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UG\UGDtaSrc.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCelTyp.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCell.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGFormat.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGHscrol.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGSidehd.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGTopHdg.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGVscrol.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGGrid.ixx">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
   </ItemGroup>

@@ -12,9 +12,9 @@ module;
 #include <string>
 
 #include "ugdefine.h"
-#include "uggdinfo.h"
+//#include "uggdinfo.h"
 //#include "UGCTarrw.h"
-#include "UGCelTyp.h"
+//#include "UGCelTyp.h"
 
 // define cell type extensions
 #define UGCT_ARROWRIGHT		BIT4
@@ -29,6 +29,7 @@ module;
 export module Xe.UGCTarrw;
 
 import Xe.UIcolorsIF;
+import Xe.UGCelTyp;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

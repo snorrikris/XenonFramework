@@ -179,6 +179,7 @@
     <ClCompile Include="..\src\UG\UGCell.cpp" />
     <ClCompile Include="..\src\UG\UGCelTyp.cpp" />
     <ClCompile Include="..\src\UG\UGCTarrw.cpp" />
+    <ClCompile Include="..\src\UG\UGCTarrw.ixx" />
     <ClCompile Include="..\src\UG\UGCTprogress.cpp" />
     <ClCompile Include="..\src\UG\UGCtrl.ixx" />
     <ClCompile Include="..\src\UG\UGCTsarw.cpp" />
@@ -189,6 +190,7 @@
     <ClCompile Include="..\src\UG\UGEdit.cpp" />
     <ClCompile Include="..\src\UG\ugformat.cpp" />
     <ClCompile Include="..\src\UG\uggdinfo.cpp" />
+    <ClCompile Include="..\src\UG\uggdinfo.ixx" />
     <ClCompile Include="..\src\UG\UGGrid.cpp" />
     <ClCompile Include="..\src\UG\ughscrol.cpp" />
     <ClCompile Include="..\src\UG\UGMemMan.cpp" />

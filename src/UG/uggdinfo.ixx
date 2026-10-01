@@ -29,7 +29,8 @@ module;
 export module Xe.UGGridInfo;
 //#include "..\XSuperTooltip.h"
 //import Xe.XSuperTooltip;
-import Xe.UIcolorsIF;
+//import Xe.UIcolorsIF;
+import Xe.UGDtaSrc;
 
 export typedef std::function<int(long ID, int col, long row, long msg, long long param)> fnOnCellTypeNotify;
 export typedef std::function<int(int col, long row, CUGCell* cell)> fnGetCellIndirect;

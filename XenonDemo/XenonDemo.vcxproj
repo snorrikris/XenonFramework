@@ -187,6 +187,7 @@
     <ClCompile Include="..\src\UG\UGDLType.cpp" />
     <ClCompile Include="..\src\UG\UGDrwHnt.cpp" />
     <ClCompile Include="..\src\UG\UGDtaSrc.cpp" />
+    <ClCompile Include="..\src\UG\UGDtaSrc.ixx" />
     <ClCompile Include="..\src\UG\UGEdit.cpp" />
     <ClCompile Include="..\src\UG\ugformat.cpp" />
     <ClCompile Include="..\src\UG\uggdinfo.cpp" />

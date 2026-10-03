@@ -60,7 +60,13 @@ module;
 
 export module Xe.UGCelTyp;
 
+import Xe.UGCelTypIF;
 import Xe.UGCell;
+import Xe.UGGridInfoIF;
+
+import Xe.UIcolorsIF;
+
+import Xe.D2DRenderContext;
 
 #ifdef UG_ENABLE_PRINTING
 #undef UG_ENABLE_PRINTING
@@ -89,16 +95,12 @@ static char THIS_FILE[] = __FILE__;
 //#define WIDTHBYTES(bits)        ((unsigned)((bits+31)&(~31))/8)  /* ULONG aligned ! */
 //#endif
 
-import Xe.UIcolorsIF;
+//class CUGGridInfo;
 
-import Xe.D2DRenderContext;
-
-class CUGGridInfo;
-
-export class CUGCellType //: public CObject
+export class CUGCellType : public CUGCellTypeIF
 {
 public:
-	CUGGridInfo* m_GI = nullptr;
+	CUGGridInfoIF* m_GI = nullptr;
 
 protected:
 	BOOL	m_canTextEdit;		//allow inline editing
@@ -113,7 +115,7 @@ protected:
 	int		m_ID;				//ID which is the index in the celltype list
 	//once it is registered (see CUGCtrl::AddCellType)
 
-
+public:
 	/***************************************************
 	CUGCellType - Constructor
 		Setup the default properties for the cell type
@@ -197,7 +199,7 @@ protected:
 	****************************************************/
 	virtual LPCTSTR GetName()
 	{
-		return _T("Normal Cell Type (default)");
+		return L"Normal Cell Type (default)";
 	}
 
 	/***************************************************
@@ -914,7 +916,7 @@ protected:
 				stringLen = cell->GetTextLength();
 			}
 			else {
-				string = _T("");
+				string = L"";
 				stringLen = 0;
 			}
 		}
@@ -924,7 +926,7 @@ protected:
 				stringLen = lstrlen(string);
 			}
 			else {
-				string = _T("");
+				string = L"";
 				stringLen = 0;
 			}
 		}
@@ -949,7 +951,7 @@ protected:
 		//	pOldFont = dc->SelectObject(cell->GetFont());
 
 		//check the selected and current states
-		if (selected || (current && m_GI->m_currentCellMode & 2))
+		if (selected || (current && m_GI->CurrentCellMode() & 2))
 		{
 			//dc->SetTextColor(cell->GetHTextColor());
 			textcolor = cell->GetHTextColor();
@@ -1443,7 +1445,7 @@ protected:
 		ID2D1RenderTarget* pRT = pRctx->m_pCurrentRT;
 		//const LogGridPaintObj& PO = m_GI->m_xeUI->GetLogGridPaintObj();
 		long props = cell->GetPropertyFlags();
-		BOOL excelBdr = m_GI->m_enableExcelBorders;
+		BOOL excelBdr = m_GI->EnableExcelBorders();
 
 		if ((props & UGCELL_BORDERSTYLE_SET) == 0 && !excelBdr)
 		{
@@ -1598,7 +1600,7 @@ protected:
 			int loop;
 			//light color
 			//dc->SelectObject(PO.m_pThreeDLightPen);
-			for (loop = 0; loop < m_GI->m_threeDHeight; loop++)
+			for (loop = 0; loop < m_GI->ThreeDHeight(); loop++)
 			{
 				//dc->MoveTo(rect->left+loop,rect->bottom-loop-1);
 				//dc->LineTo(rect->left+loop,rect->top+loop);
@@ -1610,7 +1612,7 @@ protected:
 			}
 			//dark color
 			//dc->SelectObject(PO.m_pThreeDDarkPen);
-			for (loop = 0; loop < m_GI->m_threeDHeight; loop++)
+			for (loop = 0; loop < m_GI->ThreeDHeight(); loop++)
 			{
 				//dc->MoveTo(rect->right-loop-1,rect->top+loop);
 				//dc->LineTo(rect->right-loop-1,rect->bottom-loop-1);
@@ -1620,10 +1622,10 @@ protected:
 				pRT->DrawLine({ (float)(rect->right - loop - 1), (float)(rect->bottom - loop - 1) },
 					{ (float)(rect->left + loop), (float)(rect->bottom - loop - 1) }, pRctx->GetBrush(CID::GrdHdrBrd));
 			}
-			left = m_GI->m_threeDHeight;
-			top = m_GI->m_threeDHeight;
-			right = -m_GI->m_threeDHeight;
-			bottom = -m_GI->m_threeDHeight;
+			left   =  m_GI->ThreeDHeight();
+			top    =  m_GI->ThreeDHeight();
+			right  = -m_GI->ThreeDHeight();
+			bottom = -m_GI->ThreeDHeight();
 		}
 
 		rectout->left = rect->left + left;
@@ -1688,7 +1690,7 @@ protected:
 			//::DrawTextW(hDC, pStr, (int)len, rect, style );
 			//s.cx = rect.Width();
 			//s.cy = rect.Height();
-			s = m_GI->m_xeUI->GetTextSizeW(font, cell->GetText());
+			s = m_GI->GetXeUI()->GetTextSizeW(font, cell->GetText());
 		}
 
 		//use margins

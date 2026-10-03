@@ -33,10 +33,23 @@ module;
 #include <string>
 
 #include "ugdefine.h"
-#include "UGCelTyp.h"
-#include "uggdinfo.h"
-#include "XeGridDefs.h"
-#include "UGTopHdg.h"
+//#include "UGCelTyp.h"
+//#include "uggdinfo.h"
+//#include "UGTopHdg.h"
+
+//#include "ugcell.h"
+//#include "UgDrwHnt.h"
+
+export module Xe.UGTopHdg;
+
+import Xe.UIcolorsIF;
+
+import Xe.D2DWndBase;
+import Xe.FileTimeX;
+import Xe.UGGridInfoIF;
+import Xe.UGCelTyp;
+import Xe.UGDrawHint;
+import Xe.UGCell;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -44,20 +57,12 @@ module;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-import Xe.UIcolorsIF;
-
-#include "ugcell.h"
-#include "UgDrwHnt.h"
-
-import Xe.D2DWndBase;
-import Xe.FileTimeX;
-
-class CUGGridInfo;
+//class CUGGridInfo;
 
 export class CUGTopHdg : public CXeD2DWndBase
 {
 public:
-	CUGGridInfo* m_GI;		//pointer to the grid information
+	CUGGridInfoIF* m_GI;		//pointer to the grid information
 
 protected:
 	CUGCell			m_cell;		//general purpose cell class
@@ -106,7 +111,7 @@ public:
 	bool CreateTopHdg(DWORD dwStyle, const CRect& rect, HWND hParentWnd, UINT nID)
 	{
 		std::wstring classname = L"CUGTopHdg_WNDCLASS";
-		m_GI->m_xeUI->RegisterWindowClass(classname, D2DCtrl_WndProc);
+		m_GI->GetXeUI()->RegisterWindowClass(classname, D2DCtrl_WndProc);
 		dwStyle = dwStyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 		HWND hWnd = CreateD2DWindow(0, classname.c_str(), nullptr, dwStyle, rect, hParentWnd, nID);
 		return hWnd != 0;
@@ -125,7 +130,7 @@ protected:
 	//void OnPaint() 
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 	{
-		if (m_GI->m_paintMode == FALSE)
+		if (!m_GI->PaintMode())
 			return;
 
 		DrawCellsIntern(this);
@@ -147,21 +152,21 @@ protected:
 		ID2D1RenderTarget* pRT = pRctx->m_pCurrentRT;
 		CRect rect(0, 0, 0, 0), cellRect;
 		CUGCell cell;
-		CUGCellType* cellType;
+		CUGCellTypeIF* cellType;
 		//int dcID;
 		int xIndex, col;
 		long yIndex, row;
 
 		int blankRight = 0;
 
-		for (yIndex = (m_GI->m_numberTopHdgRows * -1); yIndex < 0; yIndex++)
+		for (yIndex = (m_GI->NumberTopHdgRows() * -1); yIndex < 0; yIndex++)
 		{
 			row = yIndex;
 
-			for (xIndex = 0; xIndex < m_GI->m_numberCols; xIndex++)
+			for (xIndex = 0; xIndex < m_GI->NumberCols(); xIndex++)
 			{
-				if (xIndex == m_GI->m_numLockCols)
-					xIndex = m_GI->m_leftCol;
+				if (xIndex == m_GI->NumLockCols())
+					xIndex = m_GI->LeftCol();
 				col = xIndex;
 				row = yIndex;
 
@@ -189,18 +194,18 @@ protected:
 							cellType->OnDraw(pRctx, EXE_FONT::eUI_FontBold, &cellRect, col, row, &cell, 0, 0);
 					}
 				}
-				if (rect.right > m_GI->m_gridWidth)
+				if (rect.right > m_GI->GridWidth())
 					break;
 			}
 			if (blankRight < rect.right)
 				blankRight = rect.right;
 		}
-		if (blankRight < m_GI->m_gridWidth)
+		if (blankRight < m_GI->GridWidth())
 		{
 			rect.top = 0;
-			rect.bottom = m_GI->m_topHdgHeight;
+			rect.bottom = m_GI->TopHdgHeight();
 			rect.left = blankRight;
-			rect.right = m_GI->m_gridWidth;
+			rect.right = m_GI->GridWidth();
 			// fill-in the area that is not covered by cells
 			// for some reason the next line calls CXeGrid::OnKillFocus ? ? ? ? ? WTF
 			pRT->FillRectangle(RectFfromRect(rect), GetBrush(CID::GrdHdrFillBg));
@@ -222,12 +227,12 @@ public:
 		//calc the last row height
 		//find the row
 		int yIndex, height = 0;
-		for (yIndex = -1; yIndex > (m_GI->m_numberTopHdgRows * -1); yIndex--)
+		for (yIndex = -1; yIndex > (m_GI->NumberTopHdgRows() * -1); yIndex--)
 		{
 			height += GetTHRowHeight(yIndex);
 		}
 
-		height = m_GI->m_topHdgHeight - height;
+		height = m_GI->TopHdgHeight() - height;
 
 		if (height < 0)
 			height = 0;
@@ -250,7 +255,7 @@ public:
 	*************************************************/
 	void Moved()
 	{
-		if (m_GI->m_leftCol == m_GI->m_lastLeftCol)
+		if (m_GI->LeftCol() == m_GI->LastLeftCol())
 			return;
 
 		//redraw the window
@@ -272,23 +277,23 @@ protected:
 	*****************************************************/
 	void CheckForUserResize(CPoint* point)
 	{
-		if (m_GI->m_userSizingMode == FALSE)
+		if (m_GI->UserSizingMode() == FALSE)
 			return;
 
 		//top heading column sizing
 		int width = 0;
-		for (int col = 0; col < m_GI->m_numberCols; col++)
+		for (int col = 0; col < m_GI->NumberCols(); col++)
 		{
-			if (col == m_GI->m_numLockCols && col < m_GI->m_leftCol)
-				col = m_GI->m_leftCol;
+			if (col == m_GI->NumLockCols() && col < m_GI->LeftCol())
+				col = m_GI->LeftCol();
 
 			width += m_GI->GetColWidth(col);
-			if (width > m_GI->m_gridWidth)
+			if (width > m_GI->GridWidth())
 				break;
 
 			if (point->x < width + 3 && point->x > width - 3)
 			{
-				if (m_GI->GetColWidth(col + 1) == 0 && (col + 1) < m_GI->m_numberCols)
+				if (m_GI->GetColWidth(col + 1) == 0 && (col + 1) < m_GI->NumberCols())
 					col++;
 
 				if (m_GI->OnCanSizeCol(col) == FALSE)
@@ -300,14 +305,14 @@ protected:
 				m_sizingStartSize = m_GI->GetColWidth(col);//original size
 				m_sizingStartPos = point->x;			//original start pos
 
-				SetCursor(m_GI->m_WEResizseCursor);
+				SetCursor(m_GI->WEResizseCursor());
 				return;
 			}
 		}
 
 		//top heading row sizing
-		int height = m_GI->m_topHdgHeight;
-		for (int row = 0; row < m_GI->m_numberTopHdgRows; row++)
+		int height = m_GI->TopHdgHeight();
+		for (int row = 0; row < m_GI->NumberTopHdgRows(); row++)
 		{
 			if (point->y < height + 3 && point->y > height - 3)
 			{
@@ -317,14 +322,14 @@ protected:
 				m_canSize = TRUE;
 				m_colOrRowSizing = 1;				// 0-col 1-row
 				m_sizingColRow = row;				//column/row being sized
-				m_sizingStartSize = m_GI->m_topHdgHeights[row];//original size
+				m_sizingStartSize = m_GI->GetTopHdgRowHeight(row);//original size
 				m_sizingStartPos = point->y;			//original start pos
-				m_sizingStartHeight = m_GI->m_topHdgHeight;
+				m_sizingStartHeight = m_GI->TopHdgHeight();
 
-				SetCursor(m_GI->m_NSResizseCursor);
+				SetCursor(m_GI->NSResizseCursor());
 				return;
 			}
-			height -= m_GI->m_topHdgHeights[row];
+			height -= m_GI->GetTopHdgRowHeight(row);
 		}
 
 		if (m_canSize)
@@ -355,7 +360,7 @@ protected:
 
 		//check to see if the mouse is over a cell separation 
 		//if the mouse is not currently sizing
-		if (m_isSizing == FALSE && (nFlags & MK_LBUTTON) == 0 && m_GI->m_userSizingMode > 0)
+		if (m_isSizing == FALSE && (nFlags & MK_LBUTTON) == 0 && m_GI->UserSizingMode() > 0)
 		{
 			//check for user resize position
 			CheckForUserResize(&point);
@@ -373,7 +378,7 @@ protected:
 				// this notification will only be sent to the visible rows.
 				for (int nIndex = m_GI->GetTopRow(); nIndex < m_GI->GetBottomRow(); nIndex++)
 				{
-					CUGCellType* pCellType = m_GI->GetCellTypeColRow(m_sizingColRow, nIndex);
+					CUGCellTypeIF* pCellType = m_GI->GetCellTypeColRow(m_sizingColRow, nIndex);
 					if (pCellType != NULL)
 					{
 						pCellType->OnChangingCellWidth(m_sizingColRow, nIndex, &width);
@@ -383,7 +388,7 @@ protected:
 				m_GI->OnColSizing(m_sizingColRow, &width);
 
 				//just draw a focus rect
-				if (m_GI->m_userSizingMode == 1)
+				if (m_GI->UserSizingMode() == 1)
 				{
 					m_GI->SetColWidth(m_sizingColRow, width, true);
 					Update();
@@ -391,7 +396,7 @@ protected:
 					//CDC* dc = m_GI->m_gridWnd->GetDC();
 					//dc->DrawFocusRect(&m_focusRect);
 					m_focusRect.top = 0;
-					m_focusRect.bottom = m_GI->m_gridHeight;
+					m_focusRect.bottom = m_GI->GridHeight();
 					m_focusRect.left = point.x - 1;
 					m_focusRect.right = point.x + 1;
 					//dc->DrawFocusRect(&m_focusRect);
@@ -409,7 +414,7 @@ protected:
 				int height = m_sizingStartSize + (point.y - m_sizingStartPos);
 				if (height < 0)
 					height = 0;
-				m_GI->m_topHdgHeights[m_sizingColRow] = height;
+				m_GI->SetTopHdgRowHeight(m_sizingColRow, height);
 
 				height = m_sizingStartHeight + (point.y - m_sizingStartPos);
 				if (height < 0)
@@ -417,18 +422,18 @@ protected:
 
 				if (m_GI->OnTopHdgSizing(&height) == TRUE)
 				{
-					m_GI->m_topHdgHeight = height;
+					m_GI->SetTopHdgHeight(height);
 					m_GI->AdjustComponentSizes();
 				}
 			}
 		}
 		//check for column swapping
-		else if (m_GI->m_enableColSwapping && m_swapStartCol >= 0)
+		else if (m_GI->EnableColSwapping() && m_swapStartCol >= 0)
 		{
 			MSG msg;
 
 			//while column swapping enable mouse scrolling of the grid
-			if (point.x < 0 || point.x > m_GI->m_gridWidth)
+			if (point.x < 0 || point.x > m_GI->GridWidth())
 			{
 				//remove the focus rectangle
 				//CDC* dc = m_GI->m_gridWnd->GetDC();
@@ -441,7 +446,7 @@ protected:
 				{
 					if (point.x < 0)
 						m_GI->MoveLeftCol(UG_LINEUP);
-					else if (point.x > m_GI->m_gridWidth)
+					else if (point.x > m_GI->GridWidth())
 						m_GI->MoveLeftCol(UG_LINEDOWN);
 
 					//check for messages, if ther are none then scroll some more
@@ -476,8 +481,8 @@ protected:
 						rect.left = rect.right;
 					}
 
-					if (col > m_GI->m_numberCols)
-						col = m_GI->m_numberCols;
+					if (col > m_GI->NumberCols())
+						col = m_GI->NumberCols();
 
 					//the firt time this is called redraw the top heading
 					//so that the startswap cell is updated
@@ -495,7 +500,7 @@ protected:
 					//CDC* dc = m_GI->m_gridWnd->GetDC();
 					//dc->DrawFocusRect(&m_focusRect);
 					m_focusRect.top = 0;
-					m_focusRect.bottom = m_GI->m_gridHeight;
+					m_focusRect.bottom = m_GI->GridHeight();
 					m_focusRect.left = rect.left;
 					m_focusRect.right = rect.left + 2;
 					//dc->DrawFocusRect(&m_focusRect);
@@ -538,8 +543,8 @@ protected:
 
 		UNREFERENCED_PARAMETER(nFlags);
 
-		if (GetFocus() != m_GI->m_gridWnd)
-			::SetFocus(m_GI->m_gridWnd);
+		if (GetFocus() != m_GI->GridWnd())
+			::SetFocus(m_GI->GridWnd());
 
 		if (m_canSize)
 		{
@@ -593,7 +598,7 @@ protected:
 				// this notification will only be sent to the visible rows.
 				for (int nIndex = m_GI->GetTopRow(); nIndex < m_GI->GetBottomRow(); nIndex++)
 				{
-					CUGCellType* pCellType = m_GI->GetCellTypeColRow(m_sizingColRow, nIndex);
+					CUGCellTypeIF* pCellType = m_GI->GetCellTypeColRow(m_sizingColRow, nIndex);
 					if (pCellType != NULL)
 					{
 						pCellType->OnChangedCellWidth(m_sizingColRow, nIndex, &width);
@@ -605,7 +610,7 @@ protected:
 			}
 			else
 			{
-				m_GI->OnTopHdgSized(&m_GI->m_topHdgHeight);
+				m_GI->OnTopHdgSized(m_GI->TopHdgHeight());
 			}
 			m_isSizing = FALSE;
 
@@ -638,7 +643,7 @@ protected:
 		}
 
 		//column swapping
-		if (m_GI->m_enableColSwapping && m_swapStartCol >= 0)
+		if (m_GI->EnableColSwapping() && m_swapStartCol >= 0)
 		{
 			int end = m_swapEndCol;
 			if (m_swapStartCol < end) // this needs to be done since the internal
@@ -706,7 +711,7 @@ protected:
 		if (m_canSize)
 		{
 			//check to see if the column should be BestFit
-			if (m_GI->m_userBestSizeFlag)
+			if (m_GI->UserBestSizeFlag())
 			{
 				m_ftxLastBestFit.SetUTCnow();
 				m_GI->BestFit(m_sizingColRow, m_sizingColRow, 20, UG_BESTFIT_TOPHEADINGS);
@@ -718,7 +723,7 @@ protected:
 				// this notification will only be sent to the visible rows.
 				for (int nIndex = m_GI->GetTopRow(); nIndex < m_GI->GetBottomRow(); nIndex++)
 				{
-					CUGCellType* pCellType = m_GI->GetCellTypeColRow(m_sizingColRow, nIndex);
+					CUGCellTypeIF* pCellType = m_GI->GetCellTypeColRow(m_sizingColRow, nIndex);
 					if (pCellType != NULL)
 					{
 						pCellType->OnChangedCellWidth(m_sizingColRow, nIndex, &width);
@@ -761,8 +766,8 @@ protected:
 
 		UNREFERENCED_PARAMETER(nFlags);
 
-		if (GetFocus() != m_GI->m_gridWnd)
-			::SetFocus(m_GI->m_gridWnd);
+		if (GetFocus() != m_GI->GridWnd())
+			::SetFocus(m_GI->GridWnd());
 
 		if (GetCellFromPoint(&point, &col, &row, &rect) == UG_SUCCESS)
 		{
@@ -772,10 +777,10 @@ protected:
 			m_GI->OnTH_RClicked(col, row, 1, &rect, &point, processed);
 		}
 
-		if (m_GI->m_enablePopupMenu)
+		if (m_GI->IsEnablePopupMenu())
 		{
 			ClientToScreen(&point);
-			m_GI->StartMenu(col, row, &point, UG_TOPHEADING);
+			m_GI->StartMenu(col, row, point, UG_TOPHEADING);
 		}
 		return 0;
 	}
@@ -832,9 +837,9 @@ protected:
 			return 1;
 		}
 		else if (m_colOrRowSizing == 0)
-			SetCursor(m_GI->m_WEResizseCursor);
+			SetCursor(m_GI->WEResizseCursor());
 		else
-			SetCursor(m_GI->m_NSResizseCursor);
+			SetCursor(m_GI->NSResizseCursor());
 
 		return 1;
 
@@ -899,10 +904,10 @@ public:
 		rect->left = 0;
 		rect->top = 0;
 		rect->right = 0;
-		rect->bottom = m_GI->m_topHdgHeight;
+		rect->bottom = m_GI->TopHdgHeight();
 
 		//if the specified cell is within a join then find the joined range
-		if (m_GI->m_enableJoins)
+		if (m_GI->EnableJoins())
 		{
 			if (GetJoinRange(&startCol, &startRow, &endCol, &endRow) == UG_SUCCESS)
 			{
@@ -912,16 +917,16 @@ public:
 		}
 
 		//find the col
-		if (startCol >= m_GI->m_numLockCols)	//if the col is not within the lock region
+		if (startCol >= m_GI->NumLockCols())	//if the col is not within the lock region
 		{
-			rect->left = m_GI->m_lockColWidth;
-			rect->right = m_GI->m_lockColWidth;
+			rect->left = m_GI->LockColWidth();
+			rect->right = m_GI->LockColWidth();
 		}
 
-		for (xIndex = 0; xIndex < m_GI->m_numberCols; xIndex++)
+		for (xIndex = 0; xIndex < m_GI->NumberCols(); xIndex++)
 		{
-			if (xIndex == m_GI->m_numLockCols)
-				xIndex = m_GI->m_leftCol;
+			if (xIndex == m_GI->NumLockCols())
+				xIndex = m_GI->LeftCol();
 
 			if (xIndex == startCol)
 				rect->left = width;
@@ -936,7 +941,7 @@ public:
 		}
 
 		//find the row
-		for (yIndex = (m_GI->m_numberTopHdgRows * -1); yIndex < 0; yIndex++)
+		for (yIndex = (m_GI->NumberTopHdgRows() * -1); yIndex < 0; yIndex++)
 		{
 			if (yIndex == startRow)
 				rect->top = height;
@@ -977,10 +982,10 @@ public:
 		rect->bottom = 0;
 
 		//find the col
-		for (xIndex = 0; xIndex < m_GI->m_numberCols; xIndex++)
+		for (xIndex = 0; xIndex < m_GI->NumberCols(); xIndex++)
 		{
-			if (xIndex == m_GI->m_numLockCols)
-				xIndex = m_GI->m_leftCol;
+			if (xIndex == m_GI->NumLockCols())
+				xIndex = m_GI->LeftCol();
 
 			rect->right += m_GI->GetColWidth(xIndex);
 
@@ -994,7 +999,7 @@ public:
 		}
 
 		//find the row
-		for (yIndex = -m_GI->m_numberTopHdgRows; yIndex < 0; yIndex++)
+		for (yIndex = -m_GI->NumberTopHdgRows(); yIndex < 0; yIndex++)
 		{
 			rect->bottom += GetTHRowHeight(yIndex);
 
@@ -1046,7 +1051,7 @@ public:
 	*****************************************************/
 	int GetJoinRange(int* col, int* row, int* endCol, int* endRow)
 	{
-		if (m_GI->m_enableJoins == FALSE)
+		if (m_GI->EnableJoins() == FALSE)
 			return UG_ERROR;
 
 		int startCol;
@@ -1090,10 +1095,10 @@ public:
 		//translate the row number into a 0 based positive index
 		row = (row * -1) - 1;
 
-		if (row <0 || row > m_GI->m_numberTopHdgRows)
+		if (row <0 || row > m_GI->NumberTopHdgRows())
 			return 0;
 
-		return m_GI->m_topHdgHeights[row];
+		return m_GI->GetTopHdgRowHeight(row);
 	}
 
 	/************************************************

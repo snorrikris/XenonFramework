@@ -26,6 +26,8 @@ module;
 
 export module Xe.UGFormat;
 
+//import Xe.UGCell;
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE

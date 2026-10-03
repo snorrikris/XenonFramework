@@ -5,7 +5,6 @@ module;
 #include <functional>
 #include "GridDefs.h"
 //#include "UG\UGCell.h"
-#include "UG\XeGridDefs.h"
 
 export module Xe.GridDataSource;
 
@@ -18,6 +17,7 @@ import Xe.mfc_types;
 //import Xe.LogDefs;
 import Xe.DefData;
 import Xe.UGCell;
+import Xe.UGGridInfoIF;
 
 export constexpr auto UG_ALIGNLEFT = 1;
 export constexpr auto UG_ALIGNRIGHT = 2;

@@ -16,6 +16,7 @@ module;
 		The CUGCtrl class holds an array of these
 		classes where each sheet has one entry.
 *************************************************************************/
+#include "../os_minimal.h"
 #include <functional>
 //#include "UGDtaSrc.h"
 //#include "UGCell.h"
@@ -24,14 +25,23 @@ module;
 //#include "ugptrlst.h"
 //#include "UGCelTyp.h"
 //#include "UGDrwHnt.h"
-//#include "XeGridDefs.h"
+//#include "..\XSuperTooltip.h"
+#include "ugdefine.h"
 
 export module Xe.UGGridInfo;
-//#include "..\XSuperTooltip.h"
+
 //import Xe.XSuperTooltip;
-//import Xe.UIcolorsIF;
+import Xe.UIcolorsIF;
+import Xe.UGGridInfoIF;
 import Xe.UGDtaSrc;
 import Xe.UGCell;
+import Xe.UGCelTyp;
+import Xe.UGDrawHint;
+import Xe.UGCell;
+import Xe.UGDtaSrc;
+import Xe.UGMem;
+import Xe.UGMultiSelect;
+import Xe.UGPtrList;
 
 export typedef std::function<int(long ID, int col, long row, long msg, long long param)> fnOnCellTypeNotify;
 export typedef std::function<int(int col, long row, CUGCell* cell)> fnGetCellIndirect;
@@ -58,7 +68,7 @@ export typedef std::function<int(CUGCell* cell1, CUGCell* cell2, int flags)> fnO
 //export typedef std::function<void(CDC* dc, CDC* db_dc, int section)> fnOnScreenDCSetup;
 export typedef std::function<long()> fnGetNumberRows;
 export typedef std::function<void()> fnAdjustComponentSizes;
-export typedef std::function<int(int col, long row, POINT* point, int section)> fnStartMenu;
+export typedef std::function<int(int col, long row, CPoint point, int section)> fnStartMenu;
 //export typedef std::function<()> fn;
 //export typedef std::function<()> fn;
 //export typedef std::function<()> fn;
@@ -88,8 +98,8 @@ export typedef std::function<int()> fnOnCanSizeTopHdg;
 export typedef std::function<int()> fnOnCanSizeSideHdg;
 export typedef std::function<int(int* height)> fnOnTopHdgSizing;
 export typedef std::function<int(int* width)> fnOnSideHdgSizing;
-export typedef std::function<int(int* height)> fnOnTopHdgSized;
-export typedef std::function<int(int* width)> fnOnSideHdgSized;
+export typedef std::function<int(int height)> fnOnTopHdgSized;
+export typedef std::function<int(int width)> fnOnSideHdgSized;
 export typedef std::function<void()> fnOnColRowSizeFinished;
 export typedef std::function<int(int height)> fnSetTH_Height;
 export typedef std::function<int(int width)> fnSetSH_Width;
@@ -121,17 +131,17 @@ export typedef std::function<int(long row, int height)> fnSetRowHeight;
 export typedef std::function<void(UINT nSBCode, UINT nPos)> fnHScroll;
 
 
-export struct UGCOLINFO
-{
-	int				width;
-	CUGDataSource* dataSource;
-	CUGCell* colDefault;
-	int				colTranslation;
-
-};
+//export struct UGCOLINFO
+//{
+//	int				width;
+//	CUGDataSource* dataSource;
+//	CUGCell* colDefault;
+//	int				colTranslation;
+//
+//};
 //class CXeUIcolorsIF;
 
-export class CUGGridInfo //: public CObject
+export class CUGGridInfo : public CUGGridInfoIF
 {
 public:
 	CUGGridInfo()
@@ -426,7 +436,7 @@ public:
 
 	//cursors
 	// Get the 'app' cursor from s_xeUI
-	HCURSOR GetDefaultCursor()
+	virtual HCURSOR GetDefaultCursor() const override
 	{
 		return m_xeUI->GetAppCursor();
 	}
@@ -468,7 +478,7 @@ public:
 	//BOOL m_findDialogStarted = FALSE;
 	//BOOL m_findInAllCols = TRUE;
 
-	int GetColWidth(int col, int* width)
+	int GetColWidth(int col, int* width) const
 	{
 		if (col >= m_numberCols)
 			return UG_ERROR;
@@ -490,7 +500,7 @@ public:
 		return UG_SUCCESS;
 	}
 
-	int GetColWidth(int col)
+	virtual int GetColWidth(int col) const override
 	{
 		int w;
 		if (GetColWidth(col, &w) == UG_SUCCESS)
@@ -500,14 +510,13 @@ public:
 		return 0;
 	}
 
-	int GetNumberCols() { return m_numberCols; }
-
-	int	GetCurrentCol() { return m_currentCol; }
-	long GetCurrentRow() { return m_currentRow; }
-	int	GetLeftCol() { return m_leftCol; }
-	int	GetRightCol() { return m_rightCol; }
-	long GetTopRow() { return m_topRow; }
-	long GetBottomRow() { return m_bottomRow; }
+	virtual int GetNumberCols() const override { return m_numberCols; }
+	virtual int	GetCurrentCol() const override { return m_currentCol; }
+	virtual long GetCurrentRow() const override { return m_currentRow; }
+	virtual int	GetLeftCol() const override { return m_leftCol; }
+	virtual int	GetRightCol() const override { return m_rightCol; }
+	virtual long GetTopRow() const override { return m_topRow; }
+	virtual long GetBottomRow() const override { return m_bottomRow; }
 
 	int	SetTH_HeightValue(int height) {
 
@@ -533,90 +542,509 @@ public:
 		return UG_SUCCESS;
 	}
 
+#pragma region _fn_pointers_Set_by_UGCtrl
 	// Callback functions into UGCtrl
-	fnOnCellTypeNotify OnCellTypeNotify = nullptr;
-	fnGetCellIndirect GetCellIndirect = nullptr;
-	fnGetCellType GetCellType = nullptr;
-	fnGetCellTypeColRow GetCellTypeColRow = nullptr;
-	fnGetRowHeight GetRowHeight = nullptr;
-	fnGetNonUniformRowHeight GetNonUniformRowHeight = nullptr;
-	fnSetCell SetCell = nullptr;
-	fnRedrawAll RedrawAll = nullptr;
-	fnRedrawCell RedrawCell = nullptr;
-	fnGetCellRect GetCellRect = nullptr;
-	fnGetRangeRect GetRangeRect = nullptr;
-	fnOnKillFocusNewWnd OnKillFocusNewWnd = nullptr;
-	fnOnSetFocus OnSetFocus = nullptr;
-	fnOnKillFocus OnKillFocus = nullptr;
-	fnEditCtrlFinished EditCtrlFinished = nullptr;
-	fnGotoCell GotoCell = nullptr;
-	fnGotoCol GotoCol = nullptr;
-	fnGotoRow GotoRow = nullptr;
-	fnOnEditVerify OnEditVerify = nullptr;
-	fnGetCellFromPointColRow GetCellFromPointColRow = nullptr;
-	fnGetCellFromPoint GetCellFromPoint = nullptr;
-	fnOnSortEvaluate OnSortEvaluate = nullptr;
-	//fnOnScreenDCSetup OnScreenDCSetup = nullptr;
-	fnGetNumberRows GetNumberRows = nullptr;
-	fnAdjustComponentSizes AdjustComponentSizes = nullptr;
-	fnStartMenu StartMenu = nullptr;
-	fnOnLClicked OnLClicked = nullptr;
-	fnOnRClicked OnRClicked = nullptr;
-	fnOnDClicked OnDClicked = nullptr;
-	fnOnMouseMove OnMouseMove = nullptr;
-	fnOnTH_LClicked OnTH_LClicked = nullptr;
-	fnOnTH_RClicked OnTH_RClicked = nullptr;
-	fnOnTH_DClicked OnTH_DClicked = nullptr;
-	fnOnSH_LClicked OnSH_LClicked = nullptr;
-	fnOnSH_RClicked OnSH_RClicked = nullptr;
-	fnOnSH_DClicked OnSH_DClicked = nullptr;
-	fnOnCB_LClicked OnCB_LClicked = nullptr;
-	fnOnCB_RClicked OnCB_RClicked = nullptr;
-	fnOnCB_DClicked OnCB_DClicked = nullptr;
-	fnOnKeyDown OnKeyDown = nullptr;
-	fnOnKeyUp OnKeyUp = nullptr;
-	fnOnCharDown OnCharDown = nullptr;
-	fnOnCanSizeCol OnCanSizeCol = nullptr;
-	fnOnColSizing OnColSizing = nullptr;
-	fnOnColSized OnColSized = nullptr;
-	fnOnCanSizeRow OnCanSizeRow = nullptr;
-	fnOnRowSizing OnRowSizing = nullptr;
-	fnOnRowSized OnRowSized = nullptr;
-	fnOnCanSizeTopHdg OnCanSizeTopHdg = nullptr;
-	fnOnCanSizeSideHdg OnCanSizeSideHdg = nullptr;
-	fnOnTopHdgSizing OnTopHdgSizing = nullptr;
-	fnOnSideHdgSizing OnSideHdgSizing = nullptr;
-	fnOnTopHdgSized OnTopHdgSized = nullptr;
-	fnOnSideHdgSized OnSideHdgSized = nullptr;
-	fnOnColRowSizeFinished OnColRowSizeFinished = nullptr;
-	fnSetTH_Height SetTH_Height = nullptr;
-	fnSetSH_Width SetSH_Width = nullptr;
-	fnOnHint OnHint = nullptr;
-	fnMoveTopRow MoveTopRow = nullptr;
-	fnSetTopRow SetTopRow = nullptr;
-	fnMoveCurrentRow MoveCurrentRow = nullptr;
-	fnSetLeftCol SetLeftCol = nullptr;
-	fnMoveLeftCol MoveLeftCol = nullptr;
-	fnMoveCurrentCol MoveCurrentCol = nullptr;
-	fnOnViewMoved OnViewMoved = nullptr;
-	fnGetJoinStartCell GetJoinStartCell = nullptr;
-	int GetJoinStartCellColRow(int* col, long* row)
+	fnOnCellTypeNotify _fn_OnCellTypeNotify = nullptr;
+	fnGetCellIndirect _fn_GetCellIndirect = nullptr;
+	fnGetCellType _fn_GetCellType = nullptr;
+	fnGetCellTypeColRow _fn_GetCellTypeColRow = nullptr;
+	fnGetRowHeight _fn_GetRowHeight = nullptr;
+	fnGetNonUniformRowHeight _fn_GetNonUniformRowHeight = nullptr;
+	fnSetCell _fn_SetCell = nullptr;
+	fnRedrawAll _fn_RedrawAll = nullptr;
+	fnRedrawCell _fn_RedrawCell = nullptr;
+	fnGetCellRect _fn_GetCellRect = nullptr;
+	fnGetRangeRect _fn_GetRangeRect = nullptr;
+	fnOnKillFocusNewWnd _fn_OnKillFocusNewWnd = nullptr;
+	fnOnSetFocus _fn_OnSetFocus = nullptr;
+	fnOnKillFocus _fn_OnKillFocus = nullptr;
+	fnEditCtrlFinished _fn_EditCtrlFinished = nullptr;
+	fnGotoCell _fn_GotoCell = nullptr;
+	fnGotoCol _fn_GotoCol = nullptr;
+	fnGotoRow _fn_GotoRow = nullptr;
+	fnOnEditVerify _fn_OnEditVerify = nullptr;
+	fnGetCellFromPointColRow _fn_GetCellFromPointColRow = nullptr;
+	fnGetCellFromPoint _fn_GetCellFromPoint = nullptr;
+	fnOnSortEvaluate _fn_OnSortEvaluate = nullptr;
+	fnGetNumberRows _fn_GetNumberRows = nullptr;
+	fnAdjustComponentSizes _fn_AdjustComponentSizes = nullptr;
+	fnStartMenu _fn_StartMenu = nullptr;
+	fnOnLClicked _fn_OnLClicked = nullptr;
+	fnOnRClicked _fn_OnRClicked = nullptr;
+	fnOnDClicked _fn_OnDClicked = nullptr;
+	fnOnMouseMove _fn_OnMouseMove = nullptr;
+	fnOnTH_LClicked _fn_OnTH_LClicked = nullptr;
+	fnOnTH_RClicked _fn_OnTH_RClicked = nullptr;
+	fnOnTH_DClicked _fn_OnTH_DClicked = nullptr;
+	fnOnSH_LClicked _fn_OnSH_LClicked = nullptr;
+	fnOnSH_RClicked _fn_OnSH_RClicked = nullptr;
+	fnOnSH_DClicked _fn_OnSH_DClicked = nullptr;
+	fnOnCB_LClicked _fn_OnCB_LClicked = nullptr;
+	fnOnCB_RClicked _fn_OnCB_RClicked = nullptr;
+	fnOnCB_DClicked _fn_OnCB_DClicked = nullptr;
+	fnOnKeyDown _fn_OnKeyDown = nullptr;
+	fnOnKeyUp _fn_OnKeyUp = nullptr;
+	fnOnCharDown _fn_OnCharDown = nullptr;
+	fnOnCanSizeCol _fn_OnCanSizeCol = nullptr;
+	fnOnColSizing _fn_OnColSizing = nullptr;
+	fnOnColSized _fn_OnColSized = nullptr;
+	fnOnCanSizeRow _fn_OnCanSizeRow = nullptr;
+	fnOnRowSizing _fn_OnRowSizing = nullptr;
+	fnOnRowSized _fn_OnRowSized = nullptr;
+	fnOnCanSizeTopHdg _fn_OnCanSizeTopHdg = nullptr;
+	fnOnCanSizeSideHdg _fn_OnCanSizeSideHdg = nullptr;
+	fnOnTopHdgSizing _fn_OnTopHdgSizing = nullptr;
+	fnOnSideHdgSizing _fn_OnSideHdgSizing = nullptr;
+	fnOnTopHdgSized _fn_OnTopHdgSized = nullptr;
+	fnOnSideHdgSized _fn_OnSideHdgSized = nullptr;
+	fnOnColRowSizeFinished _fn_OnColRowSizeFinished = nullptr;
+	fnSetTH_Height _fn_SetTH_Height = nullptr;
+	fnSetSH_Width _fn_SetSH_Width = nullptr;
+	fnOnHint _fn_OnHint = nullptr;
+	fnMoveTopRow _fn_MoveTopRow = nullptr;
+	fnSetTopRow _fn_SetTopRow = nullptr;
+	fnMoveCurrentRow _fn_MoveCurrentRow = nullptr;
+	fnSetLeftCol _fn_SetLeftCol = nullptr;
+	fnMoveLeftCol _fn_MoveLeftCol = nullptr;
+	fnMoveCurrentCol _fn_MoveCurrentCol = nullptr;
+	fnOnViewMoved _fn_OnViewMoved = nullptr;
+	fnGetJoinStartCell _fn_GetJoinStartCell = nullptr;
+	fnGetJoinRange _fn_GetJoinRange = nullptr;
+	fnSetColWidth _fn_SetColWidth = nullptr;
+	fnVerifyCurrentRow _fn_VerifyCurrentRow = nullptr;
+	fnBestFit _fn_BestFit = nullptr;
+	fnSetTH_RowHeight _fn_SetTH_RowHeight = nullptr;
+	fnSetSH_ColWidth _fn_SetSH_ColWidth = nullptr;
+	fnHideTooltip _fn_HideTooltip = nullptr;	// note hide all child wnd tooltips
+	fnMakeSuperTooltip _fn_MakeSuperTooltip = nullptr;
+	fnOnColSwapStart _fn_OnColSwapStart = nullptr;
+	fnOnCanColSwap _fn_OnCanColSwap = nullptr;
+	fnOnColSwapped _fn_OnColSwapped = nullptr;
+	fnMoveColPosition _fn_MoveColPosition = nullptr;
+	fnSetRowHeight _fn_SetRowHeight = nullptr;
+	fnHScroll _fn_HScroll = nullptr;
+
+	virtual int GetJoinStartCellColRow(int* col, long* row) override
 	{
-		return GetJoinStartCell(col, row, &m_cell);
+		return _fn_GetJoinStartCell(col, row, &m_cell);
 	}
-	fnGetJoinRange GetJoinRange = nullptr;
-	fnSetColWidth SetColWidth = nullptr;
-	fnVerifyCurrentRow VerifyCurrentRow = nullptr;
-	//fnOnDrawFocusRect OnDrawFocusRect = nullptr;
-	fnBestFit BestFit = nullptr;
-	fnSetTH_RowHeight SetTH_RowHeight = nullptr;
-	fnSetSH_ColWidth SetSH_ColWidth = nullptr;
-	fnHideTooltip HideTooltip = nullptr;	// note hide all child wnd tooltips
-	fnMakeSuperTooltip MakeSuperTooltip = nullptr;
-	fnOnColSwapStart OnColSwapStart = nullptr;
-	fnOnCanColSwap OnCanColSwap = nullptr;
-	fnOnColSwapped OnColSwapped = nullptr;
-	fnMoveColPosition MoveColPosition = nullptr;
-	fnSetRowHeight SetRowHeight = nullptr;
-	fnHScroll HScroll = nullptr;
+#pragma endregion _fn_pointers_Set_by_UGCtrl
+
+#pragma region ImplCUGGridInfoIF_fn_
+	virtual int OnCellTypeNotify(long ID, int col, long row, long msg, long long param)
+	{
+		return _fn_OnCellTypeNotify(ID, col, row, msg, param);
+	}
+	virtual int GetCellIndirect(int col, long row, CUGCell* cell)
+	{
+		return _fn_GetCellIndirect(col, row, cell);
+	}
+	virtual CUGCellTypeIF* GetCellType(int type)
+	{
+		return _fn_GetCellType(type);
+	}
+	virtual CUGCellTypeIF* GetCellTypeColRow(int col, long row)
+	{
+		return _fn_GetCellTypeColRow(col, row);
+	}
+	virtual int GetRowHeight(long row)
+	{
+		return _fn_GetRowHeight(row);
+	}
+	virtual int GetNonUniformRowHeight(long row)
+	{
+		return _fn_GetNonUniformRowHeight(row);
+	}
+	virtual int SetCell(int col, long row, CUGCell* cell)
+	{
+		return _fn_SetCell(col, row, cell);
+	}
+	virtual int RedrawAll()
+	{
+		return _fn_RedrawAll();
+	}
+	virtual int RedrawCell(int col, long row)
+	{
+		return _fn_RedrawCell(col, row);
+	}
+	virtual int GetCellRect(int col, long row, RECT* rect)
+	{
+		return _fn_GetCellRect(col, row, rect);
+	}
+	virtual int GetRangeRect(int startCol, long startRow, int endCol, long endRow, RECT* rect)
+	{
+		return _fn_GetRangeRect(startCol, startRow, endCol, endRow, rect);
+	}
+	virtual void OnKillFocusNewWnd(int section, HWND hNewWnd)
+	{
+		return _fn_OnKillFocusNewWnd(section, hNewWnd);
+	}
+	virtual void OnSetFocus(int section)
+	{
+		return _fn_OnSetFocus(section);
+	}
+	virtual void OnKillFocus(int section)
+	{
+		return _fn_OnKillFocus(section);
+	}
+	virtual int EditCtrlFinished(LPCTSTR string, BOOL cancelFlag, BOOL continueFlag, int continueCol, long continueRow)
+	{
+		return _fn_EditCtrlFinished(string, cancelFlag, continueFlag, continueCol, continueRow);
+	}
+	virtual int GotoCell(int col, long row)
+	{
+		return _fn_GotoCell(col, row);
+	}
+	virtual int GotoCol(int col)
+	{
+		return _fn_GotoCol(col);
+	}
+	virtual int GotoRow(long row)
+	{
+		return _fn_GotoRow(row);
+	}
+	virtual int OnEditVerify(int col, long row, HWND edit, UINT* vcKey)
+	{
+		return _fn_OnEditVerify(col, row, edit, vcKey);
+	}
+	virtual int GetCellFromPointColRow(int x, int y, int* col, long* row)
+	{
+		return _fn_GetCellFromPointColRow(x, y, col, row);
+	}
+	virtual int GetCellFromPoint(int x, int y, int* ptcol, long* ptrow, RECT* rect)
+	{
+		return _fn_GetCellFromPoint(x, y, ptcol, ptrow, rect);
+	}
+	virtual int OnSortEvaluate(CUGCell* cell1, CUGCell* cell2, int flags)
+	{
+		return _fn_OnSortEvaluate(cell1, cell2, flags);
+	}
+	virtual long GetNumberRows()
+	{
+		return _fn_GetNumberRows();
+	}
+	virtual void AdjustComponentSizes()
+	{
+		_fn_AdjustComponentSizes();
+	}
+	virtual int StartMenu(int col, long row, CPoint point, int section)
+	{
+		return _fn_StartMenu(col, row, point, section);
+	}
+	virtual void OnLClicked(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnLClicked(col, row, updn, rect, point, processed);
+	}
+	virtual void OnRClicked(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnRClicked(col, row, updn, rect, point, processed);
+	}
+	virtual void OnDClicked(int col, long row, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnDClicked(col, row, rect, point, processed);
+	}
+	virtual void OnMouseMove(int col, long row, POINT* point, UINT nFlags, BOOL processed)
+	{
+		_fn_OnMouseMove(col, row, point, nFlags, processed);
+	}
+	virtual void OnTH_LClicked(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnTH_LClicked(col, row, updn, rect, point, processed);
+	}
+	virtual void OnTH_RClicked(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnTH_RClicked(col, row, updn, rect, point, processed);
+	}
+	virtual void OnTH_DClicked(int col, long row, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnTH_DClicked(col, row, rect, point, processed);
+	}
+	virtual void OnSH_LClicked(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnSH_LClicked(col, row, updn, rect, point, processed);
+	}
+	virtual void OnSH_RClicked(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnSH_RClicked(col, row, updn, rect, point, processed);
+	}
+	virtual void OnSH_DClicked(int col, long row, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnSH_DClicked(col, row, rect, point, processed);
+	}
+	virtual void OnCB_LClicked(int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnCB_LClicked(updn, rect, point, processed);
+	}
+	virtual void OnCB_RClicked(int updn, RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnCB_RClicked(updn, rect, point, processed);
+	}
+	virtual void OnCB_DClicked(RECT* rect, POINT* point, BOOL processed)
+	{
+		_fn_OnCB_DClicked(rect, point, processed);
+	}
+	virtual void OnKeyDown(UINT* vcKey, BOOL processed)
+	{
+		_fn_OnKeyDown(vcKey, processed);
+	}
+	virtual void OnKeyUp(UINT* vcKey, BOOL processed)
+	{
+		_fn_OnKeyUp(vcKey, processed);
+	}
+	virtual void OnCharDown(UINT* vcKey, BOOL processed)
+	{
+		_fn_OnCharDown(vcKey, processed);
+	}
+	virtual int OnCanSizeCol(int col)
+	{
+		return _fn_OnCanSizeCol(col);
+	}
+	virtual void OnColSizing(int col, int* width)
+	{
+		_fn_OnColSizing(col, width);
+	}
+	virtual void OnColSized(int col, int* width)
+	{
+		_fn_OnColSized(col, width);
+	}
+	virtual int OnCanSizeRow(long row)
+	{
+		return _fn_OnCanSizeRow(row);
+	}
+	virtual void OnRowSizing(long row, int* height)
+	{
+		_fn_OnRowSizing(row, height);
+	}
+	virtual void OnRowSized(long row, int* height)
+	{
+		_fn_OnRowSized(row, height);
+	}
+	virtual int OnCanSizeTopHdg()
+	{
+		return _fn_OnCanSizeTopHdg();
+	}
+	virtual int OnCanSizeSideHdg()
+	{
+		return _fn_OnCanSizeSideHdg();
+	}
+	virtual int OnTopHdgSizing(int* height)
+	{
+		return _fn_OnTopHdgSizing(height);
+	}
+	virtual int OnSideHdgSizing(int* width)
+	{
+		return _fn_OnSideHdgSizing(width);
+	}
+	virtual int OnTopHdgSized(int height)
+	{
+		return _fn_OnTopHdgSized(height);
+	}
+	virtual int OnSideHdgSized(int width)
+	{
+		return _fn_OnSideHdgSized(width);
+	}
+	virtual void OnColRowSizeFinished()
+	{
+		_fn_OnColRowSizeFinished();
+	}
+	virtual int SetTH_Height(int height)
+	{
+		return _fn_SetTH_Height(height);
+	}
+	virtual int SetSH_Width(int width)
+	{
+		return _fn_SetSH_Width(width);
+	}
+	virtual int OnHint(int col, long row, int section, TOOLTIP_SETTINGS& ttSettings)
+	{
+		return _fn_OnHint(col, row, section, ttSettings);
+	}
+	virtual int MoveTopRow(int flag)
+	{
+		return _fn_MoveTopRow(flag);
+	}
+	virtual int SetTopRow(long row)
+	{
+		return _fn_SetTopRow(row);
+	}
+	virtual int MoveCurrentRow(int flag)
+	{
+		return _fn_MoveCurrentRow(flag);
+	}
+	virtual int SetLeftCol(int col)
+	{
+		return _fn_SetLeftCol(col);
+	}
+	virtual int MoveLeftCol(int flag)
+	{
+		return _fn_MoveLeftCol(flag);
+	}
+	virtual int MoveCurrentCol(int flag)
+	{
+		return _fn_MoveCurrentCol(flag);
+	}
+	virtual void OnViewMoved(int nScrolDir, long oldPos, long newPos)
+	{
+		_fn_OnViewMoved(nScrolDir, oldPos, newPos);
+	}
+	virtual int GetJoinStartCell(int* col, long* row, CUGCell* cell)
+	{
+		return _fn_GetJoinStartCell(col, row, cell);
+	}
+	virtual int GetJoinRange(int* col, long* row, int* col2, long* row2)
+	{
+		return _fn_GetJoinRange(col, row, col2, row2);
+	}
+	virtual int SetColWidth(int col, int width, bool notify)
+	{
+		return _fn_SetColWidth(col, width, notify);
+	}
+	virtual int VerifyCurrentRow(long* newRow)
+	{
+		return _fn_VerifyCurrentRow(newRow);
+	}
+	virtual int BestFit(int startCol, int endCol, int CalcRange, int flag)
+	{
+		return _fn_BestFit(startCol, endCol, CalcRange, flag);
+	}
+	virtual int SetTH_RowHeight(int row, int height)
+	{
+		return _fn_SetTH_RowHeight(row, height);
+	}
+	virtual int SetSH_ColWidth(int col, int width)
+	{
+		return _fn_SetSH_ColWidth(col, width);
+	}
+	virtual LRESULT MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section)
+	{
+		return _fn_MakeSuperTooltip(pNeedTT, hWnd, section);
+	}
+	virtual void HideTooltip()
+	{
+		_fn_HideTooltip();
+	}
+	virtual BOOL OnColSwapStart(int col)
+	{
+		return _fn_OnColSwapStart(col);
+	}
+	virtual BOOL OnCanColSwap(int fromCol, int toCol)
+	{
+		return _fn_OnCanColSwap(fromCol, toCol);
+	}
+	virtual void OnColSwapped(int fromCol, int toCol)
+	{
+		return _fn_OnColSwapped(fromCol, toCol);
+	}
+	virtual int MoveColPosition(int fromCol, int toCol, BOOL insertBefore)
+	{
+		return _fn_MoveColPosition(fromCol, toCol, insertBefore);
+	}
+	virtual int SetRowHeight(long row, int height)
+	{
+		return _fn_SetRowHeight(row, height);
+	}
+	virtual void HScroll(UINT nSBCode, UINT nPos)
+	{
+		_fn_HScroll(nSBCode, nPos);
+	}
+#pragma endregion ImplCUGGridInfoIF_fn_
+
+#pragma region GettersSetters
+public:
+	virtual BOOL CancelMode() const					override { return m_bCancelMode; }
+	virtual BOOL Extend() const						override { return m_bExtend; }
+	virtual int BallisticDelay() const				override { return m_ballisticDelay; }
+	virtual int BallisticMode() const				override { return m_ballisticMode; }
+	virtual int BallisticKeyDelay() const			override { return m_ballisticKeyDelay; }
+	virtual int BallisticKeyMode() const			override { return m_ballisticKeyMode; }
+	virtual void SetBottomRow(long row)				override {		  m_bottomRow = row; }
+	virtual long BottomRow() const					override { return m_bottomRow; }
+	virtual int CurrentCol() const					override { return m_currentCol; }
+	virtual long CurrentRow() const					override { return m_currentRow; }
+	virtual int CurrentCellMode() const				override { return m_currentCellMode; }
+	virtual int DefColWidth() const					override { return m_defColWidth; }
+	virtual int DefRowHeight() const				override { return m_defRowHeight; }
+	virtual void SetDefRowHeight(int cy)			override {		  m_defRowHeight = cy; }
+	virtual CUGDataSource* DefDataSource() const	override { return m_defDataSource; }
+	virtual CUGCell& EditCell()						override { return m_editCell; }
+	virtual void SetDragCol(int col)				override {		  m_dragCol = col; }
+	virtual void SetDragRow(long row)				override {		  m_dragCol = row; }
+	virtual int DragCol() const						override { return m_dragCol; }
+	virtual long DragRow() const					override { return m_dragRow; }
+	virtual int EditCol() const						override { return m_editCol; }
+	virtual bool EditInProgress() const				override { return m_editInProgress; }
+	virtual long EditRow() const					override { return m_editRow; }
+	virtual int EnableColSwapping() const			override { return m_enableColSwapping; }
+	virtual int EnableJoins() const					override { return m_enableJoins; }
+	virtual int EnableExcelBorders() const			override { return m_enableExcelBorders; }
+	virtual void EnablePopupMenu(bool enable)		override {		  m_enablePopupMenu = enable; }
+	virtual bool IsEnablePopupMenu() const			override { return m_enablePopupMenu; }
+	virtual int GridHeight() const					override { return m_gridHeight; }
+	virtual int GridWidth() const					override { return m_gridWidth; }
+	virtual HWND GridWnd() const					override { return m_gridWnd; }
+	virtual HWND CtrlWnd() const					override { return m_ctrlWnd; }
+	virtual int HScrollMode() const					override { return m_hScrollMode; }
+	virtual CRect HScrollRect() const				override { return m_hScrollRect; }
+	virtual int HighlightRowFlag() const			override { return m_highlightRowFlag; }
+	virtual int LastLeftCol() const					override { return m_lastLeftCol; }
+	virtual long LastTopRow() const					override { return m_lastTopRow; }
+	virtual int LeftCol() const						override { return m_leftCol; }
+	virtual int RightCol() const					override { return m_rightCol; }
+	virtual void SetRightCol(int col)				override {		  m_rightCol = col; }
+	virtual int LockColWidth() const				override { return m_lockColWidth; }
+	virtual int LockRowHeight() const				override { return m_lockRowHeight; }
+	virtual int MaxLeftCol() const					override { return m_maxLeftCol; }
+	virtual long MaxTopRow() const					override { return m_maxTopRow; }
+	virtual UINT MoveFlags() const					override { return m_moveFlags; }
+	virtual void SetMoveType(int type)				override {		  m_moveType = type; }
+	virtual void SetMoveFlags(UINT flags)			override {		  m_moveFlags = flags; }
+	virtual int MultiSelectFlag() const				override { return m_multiSelectFlag; }
+	virtual int NumLockCols() const					override { return m_numLockCols; }
+	virtual int NumLockRows() const					override { return m_numLockRows; }
+	virtual int NumberCols() const					override { return m_numberCols; }
+	virtual long NumberRows() const					override { return m_numberRows; }
+	virtual int NumberSideHdgCols() const			override { return m_numberSideHdgCols; }
+	virtual int NumberTopHdgRows() const			override { return m_numberTopHdgRows; }
+	virtual bool PaintMode() const					override { return m_paintMode; }
+	virtual bool ShowHScroll() const				override { return m_showHScroll; }
+	virtual BOOL ScrollOnPartialCells() const		override { return m_bScrollOnParialCells; }
+	virtual int SideHdgWidth() const				override { return m_sideHdgWidth; }
+	virtual void SetSideHdgWidth(int cx)			override {		  m_sideHdgWidth = cx; }
+	virtual void SetTopHdgHeight(int cy)			override {		  m_topHdgHeight = cy; }
+	virtual int TopHdgHeight() const				override { return m_topHdgHeight; }
+	virtual long TopRow() const						override { return m_topRow; }
+	virtual int ThreeDHeight() const				override { return m_threeDHeight; }
+	virtual int UniformRowHeightFlag() const		override { return m_uniformRowHeightFlag; }
+	virtual int UserBestSizeFlag() const			override { return m_userBestSizeFlag; }
+	virtual int UserSizingMode() const				override { return m_userSizingMode; }
+	virtual int VScrollMode() const					override { return m_vScrollMode; }
+	virtual HCURSOR NSResizseCursor() const			override { return m_NSResizseCursor; }
+	virtual HCURSOR WEResizseCursor() const			override { return m_WEResizseCursor; }
+	virtual CXeUIcolorsIF* GetXeUI()				override { return m_xeUI; }
+
+	virtual UGCOLINFO& GetColInfo(int colIdx) const override
+	{
+		return m_colInfo[colIdx];
+	}
+	virtual int GetSideHdgColWidth(int colIdx) const override
+	{
+		return m_sideHdgWidths[colIdx];
+	}
+	virtual void SetSideHdgColWidth(int colIdx, int cx) override
+	{
+		m_sideHdgWidths[colIdx] = cx;
+	}
+	virtual int GetTopHdgRowHeight(int rowIdx) const override
+	{
+		return m_topHdgHeights[rowIdx];
+	}
+	virtual void SetTopHdgRowHeight(int rowIdx, int cy) override
+	{
+		m_topHdgHeights[rowIdx] = cy;
+	}
+	virtual int IsSelected(int col, long row, int* block = nullptr) const override
+	{
+		return m_multiSelect->IsSelected(col, row, block);
+	}
+#pragma endregion GettersSetters
 };

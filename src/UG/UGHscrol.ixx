@@ -22,12 +22,14 @@ module;
 #include <string>
 
 #include "ugdefine.h"
-#include "uggdinfo.h"
-#include "ughscrol.h"
+//#include "uggdinfo.h"
+//#include "ughscrol.h"
 // define WM_HELPHITTEST messages
 //#include <afxpriv.h>
 
-export module Xe.UGHscrol;
+export module Xe.UGHScrol;
+
+import Xe.UGGridInfoIF;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,12 +41,13 @@ static char THIS_FILE[] = __FILE__;
 // Base class of 'this' class changed to CXeScrollBar.
 
 import Xe.ScrollBar;
-class CUGGridInfo;
+
+//class CUGGridInfo;
 
 export class CUGHScroll : public CXeScrollBar
 {
 public:
-	CUGGridInfo* m_GI;			//pointer to the grid information
+	CUGGridInfoIF* m_GI;			//pointer to the grid information
 
 protected:
 	int	m_lastMaxLeftCol;
@@ -101,34 +104,34 @@ public:
 	*****************************************************/
 	void Moved()
 	{
-		if (m_GI->m_paintMode == FALSE)
+		if (!m_GI->PaintMode())
 			return;
 
 		//update the range if the max left col has changed
 		//or if the number of locked columns has changed
-		if (m_lastMaxLeftCol != m_GI->m_maxLeftCol || m_lastNumLockCols != m_GI->m_numLockCols)
+		if (m_lastMaxLeftCol != m_GI->MaxLeftCol() || m_lastNumLockCols != m_GI->NumLockCols())
 		{
-			m_lastMaxLeftCol = m_GI->m_maxLeftCol;
-			m_lastNumLockCols = m_GI->m_numLockCols;
+			m_lastMaxLeftCol = m_GI->MaxLeftCol();
+			m_lastNumLockCols = m_GI->NumLockCols();
 
 			//set the scroll range
 			SCROLLINFO ScrollInfo;
 			ScrollInfo.cbSize = sizeof(SCROLLINFO);
 			ScrollInfo.fMask = SIF_PAGE | SIF_RANGE;
-			ScrollInfo.nPage = (m_GI->m_gridWidth - m_GI->m_lockColWidth) / m_GI->m_defColWidth;
+			ScrollInfo.nPage = (m_GI->GridWidth() - m_GI->LockColWidth()) / m_GI->DefColWidth();
 			ScrollInfo.nMin = 0;
-			ScrollInfo.nMax = (m_GI->m_maxLeftCol - m_GI->m_numLockCols) + ScrollInfo.nPage - 1;
+			ScrollInfo.nMax = (m_GI->MaxLeftCol() - m_GI->NumLockCols()) + ScrollInfo.nPage - 1;
 			SetScrollInfo(&ScrollInfo, FALSE);
 
-			if (m_GI->m_hScrollRect.top == m_GI->m_hScrollRect.bottom)
+			if (m_GI->HScrollRect().top == m_GI->HScrollRect().bottom)
 				m_GI->AdjustComponentSizes();
 		}
 
 		//set the scroll pos
-		if (m_GI->m_lastLeftCol != m_GI->m_leftCol)
+		if (m_GI->LastLeftCol() != m_GI->LeftCol())
 		{
-			SetScrollPos(m_GI->m_leftCol - m_GI->m_numLockCols, TRUE);
-			m_GI->OnViewMoved(UG_HSCROLL, (long)m_GI->m_lastLeftCol, (long)m_GI->m_leftCol);
+			SetScrollPos(m_GI->LeftCol() - m_GI->NumLockCols(), TRUE);
+			m_GI->OnViewMoved(UG_HSCROLL, (long)m_GI->LastLeftCol(), (long)m_GI->LeftCol());
 		}
 
 		_RedrawDirectly();
@@ -147,10 +150,10 @@ public:
 	*****************************************************/
 	void HScroll(UINT nSBCode, UINT nPos)
 	{
-		if (::GetFocus() != m_GI->m_gridWnd)
-			::SetFocus(m_GI->m_gridWnd);
+		if (::GetFocus() != m_GI->GridWnd())
+			::SetFocus(m_GI->GridWnd());
 
-		m_GI->m_moveType = 4;
+		m_GI->SetMoveType(4);
 
 		switch (nSBCode)
 		{
@@ -173,10 +176,10 @@ public:
 			m_GI->MoveLeftCol(UG_RIGHT);
 			break;
 		case SB_THUMBTRACK:
-			if (m_GI->m_hScrollMode == UG_SCROLLTRACKING)	//tracking
-				m_GI->SetLeftCol(nPos + m_GI->m_numLockCols);
+			if (m_GI->HScrollMode() == UG_SCROLLTRACKING)	//tracking
+				m_GI->SetLeftCol(nPos + m_GI->NumLockCols());
 
-			m_trackColPos = nPos + m_GI->m_numLockCols;
+			m_trackColPos = nPos + m_GI->NumLockCols();
 
 			//if enabled then show scroll hints
 			//#ifdef UG_ENABLE_SCROLLHINTS
@@ -209,7 +212,7 @@ public:
 			//}
 			//#endif
 
-			m_GI->SetLeftCol(nPos + m_GI->m_numLockCols);
+			m_GI->SetLeftCol(nPos + m_GI->NumLockCols());
 
 			break;
 		}
@@ -228,10 +231,10 @@ public:
 	//void OnRButtonDown(UINT nFlags, CPoint point) 
 	virtual LRESULT _OnRightDown(UINT nFlags, CPoint point) override
 	{
-		if (m_GI->m_enablePopupMenu)
+		if (m_GI->IsEnablePopupMenu())
 		{
 			ClientToScreen(&point);
-			m_GI->StartMenu(0, 0, &point, UG_HSCROLL);
+			m_GI->StartMenu(0, 0, point, UG_HSCROLL);
 		}
 
 		//CXeScrollBar::OnRButtonDown(nFlags, point);

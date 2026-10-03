@@ -43,35 +43,34 @@ module;
 
 #include "ugdefine.h"
 //#include "UGDtaSrc.h"
-#include "ugptrlst.h"
+//#include "ugptrlst.h"
 //#include "UGCell.h"
 //#include "UGCelTyp.h"
-#include "ugdltype.h"
-#include "ugcbtype.h"
-#include "ugctarrw.h"
-#include "UGCTprogress.h"
+//#include "ugdltype.h"
+//#include "ugcbtype.h"
+//#include "ugctarrw.h"
+//#include "UGCTprogress.h"
 //#include "UGEditBase.h"
-#include "UGEdit.h"
+//#include "UGEdit.h"
 //#include "UGMEdit.h"
 //#include "UGMemMan.h"
 //#include "UGDrwHnt.h"
-#include "UGMultiS.h"
+//#include "UGMultiS.h"
 //#include "uggdinfo.h"
-#include "XeGridDefs.h"
 //#include "..\PPTooltip.h"
 //#include "..\XSuperTooltip.h"
-#include "UGGrid.h"
+//#include "UGGrid.h"
 //#include "UGCell.h"
-#include "UGTopHdg.h"
-#include "ugvscrol.h"
-#include "ughscrol.h"
+//#include "UGTopHdg.h"
+//#include "ugvscrol.h"
+//#include "ughscrol.h"
 //#include "UGCnrBtn.h"
 //#include "ugtab.h"
 //#include "UGHint.h"
-#include "ugsidehd.h"
-#include "ugformat.h"
-#include "UGCTsarw.h"
-#include "UGCTurlbtn.h"
+//#include "ugsidehd.h"
+//#include "ugformat.h"
+//#include "UGCTsarw.h"
+//#include "UGCTurlbtn.h"
 //#ifdef UG_ENABLE_PRINTING
 //#undef UG_ENABLE_PRINTING
 //#endif
@@ -112,6 +111,21 @@ import Xe.UGDtaSrc;
 import Xe.UGCell;
 import Xe.UGCelTyp;
 import Xe.UGGridInfo;
+import Xe.UGDrawHint;
+import Xe.UGPtrList;
+import Xe.UGGrid;
+import Xe.UGTopHdg;
+import Xe.UGSidehd;
+import Xe.UGUrlBtnType;
+import Xe.UGSortArrowType;
+import Xe.UGDropListType;
+import Xe.UGCheckBoxType;
+import Xe.UGProgressType;
+import Xe.UGMultiSelect;
+import Xe.UGVScrol;
+import Xe.UGHScrol;
+import Xe.UGCTarrw;
+import Xe.UGEdit;
 
 #define ID_EDIT_FIND                    0xE124
 
@@ -389,87 +403,85 @@ CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
 	m_GI->m_tabSizing = FALSE;
 
 	// Set all function pointers in grid info class
-	m_GI->OnCellTypeNotify = [this](long ID, int col, long row, long msg, long long param) { return OnCellTypeNotify(ID, col, row, msg, param); };
-	m_GI->GetCellIndirect = [this](int col, long row, CUGCell* cell) { return GetCellIndirect(col, row, cell); };
-	m_GI->GetCellType = [this](int type) { return GetCellType(type); };
-	m_GI->GetCellTypeColRow = [this](int col, long row) { return GetCellType(col, row); };
-	m_GI->GetRowHeight = [this](long row) { return GetRowHeight(row); };
-	m_GI->GetNonUniformRowHeight = [this](long row) { return GetNonUniformRowHeight(row); };
-	m_GI->SetCell = [this](int col, long row, CUGCell* cell) { return SetCell(col, row, cell); };
-	m_GI->RedrawAll = [this]() { return RedrawAll(); };
-	m_GI->RedrawCell = [this](int col, long row) { return RedrawCell(col, row); };
-	m_GI->GetCellRect = [this](int col, long row, RECT* rect) { return GetCellRect(col, row, rect); };
-	m_GI->GetRangeRect = [this](int startCol, long startRow, int endCol, long endRow, RECT* rect) { return GetRangeRect(startCol, startRow, endCol, endRow, rect); };
-	m_GI->OnKillFocusNewWnd = [this](int section, HWND hNewWnd) { OnKillFocus(section, hNewWnd); };
-	m_GI->OnSetFocus = [this](int section) { OnSetFocus(section); };
-	m_GI->OnKillFocus = [this](int section) { OnKillFocus(section); };
-	m_GI->EditCtrlFinished = [this](LPCTSTR string, BOOL cancelFlag, BOOL continueFlag, int continueCol, long continueRow) { return EditCtrlFinished(string, cancelFlag, continueFlag, continueCol, continueRow); };
-	m_GI->GotoCell = [this](int col, long row) { return GotoCell(col, row); };
-	m_GI->GotoCol = [this](int col) { return GotoCol(col); };
-	m_GI->GotoRow = [this](long row) { return GotoRow(row); };
-	m_GI->OnEditVerify = [this](int col, long row, HWND edit, UINT* vcKey) { return OnEditVerify(col, row, edit, vcKey); };
-	m_GI->GetCellFromPointColRow = [this](int x, int y, int* col, long* row) { return GetCellFromPoint(x, y, col, row); };
-	m_GI->GetCellFromPoint = [this](int x, int y, int* ptcol, long* ptrow, RECT* rect) { return GetCellFromPoint(x, y, ptcol, ptrow, rect); };
-	m_GI->OnSortEvaluate = [this](CUGCell* cell1, CUGCell* cell2, int flags) { return OnSortEvaluate(cell1, cell2, flags); };
-	//m_GI->OnScreenDCSetup = [this](CDC* dc, CDC* db_dc, int section) { OnScreenDCSetup(dc, db_dc, section); };
-	m_GI->GetNumberRows = [this]() { return GetNumberRows(); };
-	m_GI->AdjustComponentSizes = [this]() { AdjustComponentSizes(); };
-	m_GI->StartMenu = [this](int col, long row, POINT* point, int section) { return StartMenu(col, row, point, section); };
-	m_GI->OnLClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnLClicked(col, row, updn, rect, point, processed); };
-	m_GI->OnRClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnRClicked(col, row, updn, rect, point, processed); };
-	m_GI->OnDClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnDClicked(col, row, rect, point, processed); };
-	m_GI->OnMouseMove = [this](int col, long row, POINT* point, UINT nFlags, BOOL processed) { OnMouseMove(col, row, point, nFlags, processed); };
-	m_GI->OnTH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_LClicked(col, row, updn, rect, point, processed); };
-	m_GI->OnTH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_RClicked(col, row, updn, rect, point, processed); };
-	m_GI->OnTH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnTH_DClicked(col, row, rect, point, processed); };
-	m_GI->OnSH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_LClicked(col, row, updn, rect, point, processed); };
-	m_GI->OnSH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_RClicked(col, row, updn, rect, point, processed); };
-	m_GI->OnSH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnSH_DClicked(col, row, rect, point, processed); };
-	m_GI->OnCB_LClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_LClicked(updn, rect, point, processed); };
-	m_GI->OnCB_RClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_RClicked(updn, rect, point, processed); };
-	m_GI->OnCB_DClicked = [this](RECT* rect, POINT* point, BOOL processed) { OnCB_DClicked(rect, point, processed); };
-	m_GI->OnKeyDown = [this](UINT* vcKey, BOOL processed) { OnKeyDown(vcKey, processed); };
-	m_GI->OnKeyUp = [this](UINT* vcKey, BOOL processed) { OnKeyUp(vcKey, processed); };
-	m_GI->OnCharDown = [this](UINT* vcKey, BOOL processed) { OnCharDown(vcKey, processed); };
-	m_GI->OnCanSizeCol = [this](int col) { return OnCanSizeCol(col); };
-	m_GI->OnColSizing = [this](int col, int* width) { OnColSizing(col, width); };
-	m_GI->OnColSized = [this](int col, int* width) { OnColSized(col, width); };
-	m_GI->OnCanSizeRow = [this](long row) { return OnCanSizeRow(row); };
-	m_GI->OnRowSizing = [this](long row, int* height) { OnRowSizing(row, height); };
-	m_GI->OnRowSized = [this](long row, int* height) { OnRowSized(row, height); };
-	m_GI->OnCanSizeTopHdg = [this]() { return OnCanSizeTopHdg(); };
-	m_GI->OnCanSizeSideHdg = [this]() { return OnCanSizeSideHdg(); };
-	m_GI->OnTopHdgSizing = [this](int* height) { return OnTopHdgSizing(height); };
-	m_GI->OnSideHdgSizing = [this](int* width) { return OnSideHdgSizing(width); };
-	m_GI->OnTopHdgSized = [this](int* height) { return OnTopHdgSized(height); };
-	m_GI->OnSideHdgSized = [this](int* width) { return OnSideHdgSized(width); };
-	m_GI->OnColRowSizeFinished = [this]() { OnColRowSizeFinished(); };
-	m_GI->SetTH_Height = [this](int height) { return SetTH_Height(height); };
-	m_GI->SetSH_Width = [this](int width) { return SetSH_Width(width); };
-	m_GI->OnHint = [this](int col, long row, int section, TOOLTIP_SETTINGS& ttSettings) { return OnHint(col, row, section, ttSettings); };
-	m_GI->MoveTopRow = [this](int flag) { return MoveTopRow(flag); };
-	m_GI->SetTopRow = [this](long row) { return SetTopRow(row); };
-	m_GI->MoveCurrentRow = [this](int flag) { return MoveCurrentRow(flag); };
-	m_GI->SetLeftCol = [this](int col) { return SetLeftCol(col); };
-	m_GI->MoveLeftCol = [this](int flag) { return MoveLeftCol(flag); };
-	m_GI->MoveCurrentCol = [this](int flag) { return MoveCurrentCol(flag); };
-	m_GI->OnViewMoved = [this](int nScrolDir, long oldPos, long newPos) { OnViewMoved(nScrolDir, oldPos, newPos); };
-	m_GI->GetJoinStartCell = [this](int* col, long* row, CUGCell* cell) { return GetJoinStartCell(col, row, cell); };
-	m_GI->GetJoinRange = [this](int* col, long* row, int* col2, long* row2) { return GetJoinRange(col, row, col2, row2); };
-	m_GI->SetColWidth = [this](int col, int width, bool notify) { return SetColWidth(col, width, notify); };
-	m_GI->VerifyCurrentRow = [this](long* newRow) { return VerifyCurrentRow(newRow); };
-	//m_GI->OnDrawFocusRect = [this](CDC* dc, RECT* rect) { OnDrawFocusRect(dc, rect); };
-	m_GI->BestFit = [this](int startCol, int endCol, int CalcRange, int flag) { return BestFit(startCol, endCol, CalcRange, flag); };
-	m_GI->SetTH_RowHeight = [this](int row, int height) { return SetTH_RowHeight(row, height); };
-	m_GI->SetSH_ColWidth = [this](int col, int width) { return SetSH_ColWidth(col, width); };
-	m_GI->MakeSuperTooltip = [this](NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section) { return MakeSuperTooltip(pNeedTT, hWnd, section); };
-	m_GI->HideTooltip = [this]() { HideTooltip(); };
-	m_GI->OnColSwapStart = [this](int col) { return OnColSwapStart(col); };
-	m_GI->OnCanColSwap = [this](int fromCol, int toCol) { return OnCanColSwap(fromCol, toCol); };
-	m_GI->OnColSwapped = [this](int fromCol, int toCol) { OnColSwapped(fromCol, toCol); };
-	m_GI->MoveColPosition = [this](int fromCol, int toCol, BOOL insertBefore) { return MoveColPosition(fromCol, toCol, insertBefore); };
-	m_GI->SetRowHeight = [this](long row, int height) { return SetRowHeight(row, height); };
-	m_GI->HScroll = [this](UINT nSBCode, UINT nPos) { HScroll(nSBCode, nPos); };
+	m_GI->_fn_OnCellTypeNotify = [this](long ID, int col, long row, long msg, long long param) { return OnCellTypeNotify(ID, col, row, msg, param); };
+	m_GI->_fn_GetCellIndirect = [this](int col, long row, CUGCell* cell) { return GetCellIndirect(col, row, cell); };
+	m_GI->_fn_GetCellType = [this](int type) { return GetCellType(type); };
+	m_GI->_fn_GetCellTypeColRow = [this](int col, long row) { return GetCellType(col, row); };
+	m_GI->_fn_GetRowHeight = [this](long row) { return GetRowHeight(row); };
+	m_GI->_fn_GetNonUniformRowHeight = [this](long row) { return GetNonUniformRowHeight(row); };
+	m_GI->_fn_SetCell = [this](int col, long row, CUGCell* cell) { return SetCell(col, row, cell); };
+	m_GI->_fn_RedrawAll = [this]() { return RedrawAll(); };
+	m_GI->_fn_RedrawCell = [this](int col, long row) { return RedrawCell(col, row); };
+	m_GI->_fn_GetCellRect = [this](int col, long row, RECT* rect) { return GetCellRect(col, row, rect); };
+	m_GI->_fn_GetRangeRect = [this](int startCol, long startRow, int endCol, long endRow, RECT* rect) { return GetRangeRect(startCol, startRow, endCol, endRow, rect); };
+	m_GI->_fn_OnKillFocusNewWnd = [this](int section, HWND hNewWnd) { OnKillFocus(section, hNewWnd); };
+	m_GI->_fn_OnSetFocus = [this](int section) { OnSetFocus(section); };
+	m_GI->_fn_OnKillFocus = [this](int section) { OnKillFocus(section); };
+	m_GI->_fn_EditCtrlFinished = [this](LPCTSTR string, BOOL cancelFlag, BOOL continueFlag, int continueCol, long continueRow) { return EditCtrlFinished(string, cancelFlag, continueFlag, continueCol, continueRow); };
+	m_GI->_fn_GotoCell = [this](int col, long row) { return GotoCell(col, row); };
+	m_GI->_fn_GotoCol = [this](int col) { return GotoCol(col); };
+	m_GI->_fn_GotoRow = [this](long row) { return GotoRow(row); };
+	m_GI->_fn_OnEditVerify = [this](int col, long row, HWND edit, UINT* vcKey) { return OnEditVerify(col, row, edit, vcKey); };
+	m_GI->_fn_GetCellFromPointColRow = [this](int x, int y, int* col, long* row) { return GetCellFromPoint(x, y, col, row); };
+	m_GI->_fn_GetCellFromPoint = [this](int x, int y, int* ptcol, long* ptrow, RECT* rect) { return GetCellFromPoint(x, y, ptcol, ptrow, rect); };
+	m_GI->_fn_OnSortEvaluate = [this](CUGCell* cell1, CUGCell* cell2, int flags) { return OnSortEvaluate(cell1, cell2, flags); };
+	m_GI->_fn_GetNumberRows = [this]() { return GetNumberRows(); };
+	m_GI->_fn_AdjustComponentSizes = [this]() { AdjustComponentSizes(); };
+	m_GI->_fn_StartMenu = [this](int col, long row, CPoint point, int section) { return StartMenu(col, row, point, section); };
+	m_GI->_fn_OnLClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnLClicked(col, row, updn, rect, point, processed); };
+	m_GI->_fn_OnRClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnRClicked(col, row, updn, rect, point, processed); };
+	m_GI->_fn_OnDClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnDClicked(col, row, rect, point, processed); };
+	m_GI->_fn_OnMouseMove = [this](int col, long row, POINT* point, UINT nFlags, BOOL processed) { OnMouseMove(col, row, point, nFlags, processed); };
+	m_GI->_fn_OnTH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_LClicked(col, row, updn, rect, point, processed); };
+	m_GI->_fn_OnTH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_RClicked(col, row, updn, rect, point, processed); };
+	m_GI->_fn_OnTH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnTH_DClicked(col, row, rect, point, processed); };
+	m_GI->_fn_OnSH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_LClicked(col, row, updn, rect, point, processed); };
+	m_GI->_fn_OnSH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_RClicked(col, row, updn, rect, point, processed); };
+	m_GI->_fn_OnSH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnSH_DClicked(col, row, rect, point, processed); };
+	m_GI->_fn_OnCB_LClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_LClicked(updn, rect, point, processed); };
+	m_GI->_fn_OnCB_RClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_RClicked(updn, rect, point, processed); };
+	m_GI->_fn_OnCB_DClicked = [this](RECT* rect, POINT* point, BOOL processed) { OnCB_DClicked(rect, point, processed); };
+	m_GI->_fn_OnKeyDown = [this](UINT* vcKey, BOOL processed) { OnKeyDown(vcKey, processed); };
+	m_GI->_fn_OnKeyUp = [this](UINT* vcKey, BOOL processed) { OnKeyUp(vcKey, processed); };
+	m_GI->_fn_OnCharDown = [this](UINT* vcKey, BOOL processed) { OnCharDown(vcKey, processed); };
+	m_GI->_fn_OnCanSizeCol = [this](int col) { return OnCanSizeCol(col); };
+	m_GI->_fn_OnColSizing = [this](int col, int* width) { OnColSizing(col, width); };
+	m_GI->_fn_OnColSized = [this](int col, int* width) { OnColSized(col, width); };
+	m_GI->_fn_OnCanSizeRow = [this](long row) { return OnCanSizeRow(row); };
+	m_GI->_fn_OnRowSizing = [this](long row, int* height) { OnRowSizing(row, height); };
+	m_GI->_fn_OnRowSized = [this](long row, int* height) { OnRowSized(row, height); };
+	m_GI->_fn_OnCanSizeTopHdg = [this]() { return OnCanSizeTopHdg(); };
+	m_GI->_fn_OnCanSizeSideHdg = [this]() { return OnCanSizeSideHdg(); };
+	m_GI->_fn_OnTopHdgSizing = [this](int* height) { return OnTopHdgSizing(height); };
+	m_GI->_fn_OnSideHdgSizing = [this](int* width) { return OnSideHdgSizing(width); };
+	m_GI->_fn_OnTopHdgSized = [this](int height) { return OnTopHdgSized(height); };
+	m_GI->_fn_OnSideHdgSized = [this](int width) { return OnSideHdgSized(width); };
+	m_GI->_fn_OnColRowSizeFinished = [this]() { OnColRowSizeFinished(); };
+	m_GI->_fn_SetTH_Height = [this](int height) { return SetTH_Height(height); };
+	m_GI->_fn_SetSH_Width = [this](int width) { return SetSH_Width(width); };
+	m_GI->_fn_OnHint = [this](int col, long row, int section, TOOLTIP_SETTINGS& ttSettings) { return OnHint(col, row, section, ttSettings); };
+	m_GI->_fn_MoveTopRow = [this](int flag) { return MoveTopRow(flag); };
+	m_GI->_fn_SetTopRow = [this](long row) { return SetTopRow(row); };
+	m_GI->_fn_MoveCurrentRow = [this](int flag) { return MoveCurrentRow(flag); };
+	m_GI->_fn_SetLeftCol = [this](int col) { return SetLeftCol(col); };
+	m_GI->_fn_MoveLeftCol = [this](int flag) { return MoveLeftCol(flag); };
+	m_GI->_fn_MoveCurrentCol = [this](int flag) { return MoveCurrentCol(flag); };
+	m_GI->_fn_OnViewMoved = [this](int nScrolDir, long oldPos, long newPos) { OnViewMoved(nScrolDir, oldPos, newPos); };
+	m_GI->_fn_GetJoinStartCell = [this](int* col, long* row, CUGCell* cell) { return GetJoinStartCell(col, row, cell); };
+	m_GI->_fn_GetJoinRange = [this](int* col, long* row, int* col2, long* row2) { return GetJoinRange(col, row, col2, row2); };
+	m_GI->_fn_SetColWidth = [this](int col, int width, bool notify) { return SetColWidth(col, width, notify); };
+	m_GI->_fn_VerifyCurrentRow = [this](long* newRow) { return VerifyCurrentRow(newRow); };
+	m_GI->_fn_BestFit = [this](int startCol, int endCol, int CalcRange, int flag) { return BestFit(startCol, endCol, CalcRange, flag); };
+	m_GI->_fn_SetTH_RowHeight = [this](int row, int height) { return SetTH_RowHeight(row, height); };
+	m_GI->_fn_SetSH_ColWidth = [this](int col, int width) { return SetSH_ColWidth(col, width); };
+	m_GI->_fn_MakeSuperTooltip = [this](NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section) { return MakeSuperTooltip(pNeedTT, hWnd, section); };
+	m_GI->_fn_HideTooltip = [this]() { HideTooltip(); };
+	m_GI->_fn_OnColSwapStart = [this](int col) { return OnColSwapStart(col); };
+	m_GI->_fn_OnCanColSwap = [this](int fromCol, int toCol) { return OnCanColSwap(fromCol, toCol); };
+	m_GI->_fn_OnColSwapped = [this](int fromCol, int toCol) { OnColSwapped(fromCol, toCol); };
+	m_GI->_fn_MoveColPosition = [this](int fromCol, int toCol, BOOL insertBefore) { return MoveColPosition(fromCol, toCol, insertBefore); };
+	m_GI->_fn_SetRowHeight = [this](long row, int height) { return SetRowHeight(row, height); };
+	m_GI->_fn_HScroll = [this](UINT nSBCode, UINT nPos) { HScroll(nSBCode, nPos); };
 }
 
 /***************************************************
@@ -3401,8 +3413,10 @@ int	GetCellIndirect(int col,long row,CUGCell *cell){
 	}
 
 	//use format class
-	if(cell->IsPropertySet(UGCELL_FORMAT_SET)){
-		cell->GetFormatClass()->ApplyDisplayFormat(cell);
+	if(cell->IsPropertySet(UGCELL_FORMAT_SET))
+	{
+		XeASSERT(false);	// TODO: implement cell formatting.
+		//cell->GetFormatClass()->ApplyDisplayFormat(cell);
 	}
 	//use cell style object
 	if(cell->IsPropertySet(UGCELL_STYLE_SET)){
@@ -7121,12 +7135,12 @@ int OnTopHdgSizing(int *height){
 OnSideHdgSized
 	Sent when the user has completed the sizing of the side heading
 Params:
-	width - pointer to new width
+	width - new width
 Return:
 	TRUE - to accept new size
 	FALSE - to revert to old size
 ****************************************************/
-int OnSideHdgSized(int *width){
+int OnSideHdgSized(int width){
 	//SendDataGridColWidthChangedMessage(-1, *width);
 	return 0;
 }
@@ -7135,13 +7149,13 @@ int OnSideHdgSized(int *width){
 OnTopHdgSized
 	Sent when the user has completed the sizing of the top heading
 Params:
-	height - pointer to new height
+	height - new height
 Return:
 	TRUE - to accept new size
 	FALSE - to revert to old size
 ****************************************************/
-int OnTopHdgSized(int *height){
-	UNREFERENCED_PARAMETER(*height);
+int OnTopHdgSized(int height){
+	UNREFERENCED_PARAMETER(height);
 	return 0;
 }
 
@@ -9201,7 +9215,7 @@ Return
 	2			- OnStartMenu did not allow the menu to appear
 	3			- menu failed
 ****************************************************/
-int StartMenu(int col,long row,POINT *point,int section){
+int StartMenu(int col,long row, CPoint point,int section){
 
 	if(!m_GI->m_enablePopupMenu)
 		return UG_ERROR;
@@ -9215,7 +9229,7 @@ int StartMenu(int col,long row,POINT *point,int section){
 	m_menuRow = row;
 	m_menuSection = section;
 
-	m_menu->ShowMenu(Hwnd(), CPoint(*point), 0);
+	m_menu->ShowMenu(Hwnd(), point, 0);
 
 	// SK MOD - needed NF when menu dismissed to dly paint the grid.
 	//OnMenuEnd( col, row, section );

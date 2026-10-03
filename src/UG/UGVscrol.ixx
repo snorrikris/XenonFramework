@@ -22,13 +22,17 @@ module;
 #include <string>
 
 #include "ugdefine.h"
-#include "uggdinfo.h"
+//#include "uggdinfo.h"
 //#include "UGHint.h"
-#include "ugvscrol.h"
+//#include "ugvscrol.h"
 //// define WM_HELPHITTEST messages
 //#include <afxpriv.h>
+//#include <list>
 
 export module Xe.UGVScrol;
+
+import Xe.ScrollBar;
+import Xe.UGGridInfoIF;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,16 +43,13 @@ static char THIS_FILE[] = __FILE__;
 //#pragma NOTE("SKMOD to support CXeScrollBar")
 // Base class of 'this' class changed to CXeScrollBar.
 
-//#include <list>
-import Xe.ScrollBar;
-
-class CUGGridInfo;
+//class CUGGridInfo;
 
 export class CUGVScroll : public CXeScrollBar
 {
 	// Construction
 public:
-	CUGGridInfo* m_GI;			//pointer to the grid information
+	CUGGridInfoIF* m_GI;			//pointer to the grid information
 
 protected:
 	//double			m_multiRange;	//scroll bar multiplication factor
@@ -117,23 +118,23 @@ public:
 	*****************************************************/
 	void Moved()
 	{
-		if (m_GI->m_paintMode == FALSE)
+		if (!m_GI->PaintMode())
 			return;
 
 		//set the scroll range
-		if (m_lastMaxTopRow != m_GI->m_maxTopRow ||
-			m_lastScrollMode != m_GI->m_vScrollMode ||
-			m_lastNumLockRow != m_GI->m_numLockRows)
+		if (m_lastMaxTopRow != m_GI->MaxTopRow() ||
+			m_lastScrollMode != m_GI->VScrollMode() ||
+			m_lastNumLockRow != m_GI->NumLockRows())
 		{
 			//set the last value vars
-			m_lastMaxTopRow = m_GI->m_maxTopRow;
-			m_lastScrollMode = m_GI->m_vScrollMode;
-			m_lastNumLockRow = m_GI->m_numLockRows;
+			m_lastMaxTopRow = m_GI->MaxTopRow();
+			m_lastScrollMode = m_GI->VScrollMode();
+			m_lastNumLockRow = m_GI->NumLockRows();
 
 			//set up the scrollbar if the number of rows is less than 1000
 			//if(m_GI->m_maxTopRow <=1000)
 			//{
-			if (UG_SCROLLJOYSTICK == m_GI->m_vScrollMode)
+			if (UG_SCROLLJOYSTICK == m_GI->VScrollMode())
 			{
 				SCROLLINFO ScrollInfo;
 				ScrollInfo.cbSize = sizeof(SCROLLINFO);
@@ -152,13 +153,13 @@ public:
 				ScrollInfo.cbSize = sizeof(SCROLLINFO);
 				ScrollInfo.fMask = SIF_PAGE | SIF_RANGE;
 
-				if (m_GI->m_defRowHeight < 1)
-					m_GI->m_defRowHeight = 1;
+				if (m_GI->DefRowHeight() < 1)
+					m_GI->SetDefRowHeight(1);
 
-				ScrollInfo.nPage = m_GI->m_gridHeight / m_GI->m_defRowHeight;
+				ScrollInfo.nPage = m_GI->GridHeight() / m_GI->DefRowHeight();
 
-				ScrollInfo.nMin = m_GI->m_numLockRows;
-				ScrollInfo.nMax = m_GI->m_maxTopRow + ScrollInfo.nPage - 1;
+				ScrollInfo.nMin = m_GI->NumLockRows();
+				ScrollInfo.nMax = m_GI->MaxTopRow() + ScrollInfo.nPage - 1;
 				SetScrollInfo(&ScrollInfo, FALSE);
 				_RedrawDirectly();
 			}
@@ -192,15 +193,15 @@ public:
 		//SetMultiplicationFactor(m_multiRange);
 
 		//set the scroll pos
-		if (UG_SCROLLJOYSTICK == m_GI->m_vScrollMode)
+		if (UG_SCROLLJOYSTICK == m_GI->VScrollMode())
 			SetScrollPos(1, TRUE);
 		else
 			//SetScrollPos((int)(m_GI->m_currentRow * m_multiRange),TRUE);
-			SetScrollPos((int)m_GI->m_topRow, TRUE);
+			SetScrollPos((int)m_GI->TopRow(), TRUE);
 
-		if (m_GI->m_lastTopRow != m_GI->m_topRow)
+		if (m_GI->LastTopRow() != m_GI->TopRow())
 		{
-			m_GI->OnViewMoved(UG_VSCROLL, m_GI->m_lastTopRow, m_GI->m_topRow);
+			m_GI->OnViewMoved(UG_VSCROLL, m_GI->LastTopRow(), m_GI->TopRow());
 		}
 
 		_RedrawDirectly();
@@ -219,10 +220,10 @@ public:
 	*****************************************************/
 	void VScroll(UINT nSBCode, UINT nPos)
 	{
-		if (GetFocus() != m_GI->m_gridWnd)
-			::SetFocus(m_GI->m_gridWnd);
+		if (GetFocus() != m_GI->GridWnd())
+			::SetFocus(m_GI->GridWnd());
 
-		m_GI->m_moveType = 4;
+		m_GI->SetMoveType(4);
 
 		switch (nSBCode)
 		{
@@ -245,12 +246,12 @@ public:
 			m_GI->MoveTopRow(UG_BOTTOM);
 			break;
 		case SB_THUMBTRACK:
-			if (m_GI->m_vScrollMode == UG_SCROLLTRACKING)	//tracking
+			if (m_GI->VScrollMode() == UG_SCROLLTRACKING)	//tracking
 				//m_ctrl->SetTopRow((long)((double)nPos * m_multiPos));
 				m_GI->SetTopRow((long)nPos);
 
 			//m_trackRowPos = (long)((double)nPos * m_multiPos) + m_GI->m_numLockRows;
-			m_trackRowPos = (long)(nPos + m_GI->m_numLockRows);
+			m_trackRowPos = (long)(nPos + m_GI->NumLockRows());
 
 			//scroll hint window
 			//#ifdef UG_ENABLE_SCROLLHINTS
@@ -303,10 +304,10 @@ protected:
 	//void OnRButtonDown(UINT nFlags, CPoint point) 
 	virtual LRESULT _OnRightDown(UINT nFlags, CPoint point) override
 	{
-		if (m_GI->m_enablePopupMenu)
+		if (m_GI->IsEnablePopupMenu())
 		{
 			ClientToScreen(&point);
-			m_GI->StartMenu(0, 0, &point, UG_VSCROLL);
+			m_GI->StartMenu(0, 0, point, UG_VSCROLL);
 		}
 
 		//CXeScrollBar::OnRButtonDown(nFlags, point);

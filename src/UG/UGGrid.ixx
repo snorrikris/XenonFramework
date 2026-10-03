@@ -31,17 +31,22 @@ module;
 #include <dwrite.h>
 
 #include "ugdefine.h"
-#include "uggdinfo.h"
-#include "UGGrid.h"
+//#include "uggdinfo.h"
+//#include "UGGrid.h"
+
+//#include <memory>
+//#include "ugdrwhnt.h"
 
 export module Xe.UGGrid;
 
 import Xe.UIcolorsIF;
 
-//#include <memory>
-//#include "ugdrwhnt.h"
-
 import Xe.D2DWndBase;
+import Xe.UGGridInfoIF;
+import Xe.UGDrawHint;
+import Xe.UGCelTyp;
+import Xe.UGCell;
+import Xe.UGMultiSelect;
 
 //import Xe.XSuperTooltip;
 
@@ -55,12 +60,12 @@ static char THIS_FILE[] = __FILE__;
 #define ON_WM_MOUSEWHEEL
 #endif
 
-class CUGGridInfo;
+//class CUGGridInfo;
 
 export class CUGGrid : public CXeD2DWndBase
 {
 public:
-	CUGGridInfo* m_GI;			//pointer to the grid information
+	CUGGridInfoIF* m_GI;			//pointer to the grid information
 
 	//CBitmap *		m_bitmap;		//double buffering
 	//int				m_doubleBufferMode;
@@ -109,7 +114,7 @@ public:
 	bool CreateGrid(DWORD dwStyle, const CRect& rect, HWND hParentWnd, UINT nID)
 	{
 		std::wstring classname = L"CUGGrid_WNDCLASS";
-		m_GI->m_xeUI->RegisterWindowClass(classname, D2DCtrl_WndProc);
+		m_GI->GetXeUI()->RegisterWindowClass(classname, D2DCtrl_WndProc);
 		dwStyle = dwStyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 		HWND hWnd = CreateD2DWindow(0, classname.c_str(), nullptr, dwStyle,
 			rect, hParentWnd, nID, true);
@@ -144,7 +149,7 @@ protected:
 	virtual LRESULT _OnNotify_NeedTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT) override
 	{
 		XeASSERT(pNeedTT);
-		if (pNeedTT && !m_GI->m_editInProgress)	// Don't show tooltips when a cell is in edit mode.
+		if (pNeedTT && !m_GI->EditInProgress())	// Don't show tooltips when a cell is in edit mode.
 		{
 			return m_GI->MakeSuperTooltip(pNeedTT, GetSafeHwnd(), UG_GRID);
 		}
@@ -164,7 +169,7 @@ protected:
 	//void OnPaint() 
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 	{
-		if (m_GI->m_paintMode == FALSE)
+		if (!m_GI->PaintMode())
 			return;
 
 		pRT->Clear(m_xeUI->GetColorF(CID::GrdCellDefBg));
@@ -188,9 +193,9 @@ protected:
 		//else
 		{
 			int startCol = 0,
-				endCol = m_GI->m_numberCols;
+				endCol = m_GI->NumberCols();
 			long startRow = 0,
-				endRow = m_GI->m_numberRows;
+				endRow = m_GI->NumberRows();
 			// determine the top-left and bottom-right cells of the clip rectangle
 			//m_GI->GetCellFromPointColRow( clipRect.left, clipRect.top, &startCol, &startRow );
 			//m_GI->GetCellFromPointColRow( clipRect.right, clipRect.bottom, &endCol, &endRow );
@@ -294,7 +299,7 @@ protected:
 		CSize		size;
 
 		RECT		focusRect = { -1,-1,-1,-1 };
-		CUGCellType* cellType;
+		CUGCellTypeIF* cellType;
 
 		int			rightBlank = -1;
 		int			bottomBlank = -1;
@@ -325,17 +330,17 @@ protected:
 		//the extremes, if the right or bottom is
 		//sooner then they will be updated in the
 		//main drawing loop
-		m_GI->m_rightCol = m_GI->m_numberCols;
-		m_GI->m_bottomRow = m_GI->m_numberRows;
+		m_GI->SetRightCol(m_GI->NumberCols());
+		m_GI->SetBottomRow(m_GI->NumberRows());
 
 		//main draw loop, this loop goes through all visible
 		//cells and checks to see if they need redrawing
 		//if they do then the cell is retrieved and drawn
-		for (y = 0; y < m_GI->m_numberRows; y++)
+		for (y = 0; y < m_GI->NumberRows(); y++)
 		{
 			//skip rows hidden under locked rows
-			if (y == m_GI->m_numLockRows)
-				y = m_GI->m_topRow;
+			if (y == m_GI->NumLockRows())
+				y = m_GI->TopRow();
 
 			row = y;
 
@@ -343,8 +348,8 @@ protected:
 			//for the current cell to be drawn
 			rect.top = rect.bottom;
 
-			if (m_GI->m_uniformRowHeightFlag)
-				rect.bottom += m_GI->m_defRowHeight;
+			if (m_GI->UniformRowHeightFlag())
+				rect.bottom += m_GI->DefRowHeight();
 			else
 			{
 				rect.bottom += m_GI->GetNonUniformRowHeight(row);
@@ -358,18 +363,18 @@ protected:
 
 			//check all visible cells in the current row to 
 			//see if they need drawing
-			for (x = 0; x < m_GI->m_numberCols; x++) {
+			for (x = 0; x < m_GI->NumberCols(); x++) {
 
 				//skip cols hidden under locked cols
-				if (x == m_GI->m_numLockCols)
-					x = m_GI->m_leftCol;
+				if (x == m_GI->NumLockCols())
+					x = m_GI->LeftCol();
 
 				row = y;
 				col = x;
 
 				//calc the left and right side of the rect
 				rect.left = rect.right;
-				rect.right += m_GI->m_colInfo[col].width;
+				rect.right += m_GI->GetColInfo(col).width;
 
 				if (rect.left == rect.right)
 					continue;
@@ -406,10 +411,10 @@ protected:
 
 					//draw the cell, check to see if it is 'current' and/or selected
 					CopyRect(&tempRect, &cellRect);
-					if (row == m_GI->m_currentRow && (col == m_GI->m_currentCol || m_GI->m_highlightRowFlag))
+					if (row == m_GI->CurrentRow() && (col == m_GI->CurrentCol() || m_GI->HighlightRowFlag()))
 						cellType->OnDraw(pRctx, EXE_FONT::eUI_Font, &cellRect, col, row, &cell, 0, 1);
 					else {
-						if (m_GI->m_multiSelect->IsSelected(col, row, &selectBlock))
+						if (m_GI->IsSelected(col, row, &selectBlock))
 							cellType->OnDraw(pRctx, EXE_FONT::eUI_Font, &cellRect, col, row, &cell, selectBlock + 1, 0);
 						else
 							cellType->OnDraw(pRctx, EXE_FONT::eUI_Font, &cellRect, col, row, &cell, 0, 0);
@@ -449,15 +454,15 @@ protected:
 				//check to see if the focus rect should be drawn
 				//this function should be called all the time
 				//even if it is off screen
-				if (row == m_GI->m_currentRow && (col == m_GI->m_currentCol ||
-					m_GI->m_highlightRowFlag)) {
+				if (row == m_GI->CurrentRow() && (col == m_GI->CurrentCol() ||
+					m_GI->HighlightRowFlag())) {
 					CopyRect(&focusRect, &cellRect);
 				}
 
 				//check to see if the right side of the rect is past the edge
 				//of the grid drawing area, if so then break
-				if (rect.right > m_GI->m_gridWidth) {
-					m_GI->m_rightCol = col;
+				if (rect.right > m_GI->GridWidth()) {
+					m_GI->SetRightCol(col);
 					break;
 				}
 
@@ -465,20 +470,20 @@ protected:
 
 			//check to see if there is blank space on the right side of the grid
 			//drawing area
-			if (rect.right < m_GI->m_gridWidth && m_GI->m_rightCol == m_GI->m_numberCols) {
+			if (rect.right < m_GI->GridWidth() && m_GI->RightCol() == m_GI->NumberCols()) {
 				rightBlank = rect.right;
 			}
 
 			//check to see if the bottom of the rect is past the bottom of the 
 			//grid drawing area, if so then break
-			if (rect.bottom > m_GI->m_gridHeight) {
-				m_GI->m_bottomRow = row;
+			if (rect.bottom > m_GI->GridHeight()) {
+				m_GI->SetBottomRow(row);
 				break;
 			}
 
 			//check for extra rows
-			if (y >= (m_GI->m_numberRows - 1)) {
-				long origNumRows = m_GI->m_numberRows;
+			if (y >= (m_GI->NumberRows() - 1)) {
+				long origNumRows = m_GI->NumberRows();
 				long newRow = y + 1;
 				m_GI->VerifyCurrentRow(&newRow);
 				//if(m_GI->m_numberRows > origNumRows){
@@ -492,7 +497,7 @@ protected:
 
 		//check to see if there is blank space on the bottom of the grid
 		//drawing area
-		if (rect.bottom < m_GI->m_gridHeight && m_GI->m_bottomRow == m_GI->m_numberRows)
+		if (rect.bottom < m_GI->GridHeight() && m_GI->BottomRow() == m_GI->NumberRows())
 			bottomBlank = rect.bottom;
 
 		//fill in the blank grid drawing areas
@@ -521,18 +526,18 @@ protected:
 
 		//draw the focus rect, if the flag was set above
 		if (!m_tempDisableFocusRect) {
-			if ((m_hasFocus /*|| m_GI->m_findDialogRunning*/) && !m_GI->m_editInProgress)
+			if ((m_hasFocus /*|| m_GI->m_findDialogRunning*/) && !m_GI->EditInProgress())
 			{
-				if (m_GI->m_highlightRowFlag)
+				if (m_GI->HighlightRowFlag())
 				{
 					focusRect.left = 0;
 
-					if (rect.right < m_GI->m_gridWidth)
+					if (rect.right < m_GI->GridWidth())
 						focusRect.right = rect.right;
 					else
 					{
-						if (m_GI->m_bExtend)
-							focusRect.right = m_GI->m_gridWidth;
+						if (m_GI->Extend())
+							focusRect.right = m_GI->GridWidth();
 						else
 						{
 							int iStartCol = m_GI->GetLeftCol(), iEndCol = m_GI->GetNumberCols() - 1;
@@ -885,33 +890,33 @@ protected:
 		BOOL fShiftKeyDown = (::GetKeyState(VK_SHIFT) & 0x8000) ? TRUE : FALSE;
 		BOOL fMenuKeyDown = (::GetKeyState(VK_MENU) & 0x8000) ? TRUE : FALSE;
 
-		m_GI->m_moveType = 0;	//key(default)
+		m_GI->SetMoveType(0);	//key(default)
 
 		int increment = 1; //default number of units to move
 
-		if (m_GI->m_ballisticKeyMode > 0)
+		if (m_GI->BallisticKeyMode() > 0)
 		{
 			m_keyRepeatCount++;
 
-			int value = (m_keyRepeatCount / m_GI->m_ballisticKeyMode);
+			int value = (m_keyRepeatCount / m_GI->BallisticKeyMode());
 			increment = value * value * value + 1;
 
-			if (m_GI->m_ballisticKeyDelay > 0)
+			if (m_GI->BallisticKeyDelay() > 0)
 			{
 				if (value == 0 && m_keyRepeatCount > 1)
-					Sleep(m_GI->m_ballisticKeyDelay);
+					Sleep(m_GI->BallisticKeyDelay());
 			}
 		}
 
 		//send a notify message to the cell type class
-		BOOL processed = m_GI->GetCellTypeColRow(m_GI->m_currentCol, m_GI->m_currentRow)->
-			OnKeyDown(m_GI->m_currentCol, m_GI->m_currentRow, &nChar);
+		BOOL processed = m_GI->GetCellTypeColRow(m_GI->CurrentCol(), m_GI->CurrentRow())->
+			OnKeyDown(m_GI->CurrentCol(), m_GI->CurrentRow(), &nChar);
 
 		//send a keydown notify message
 		m_GI->OnKeyDown(&nChar, processed);
 
-		int  curCol = m_GI->m_currentCol;
-		long curRow = m_GI->m_currentRow;
+		int  curCol = m_GI->CurrentCol();
+		long curRow = m_GI->CurrentRow();
 		int  JoinCellStartCol, JoinCellEndCol, colOff, rowOff;
 		long JoinCellStartRow, JoinCellEndRow;
 
@@ -922,11 +927,11 @@ protected:
 			JoinCellStartRow = curRow;
 			if ((JoinCellStartCol >= 0) && (m_GI->GetJoinStartCellColRow(&JoinCellStartCol, &JoinCellStartRow) == UG_SUCCESS))
 			{
-				m_GI->GotoCell(m_GI->m_dragCol - (curCol - JoinCellStartCol),
-					m_GI->m_dragRow - (curRow - JoinCellStartRow));
+				m_GI->GotoCell(m_GI->DragCol() - (curCol - JoinCellStartCol),
+					m_GI->DragRow() - (curRow - JoinCellStartRow));
 			}
 			else
-				m_GI->GotoCol(m_GI->m_dragCol - increment);
+				m_GI->GotoCol(m_GI->DragCol() - increment);
 		}
 		else if (nChar == VK_RIGHT)
 		{
@@ -940,19 +945,19 @@ protected:
 			JoinCellStartCol = curCol + colOff;
 			if (m_GI->GetJoinStartCellColRow(&JoinCellStartCol, &JoinCellStartRow) == UG_SUCCESS)
 			{
-				m_GI->GotoCell(m_GI->m_dragCol - (curCol - JoinCellStartCol),
-					m_GI->m_dragRow - (curRow - JoinCellStartRow));
+				m_GI->GotoCell(m_GI->DragCol() - (curCol - JoinCellStartCol),
+					m_GI->DragRow() - (curRow - JoinCellStartRow));
 			}
 			else
-				m_GI->GotoCol(m_GI->m_dragCol + colOff);
+				m_GI->GotoCol(m_GI->DragCol() + colOff);
 		}
 		else if (nChar == VK_UP)
 		{
 			if (fCtrlKeyDown && !(fShiftKeyDown || fMenuKeyDown))
 			{
-				if (m_GI->m_currentRow < m_GI->m_bottomRow)
+				if (m_GI->CurrentRow() < m_GI->BottomRow())
 				{
-					m_GI->SetTopRow(m_GI->m_topRow - 1);	// Ctrl + UP - Move current row down
+					m_GI->SetTopRow(m_GI->TopRow() - 1);	// Ctrl + UP - Move current row down
 				}
 			}
 			else
@@ -963,20 +968,20 @@ protected:
 					&& (m_GI->GetJoinStartCellColRow(&JoinCellStartCol, &JoinCellStartRow)
 						== UG_SUCCESS))
 				{
-					m_GI->GotoCell(m_GI->m_dragCol - (curCol - JoinCellStartCol),
-						m_GI->m_dragRow - (curRow - JoinCellStartRow));
+					m_GI->GotoCell(m_GI->DragCol() - (curCol - JoinCellStartCol),
+						m_GI->DragRow() - (curRow - JoinCellStartRow));
 				}
 				else
-					m_GI->GotoRow(m_GI->m_dragRow - increment);
+					m_GI->GotoRow(m_GI->DragRow() - increment);
 			}
 		}
 		else if (nChar == VK_DOWN)
 		{
 			if (fCtrlKeyDown && !(fShiftKeyDown || fMenuKeyDown))
 			{
-				if (m_GI->m_currentRow > m_GI->m_topRow)
+				if (m_GI->CurrentRow() > m_GI->TopRow())
 				{
-					m_GI->SetTopRow(m_GI->m_topRow + 1);	// Ctrl + DOWN - Move current row up
+					m_GI->SetTopRow(m_GI->TopRow() + 1);	// Ctrl + DOWN - Move current row up
 				}
 			}
 			else
@@ -991,11 +996,11 @@ protected:
 				JoinCellStartRow = curRow + rowOff;
 				if (m_GI->GetJoinStartCellColRow(&JoinCellStartCol, &JoinCellStartRow) == UG_SUCCESS)
 				{
-					m_GI->GotoCell(m_GI->m_dragCol - (curCol - JoinCellStartCol),
-						m_GI->m_dragRow - (curRow - JoinCellStartRow));
+					m_GI->GotoCell(m_GI->DragCol() - (curCol - JoinCellStartCol),
+						m_GI->DragRow() - (curRow - JoinCellStartRow));
 				}
 				else
-					m_GI->GotoRow(m_GI->m_dragRow + rowOff);
+					m_GI->GotoRow(m_GI->DragRow() + rowOff);
 			}
 		}
 		else if (nChar == VK_PRIOR)
@@ -1035,7 +1040,7 @@ protected:
 		if (::GetFocus() != Hwnd())
 			::SetFocus(Hwnd());
 
-		if (m_GI->m_editInProgress)
+		if (m_GI->EditInProgress())
 			return 0;
 
 		int col = -1;
@@ -1046,8 +1051,8 @@ protected:
 		SetCapture();
 
 		//setup the move type flags
-		m_GI->m_moveType = 1;	//lbutton
-		m_GI->m_moveFlags = nFlags;
+		m_GI->SetMoveType(1);	//lbutton
+		m_GI->SetMoveFlags(nFlags);
 
 		//check to see what cell was clicked in, and move there
 		if (m_GI->GetCellFromPoint(point.x, point.y, &col, &row, &rect) == UG_SUCCESS) {
@@ -1065,7 +1070,7 @@ protected:
 
 		m_GI->OnLClicked(col, row, 1, &rect, &point, processed);
 
-		m_GI->m_moveType = 0;	//key(default)
+		m_GI->SetMoveType(0);	//key(default)
 
 		// indicate that this mouse button down event was handled by the grid,
 		// allowing for the mouse button up to be processed.
@@ -1102,10 +1107,10 @@ protected:
 			//#pragma NOTE("SKmod - changed because of drag and drop")
 					// MOVED from Lbtn. dn.
 					//setup the move type flags
-			m_GI->m_moveType = 1;	//lbutton
-			m_GI->m_moveFlags = nFlags;
+			m_GI->SetMoveType(1);	//lbutton
+			m_GI->SetMoveFlags(nFlags);
 			m_GI->GotoCell(col, row);
-			m_GI->m_moveType = 0;	//key(default)
+			m_GI->SetMoveType(0);	//key(default)
 
 			//send a notification to the cell type	
 			processed = m_GI->GetCellTypeColRow(col, row)->OnLClicked(col, row, 0, &rect, &point);
@@ -1115,8 +1120,8 @@ protected:
 
 		ReleaseCapture();
 
-		m_GI->m_dragCol = m_GI->m_currentCol;
-		m_GI->m_dragRow = m_GI->m_currentRow;
+		m_GI->SetDragCol(m_GI->CurrentCol());
+		m_GI->SetDragRow(m_GI->CurrentRow());
 
 		m_cellTypeCapture = FALSE;
 		m_bHandledMouseDown = FALSE;
@@ -1174,13 +1179,13 @@ protected:
 		BOOL vertViewMove = FALSE,
 			horsViewMove = FALSE;
 
-		if (m_GI->m_editInProgress)
+		if (m_GI->EditInProgress())
 			return 0;
 
 		if (m_cellTypeCapture)
 		{
-			col = m_GI->m_currentCol;
-			row = m_GI->m_currentRow;
+			col = m_GI->CurrentCol();
+			row = m_GI->CurrentRow();
 			//send a notification to the cell type
 			BOOL processed = m_GI->GetCellTypeColRow(col, row)->OnMouseMove(col, row, &point, nFlags);
 			//send a notification to the main grid class
@@ -1190,8 +1195,8 @@ protected:
 		}
 
 
-		m_GI->m_moveType = 3;	//mouse move
-		m_GI->m_moveFlags = nFlags;
+		m_GI->SetMoveType(3);	//mouse move
+		m_GI->SetMoveFlags(nFlags);
 
 		//check to see if the mouse is over a cell
 		if (m_GI->GetCellFromPointColRow(point.x, point.y, &col, &row) == UG_SUCCESS)
@@ -1212,9 +1217,9 @@ protected:
 			{
 				if (m_GI->GetCellFromPointColRow(point.x, point.y, &col, &row) == UG_SUCCESS)
 				{
-					if (row == m_GI->m_bottomRow)
+					if (row == m_GI->BottomRow())
 						vertViewMove = TRUE;
-					if (col == m_GI->m_rightCol)
+					if (col == m_GI->RightCol())
 						horsViewMove = TRUE;
 
 					// The 'm_bScrollOnParialCells' flag controls the scrolling behavior
@@ -1224,23 +1229,23 @@ protected:
 					// You can set this flag to FALSE if you do not want the grid to
 					// scroll when user's mouse is over the partially visible cells,
 					// the grid will only do that when mouse is moved outside of the view.
-					if (m_GI->m_bScrollOnParialCells == FALSE && (vertViewMove == TRUE || horsViewMove == TRUE))
+					if (m_GI->ScrollOnPartialCells() == FALSE && (vertViewMove == TRUE || horsViewMove == TRUE))
 						return 0;
 
 					if (m_bHandledMouseDown != TRUE)
 						return 0;
 
 					//send a notification to the cell type
-					if (m_GI->m_numLockCols == 0 && m_GI->m_numLockRows == 0)
+					if (m_GI->NumLockCols() == 0 && m_GI->NumLockRows() == 0)
 						m_GI->GotoCell(col, row);
 					else
 					{
-						if (m_GI->m_dragCol > m_GI->m_numLockCols && col < m_GI->m_numLockCols)
+						if (m_GI->DragCol() > m_GI->NumLockCols() && col < m_GI->NumLockCols())
 							m_GI->MoveCurrentCol(UG_LINEUP);
 						else
 							m_GI->GotoCol(col);
 
-						if (m_GI->m_dragRow > m_GI->m_numLockRows && row < m_GI->m_numLockRows)
+						if (m_GI->DragRow() > m_GI->NumLockRows() && row < m_GI->NumLockRows())
 							m_GI->MoveCurrentRow(UG_LINEUP);
 						else
 							m_GI->GotoRow(row);
@@ -1250,29 +1255,29 @@ protected:
 				if (point.x < 0)
 				{
 					//if ballistic mode
-					if (m_GI->m_ballisticMode)
+					if (m_GI->BallisticMode())
 					{
-						int increment = (int)pow((double)((point.x * -1) / m_GI->m_defColWidth + 1),
-							m_GI->m_ballisticMode);
-						m_GI->GotoCol(m_GI->m_dragCol - increment);
+						int increment = (int)pow((double)((point.x * -1) / m_GI->DefColWidth() + 1),
+							m_GI->BallisticMode());
+						m_GI->GotoCol(m_GI->DragCol() - increment);
 						if (increment == 1)
-							Sleep(m_GI->m_ballisticDelay);
+							Sleep(m_GI->BallisticDelay());
 					}
 					else
 						m_GI->MoveCurrentCol(UG_LINEUP);
 					moved = TRUE;
 				}
 				//if the mouse is off the right side
-				else if (point.x > m_GI->m_gridWidth || horsViewMove)
+				else if (point.x > m_GI->GridWidth() || horsViewMove)
 				{
 					//if ballistic mode
-					if (m_GI->m_ballisticMode)
+					if (m_GI->BallisticMode())
 					{
-						int increment = (int)pow((double)((point.x - m_GI->m_gridWidth) /
-							m_GI->m_defColWidth + 1), m_GI->m_ballisticMode);
-						m_GI->GotoCol(m_GI->m_dragCol + increment);
+						int increment = (int)pow((double)((point.x - m_GI->GridWidth()) /
+							m_GI->DefColWidth() + 1), m_GI->BallisticMode());
+						m_GI->GotoCol(m_GI->DragCol() + increment);
 						if (increment == 1)
-							Sleep(m_GI->m_ballisticDelay);
+							Sleep(m_GI->BallisticDelay());
 					}
 					else
 						m_GI->MoveCurrentCol(UG_LINEDOWN);
@@ -1282,29 +1287,29 @@ protected:
 				if (point.y < 0)
 				{
 					//if ballistic mode
-					if (m_GI->m_ballisticMode)
+					if (m_GI->BallisticMode())
 					{
-						long increment = (long)pow((double)((point.y * -1) / m_GI->m_defRowHeight + 1),
-							m_GI->m_ballisticMode);
-						m_GI->GotoRow(m_GI->m_dragRow - increment);
+						long increment = (long)pow((double)((point.y * -1) / m_GI->DefRowHeight() + 1),
+							m_GI->BallisticMode());
+						m_GI->GotoRow(m_GI->DragRow() - increment);
 						if (increment == 1)
-							Sleep(m_GI->m_ballisticDelay);
+							Sleep(m_GI->BallisticDelay());
 					}
 					else
 						m_GI->MoveCurrentRow(UG_LINEUP);
 					moved = TRUE;
 				}
 				//if the mouse is below the bottom
-				else if (point.y > m_GI->m_gridHeight || vertViewMove)
+				else if (point.y > m_GI->GridHeight() || vertViewMove)
 				{
 					//if ballistic mode
-					if (m_GI->m_ballisticMode)
+					if (m_GI->BallisticMode())
 					{
-						long increment = (long)pow((double)((point.y - m_GI->m_gridHeight) /
-							m_GI->m_defRowHeight + 1), m_GI->m_ballisticMode);
-						m_GI->GotoRow(m_GI->m_dragRow + increment);
+						long increment = (long)pow((double)((point.y - m_GI->GridHeight()) /
+							m_GI->DefRowHeight() + 1), m_GI->BallisticMode());
+						m_GI->GotoRow(m_GI->DragRow() + increment);
 						if (increment == 1)
-							Sleep(m_GI->m_ballisticDelay);
+							Sleep(m_GI->BallisticDelay());
 					}
 					else
 						m_GI->MoveCurrentRow(UG_LINEDOWN);
@@ -1319,7 +1324,7 @@ protected:
 				{
 					if (msg.message == WM_MOUSEMOVE || msg.message == WM_LBUTTONUP)
 					{
-						m_GI->m_moveType = 0;	//key(default)
+						m_GI->SetMoveType(0);	//key(default)
 
 						return 0;
 					}
@@ -1330,7 +1335,7 @@ protected:
 			}
 		}
 
-		m_GI->m_moveType = 0;	//key - default
+		m_GI->SetMoveType(0);	//key - default
 		return 0;
 	}
 
@@ -1348,7 +1353,7 @@ protected:
 	//void OnRButtonDown(UINT nFlags, CPoint point)
 	virtual LRESULT _OnRightDown(UINT nFlags, CPoint point) override
 	{
-		if (m_GI->m_editInProgress)
+		if (m_GI->EditInProgress())
 			return 0;
 
 		int col = -1;
@@ -1356,8 +1361,8 @@ protected:
 		BOOL processed = FALSE;
 		RECT rect;
 
-		m_GI->m_moveType = 2;	//2button
-		m_GI->m_moveFlags = nFlags;
+		m_GI->SetMoveType(2);	//2button
+		m_GI->SetMoveFlags(nFlags);
 
 		if (m_GI->GetCellFromPoint(point.x, point.y, &col, &row, &rect) == UG_SUCCESS)
 		{
@@ -1369,15 +1374,15 @@ protected:
 		m_GI->OnRClicked(col, row, 1, &rect, &point, processed);
 
 
-		m_GI->m_moveType = 0;	//key(default)
+		m_GI->SetMoveType(0);	//key(default)
 
-		if (m_GI->m_enablePopupMenu)
+		if (m_GI->IsEnablePopupMenu())
 		{
 			ClientToScreen(&point);
-			m_GI->StartMenu(col, row, &point, UG_GRID);
+			m_GI->StartMenu(col, row, point, UG_GRID);
 		}
 
-		m_GI->m_moveType = 0;//key - default
+		m_GI->SetMoveType(0);//key - default
 		m_bHandledMouseDown = TRUE;
 		return 0;
 	}
@@ -1413,8 +1418,8 @@ protected:
 
 		m_GI->OnRClicked(col, row, 0, &rect, &point, processed);
 
-		m_GI->m_dragCol = m_GI->m_currentCol;
-		m_GI->m_dragRow = m_GI->m_currentRow;
+		m_GI->SetDragCol(m_GI->CurrentCol());
+		m_GI->SetDragRow(m_GI->CurrentRow());
 		m_bHandledMouseDown = FALSE;
 		return 0;
 	}
@@ -1439,8 +1444,8 @@ protected:
 		BOOL processed = FALSE;
 
 		//send a notification to the cell type	
-		processed = m_GI->GetCellTypeColRow(m_GI->m_currentCol, m_GI->m_currentRow)->
-			OnCharDown(m_GI->m_currentCol, m_GI->m_currentRow, &nChar);
+		processed = m_GI->GetCellTypeColRow(m_GI->CurrentCol(), m_GI->CurrentRow())->
+			OnCharDown(m_GI->CurrentCol(), m_GI->CurrentRow(), &nChar);
 
 		m_GI->OnCharDown(&nChar, processed);
 		return 0;
@@ -1483,14 +1488,14 @@ protected:
 		// redraw the current cell
 		CRect cellRect;
 
-		if (m_GI->m_highlightRowFlag == TRUE)
+		if (m_GI->HighlightRowFlag() == TRUE)
 		{
-			m_GI->GetRangeRect(0, m_GI->m_currentRow, m_GI->m_numberCols - 1, m_GI->m_currentRow, cellRect);
+			m_GI->GetRangeRect(0, m_GI->CurrentRow(), m_GI->NumberCols() - 1, m_GI->CurrentRow(), cellRect);
 			//m_GI->m_drawHintGrid.AddHint( 0, m_GI->m_currentRow, m_GI->m_numberCols - 1, m_GI->m_currentRow );
 		}
 		else
 		{
-			m_GI->GetCellRect(m_GI->m_currentCol, m_GI->m_currentRow, cellRect);
+			m_GI->GetCellRect(m_GI->CurrentCol(), m_GI->CurrentRow(), cellRect);
 			//m_GI->m_drawHintGrid.AddHint( m_GI->m_currentCol, m_GI->m_currentRow );
 		}
 
@@ -1517,7 +1522,7 @@ protected:
 		// notify the grid that the grid lost focus
 		m_GI->OnKillFocusNewWnd(UG_GRID, hNewWnd);
 
-		RedrawCell(m_GI->m_currentCol, m_GI->m_currentRow);
+		RedrawCell(m_GI->CurrentCol(), m_GI->CurrentRow());
 		return 0;
 	}
 
@@ -1607,11 +1612,11 @@ protected:
 	//BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
 	virtual LRESULT _OnMouseWheel(WORD fwKeys, short zDelta, CPoint pt) override
 	{
-		if (!m_GI->m_editInProgress)
+		if (!m_GI->EditInProgress())
 		{
 			int distance = zDelta / 120;
-			m_GI->m_moveType = 4;
-			if (m_GI->SetTopRow(m_GI->m_topRow - (distance * 3)) == UG_SUCCESS)
+			m_GI->SetMoveType(4);
+			if (m_GI->SetTopRow(m_GI->TopRow() - (distance * 3)) == UG_SUCCESS)
 			{
 				m_GI->HideTooltip();
 			}
@@ -1627,7 +1632,7 @@ protected:
 	//void OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
 	virtual LRESULT _OnMouseHWheel(WORD fwKeys, short zDelta, CPoint pt) override
 	{
-		if (m_GI->m_showHScroll)	// Is H scrollbar visible?
+		if (m_GI->ShowHScroll())	// Is H scrollbar visible?
 		{
 			_HideTooltip();
 			UINT uSBcode = zDelta < 0 ? SB_LINELEFT : SB_LINERIGHT;
@@ -1680,8 +1685,8 @@ protected:
 		m_keyRepeatCount = 0;
 
 		//send a notify message to the cell type class
-		BOOL processed = m_GI->GetCellTypeColRow(m_GI->m_currentCol, m_GI->m_currentRow)->
-			OnKeyUp(m_GI->m_currentCol, m_GI->m_currentRow, &nChar);
+		BOOL processed = m_GI->GetCellTypeColRow(m_GI->CurrentCol(), m_GI->CurrentRow())->
+			OnKeyUp(m_GI->CurrentCol(), m_GI->CurrentRow(), &nChar);
 
 		//send a keyup notify message
 		m_GI->OnKeyUp(&nChar, processed);
@@ -1741,7 +1746,7 @@ protected:
 		UINT nSBCode = LOWORD(wParam);
 		UINT nPos = HIWORD(wParam);
 		HWND hSBwnd = (HWND)lParam;
-		::SendMessageW(m_GI->m_ctrlWnd, WM_VSCROLL, MAKEWPARAM(nSBCode, nPos), (LPARAM)hSBwnd);
+		::SendMessageW(m_GI->CtrlWnd(), WM_VSCROLL, MAKEWPARAM(nSBCode, nPos), (LPARAM)hSBwnd);
 		//::SendMessage(m_GI->m_ctrlWnd, WM_VSCROLL,MAKEWPARAM(nSBCode,nPos),
 		//	(LPARAM)(pScrollBar!=NULL ? pScrollBar->GetSafeHwnd() : NULL));
 		return 0;
@@ -1763,7 +1768,7 @@ protected:
 		UINT nSBCode = LOWORD(wParam);
 		UINT nPos = HIWORD(wParam);
 		HWND hSBwnd = (HWND)lParam;
-		::SendMessageW(m_GI->m_ctrlWnd, WM_HSCROLL, MAKEWPARAM(nSBCode, nPos), (LPARAM)hSBwnd);
+		::SendMessageW(m_GI->CtrlWnd(), WM_HSCROLL, MAKEWPARAM(nSBCode, nPos), (LPARAM)hSBwnd);
 		//::SendMessage(m_GI->m_ctrlWnd, WM_HSCROLL,MAKEWPARAM(nSBCode,nPos),
 		//	(LPARAM)(pScrollBar!=NULL ? pScrollBar->GetSafeHwnd() : NULL));
 		return 0;

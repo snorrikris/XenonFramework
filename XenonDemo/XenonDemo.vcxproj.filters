@@ -33,50 +33,14 @@
     <ClInclude Include="..\src\XeAssert.h">
       <Filter>Source Files\XenonFramework</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UG\UGCBType.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGCTarrw.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGCTprogress.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGCTsarw.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGCTurlbtn.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\UG\ugdefine.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGDLType.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGDrwHnt.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGMemMan.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGMultiS.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\ugptrlst.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
     <ClInclude Include="..\src\UG\ugstruct.h">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\UG\XeGridDefs.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\XeResource.h">
       <Filter>Source Files\XenonFramework</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\UG\UGEdit.h">
-      <Filter>Source Files\XenonFramework\UG</Filter>
     </ClInclude>
     <ClInclude Include="..\vsrollinglog\VSRL.h">
       <Filter>Source Files\VSRL</Filter>
@@ -275,37 +239,7 @@
     <ClCompile Include="..\src\XeWindowStyleValue.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\UG\UGCBType.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGCTarrw.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGCTprogress.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\UG\UGCtrl.ixx">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGCTsarw.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGCTurlbtn.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGDLType.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGDrwHnt.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGMemMan.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGMultiS.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\ugptrlst.cpp">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
     <ClCompile Include="MainWnd.ixx">
@@ -340,9 +274,6 @@
     </ClCompile>
     <ClCompile Include="..\src\XeOpenFileExplorerAsync.ixx">
       <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\UG\UGEdit.cpp">
-      <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
     <ClCompile Include="..\vsrollinglog\VSRL.cpp">
       <Filter>Source Files\VSRL</Filter>
@@ -414,6 +345,42 @@
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
     <ClCompile Include="..\src\UG\UGGrid.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCBType.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCTprogress.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCTsarw.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCTurlbtn.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGDLType.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGDrwHnt.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGEdit.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGMemMan.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGMultiS.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\ugptrlst.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGGridInfoIF.ixx">
+      <Filter>Source Files\XenonFramework\UG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\UG\UGCelTypIF.ixx">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
   </ItemGroup>

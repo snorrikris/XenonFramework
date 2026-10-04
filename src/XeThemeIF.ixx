@@ -3,9 +3,10 @@ module;
 #include "os_minimal.h"
 #include <string>
 #include <vector>
-#include "ColorIDs.h"	// CID enum
 
 export module Xe.ThemeIF;
+
+export import Xe.UItypes;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

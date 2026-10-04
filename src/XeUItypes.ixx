@@ -5,6 +5,8 @@ module;
 #include <string>
 #include <functional>
 #include "XeAssert.h"
+
+// IMPORTANT - include this file ONLY here. (the compiler has problems if included in other modules).
 #include "ColorIDs.h"	// CID enum
 
 export module Xe.UItypes;

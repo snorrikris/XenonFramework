@@ -18,27 +18,16 @@ module;
 *************************************************************************/
 #include "../os_minimal.h"
 #include <functional>
-//#include "UGDtaSrc.h"
-//#include "UGCell.h"
-//#include "UGMemMan.h"
-//#include "UGMultiS.h"
-//#include "ugptrlst.h"
-//#include "UGCelTyp.h"
-//#include "UGDrwHnt.h"
-//#include "..\XSuperTooltip.h"
 #include "ugdefine.h"
 
 export module Xe.UGGridInfo;
 
-//import Xe.XSuperTooltip;
 import Xe.UIcolorsIF;
 import Xe.UGGridInfoIF;
-import Xe.UGDtaSrc;
 import Xe.UGCell;
 import Xe.UGCelTyp;
 import Xe.UGDrawHint;
 import Xe.UGCell;
-import Xe.UGDtaSrc;
 import Xe.UGMem;
 import Xe.UGMultiSelect;
 import Xe.UGPtrList;
@@ -65,13 +54,9 @@ export typedef std::function<int(int col, long row, HWND edit, UINT* vcKey)> fnO
 export typedef std::function<int(int x, int y, int* col, long* row)> fnGetCellFromPointColRow;
 export typedef std::function<int(int x, int y, int* ptcol, long* ptrow, RECT* rect)> fnGetCellFromPoint;
 export typedef std::function<int(CUGCell* cell1, CUGCell* cell2, int flags)> fnOnSortEvaluate;
-//export typedef std::function<void(CDC* dc, CDC* db_dc, int section)> fnOnScreenDCSetup;
 export typedef std::function<long()> fnGetNumberRows;
 export typedef std::function<void()> fnAdjustComponentSizes;
 export typedef std::function<int(int col, long row, CPoint point, int section)> fnStartMenu;
-//export typedef std::function<()> fn;
-//export typedef std::function<()> fn;
-//export typedef std::function<()> fn;
 export typedef std::function<void(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)> fnOnLClicked;
 export typedef std::function<void(int col, long row, int updn, RECT* rect, POINT* point, BOOL processed)> fnOnRClicked;
 export typedef std::function<void(int col, long row, RECT* rect, POINT* point, BOOL processed)> fnOnDClicked;
@@ -110,17 +95,14 @@ export typedef std::function<int(int flag)> fnMoveCurrentRow;
 export typedef std::function<int(int col)> fnSetLeftCol;
 export typedef std::function<int(int flag)> fnMoveLeftCol;
 export typedef std::function<int(int flag)> fnMoveCurrentCol;
-//export typedef std::function<()> fn;
 export typedef std::function<void(int nScrolDir, long oldPos, long newPos)> fnOnViewMoved;
 export typedef std::function<int(int* col, long* row, CUGCell* cell)> fnGetJoinStartCell;
 export typedef std::function<int(int* col, long* row, int* col2, long* row2)> fnGetJoinRange;
 export typedef std::function<int(int col, int width, bool notify)> fnSetColWidth;
 export typedef std::function<int(long* newRow)> fnVerifyCurrentRow;
-//export typedef std::function<void(CDC* dc, RECT* rect)> fnOnDrawFocusRect;
 export typedef std::function<int(int startCol, int endCol, int CalcRange, int flag)> fnBestFit;
 export typedef std::function<int(int row, int height)> fnSetTH_RowHeight;
 export typedef std::function<int(int col, int width)> fnSetSH_ColWidth;
-//export typedef std::function<LRESULT(NM_PPTOOLTIP_NEED_TT* pNeedTT, CXSuperTooltip& xtooltip, HWND hWnd, int section)> fnMakeSuperTooltip;
 export typedef std::function<LRESULT(NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section)> fnMakeSuperTooltip;
 export typedef std::function<void()> fnHideTooltip;
 export typedef std::function<BOOL(int col)> fnOnColSwapStart;
@@ -129,17 +111,6 @@ export typedef std::function<void(int fromCol, int toCol)> fnOnColSwapped;
 export typedef std::function<int(int fromCol, int toCol, BOOL insertBefore)> fnMoveColPosition;
 export typedef std::function<int(long row, int height)> fnSetRowHeight;
 export typedef std::function<void(UINT nSBCode, UINT nPos)> fnHScroll;
-
-
-//export struct UGCOLINFO
-//{
-//	int				width;
-//	CUGDataSource* dataSource;
-//	CUGCell* colDefault;
-//	int				colTranslation;
-//
-//};
-//class CXeUIcolorsIF;
 
 export class CUGGridInfo : public CUGGridInfoIF
 {

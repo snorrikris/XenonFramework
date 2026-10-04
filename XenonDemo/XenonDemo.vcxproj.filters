@@ -320,9 +320,6 @@
     <ClCompile Include="..\src\UG\uggdinfo.ixx">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\UG\UGDtaSrc.ixx">
-      <Filter>Source Files\XenonFramework\UG</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\UG\UGCelTyp.ixx">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>

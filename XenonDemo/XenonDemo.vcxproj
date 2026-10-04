@@ -164,7 +164,6 @@
     <ClCompile Include="..\src\UG\UGCTurlbtn.ixx" />
     <ClCompile Include="..\src\UG\UGDLType.ixx" />
     <ClCompile Include="..\src\UG\UGDrwHnt.ixx" />
-    <ClCompile Include="..\src\UG\UGDtaSrc.ixx" />
     <ClCompile Include="..\src\UG\UGEdit.ixx" />
     <ClCompile Include="..\src\UG\UGFormat.ixx" />
     <ClCompile Include="..\src\UG\uggdinfo.ixx" />

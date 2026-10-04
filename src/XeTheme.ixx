@@ -730,71 +730,20 @@ protected:
 	XePalette m_palette;
 	CID_Colors m_colorIDs;
 
-	//std::vector<HBRUSH> m_brushes;
-	//std::vector<HPEN> m_pens;
-
 	std::wstring m_theme_name;		// 01_Name from json.
 	bool m_isAppDefined = false;	// 02_IsAppDefined from json.
 	std::wstring m_based_on;			// 03_BasedOn from json. Theme name that 'this' theme is based on.
 
 #pragma region XeUI_Functions
 public:
-	XeTheme() = default;
-	~XeTheme()
-	{
-		//DeletePensAndBrushes();
-	}
+	//XeTheme() = default;
+	//~XeTheme(){}
 	virtual std::wstring GetThemeName() const override { return m_theme_name; }
 	virtual std::wstring GetThemeBasedOnName() const override { return m_based_on; }
 	virtual bool IsThemeAppDefined() const override { return m_isAppDefined; }
 
 	// Get set RGB value for a CID enum.
 	virtual COLORREF GetColor(CID ID) const override { return m_colorIDs.GetColor(ID); }
-
-	//virtual HBRUSH GetHBRUSH(CID uCID) override
-	//{
-	//	size_t i = static_cast<size_t>(uCID);
-	//	if (m_brushes.size() == 0)
-	//	{
-	//		m_brushes.resize(m_colorIDs.GetBiggestColorId() + 1);
-	//	}
-	//	XeASSERT(m_brushes.size() && i < m_brushes.size());	// Brushes array not created yet?
-	//	if (i >= m_brushes.size()) { return nullptr; }
-	//	if (!m_brushes[i])
-	//	{
-	//		m_brushes[i] = ::CreateSolidBrush(GetColor(uCID));
-	//	}
-	//	return m_brushes[i];
-	//}
-	//virtual HPEN GetHPEN(CID uCID) override
-	//{
-	//	size_t i = static_cast<size_t>(uCID);
-	//	if (m_pens.size() == 0)
-	//	{
-	//		m_pens.resize(m_colorIDs.GetBiggestColorId() + 1);
-	//	}
-	//	XeASSERT(m_pens.size() && i < m_pens.size());	// Pens array not created yet?
-	//	if (i >= m_pens.size()) { return nullptr; }
-	//	if (!m_pens[i])
-	//	{
-	//		m_pens[i] = ::CreatePen(PS_SOLID, 1, GetColor(uCID));
-	//		
-	//	}
-	//	return m_pens[i];
-	//}
-	//virtual void DeletePensAndBrushes() override
-	//{
-	//	for (HBRUSH hBrush : m_brushes)
-	//	{
-	//		::DeleteObject(hBrush);
-	//	}
-	//	for (HPEN hPen : m_pens)
-	//	{
-	//		::DeleteObject(hPen);
-	//	}
-	//	m_brushes.clear();
-	//	m_pens.clear();
-	//}
 #pragma endregion XeUI_Functions
 
 #pragma region LoadSaveThemeJson
@@ -950,7 +899,7 @@ public:
 	virtual bool IsCID_list_Changed() const override { return m_colorIDs.IsCID_list_Changed(); }
 
 	virtual void ResetTheme(const std::vector<CID_Color>& colorIDs,
-		const std::vector<PaletteColor>& palette) override
+			const std::vector<PaletteColor>& palette) override
 	{
 		m_colorIDs.SetColorIDs(colorIDs);
 		m_palette.SetPalette(palette);

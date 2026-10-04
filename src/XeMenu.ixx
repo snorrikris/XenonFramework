@@ -110,7 +110,7 @@ public:
 	}
 };
 
-class CXeMenu;
+export class CXeMenu;
 export typedef std::function<void(CXeMenu* pMenu, size_t top_level_index)> UpdateMenuCallbackFunc;
 
 export class CXeMenu : public CXePopupCtrl

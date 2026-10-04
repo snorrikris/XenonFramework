@@ -55,18 +55,14 @@ export struct ThemeInfoJson
 export class XeThemeIF
 {
 public:
+	virtual ~XeThemeIF() = default;
+
 	virtual std::wstring GetThemeName() const = 0;
 	virtual std::wstring GetThemeBasedOnName() const = 0;
 	virtual bool IsThemeAppDefined() const = 0;
 
 	// Get the RGB value for a CID enum.
 	virtual COLORREF GetColor(CID ID) const = 0;
-
-	//virtual HBRUSH GetHBRUSH(CID uCID) = 0;
-	//virtual CBrush* GetBrush(CID uCID) = 0;
-	//virtual HPEN GetHPEN(CID uCID) = 0;
-	//virtual CPen* GetPen(CID uCID) = 0;
-	//virtual void DeletePensAndBrushes() = 0;
 
 	virtual std::wstring LoadFromJson(const std::string& colorIDs_json,
 		const std::string& theme_json, const std::vector<ThemeInfoJson>& all_theme_list) = 0;

@@ -107,7 +107,6 @@ import Xe.DefData;
 
 //#include "UGCtrl.h"
 
-import Xe.UGDtaSrc;
 import Xe.UGCell;
 import Xe.UGCelTyp;
 import Xe.UGGridInfo;

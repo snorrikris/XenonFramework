@@ -62,7 +62,6 @@ export module Xe.UGMem;
 
 import Xe.UGGridInfoIF;
 import Xe.UGCell;
-import Xe.UGDtaSrc;
 
 //#ifdef _DEBUG
 //#define new DEBUG_NEW

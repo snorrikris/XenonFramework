@@ -9,12 +9,9 @@ export module Xe.UGGridInfoIF;
 import Xe.mfc_types;
 import Xe.UIcolorsIF;
 
-//import Xe.UGDtaSrc;
 import Xe.UGCell;
 export import Xe.UGCelTypIF;
 
-//class CUGCell;
-//class CUGCellType;
 class CUGDataSource;
 class CUGMultiSelect;
 
@@ -48,70 +45,7 @@ public:
 	virtual HCURSOR GetDefaultCursor() const = 0;
 	virtual int GetJoinStartCellColRow(int* col, long* row) = 0;
 
-	//virtual void AdjustComponentSizes() = 0;
-	//virtual int MoveLeftCol(int flag) = 0;
-	//virtual int MoveTopRow(int flag) = 0;
-	//virtual void OnViewMoved(int nScrolDir, long oldPos, long newPos) = 0;
-	//virtual int SetLeftCol(int col) = 0;
-	//virtual int SetTopRow(long row) = 0;
-	//virtual int StartMenu(int col, long row, CPoint point, int section) = 0;
-	//virtual int OnCellTypeNotify(long ID, int col, long row, long msg, long long param) = 0;
-	//virtual int OnSortEvaluate(CUGCell* cell1, CUGCell* cell2, int flags) const = 0;
-	//virtual int RedrawCell(int col, long row) = 0;
-	//virtual int GetRowHeight(long row) = 0;
-	//virtual int GetCellIndirect(int col, long row, CUGCell* cell) = 0;
-	//virtual int GetJoinStartCell(int* col, long* row, CUGCell* cell) = 0;
-	//virtual CUGCellType* GetCellType(int type) = 0;
-	//virtual int SetSH_ColWidth(int col, int width) = 0;
-	//virtual CUGCellType* GetCellTypeColRow(int col, long row) = 0;
-	//BestFit
-	//EditCtrlFinished
-	//GetCellRect
-	//GetColWidth
-	//GetDefaultCursor
-	//GetJoinRange
-	//GetJoinStartCellColRow
-	//GetNonUniformRowHeight
-	//GotoCell
-	//GotoCol
-	//GotoRow
-	//MakeSuperTooltip
-	//MoveColPosition
-	//MoveCurrentCol
-	//MoveCurrentRow
-	//NumberTopHdgRows
-	//OnCanColSwap
-	//OnCanSizeCol
-	//OnCanSizeRow
-	//OnCanSizeSideHdg
-	//OnCanSizeTopHdg
-	//OnColRowSizeFinished
-	//OnColSized
-	//OnColSizing
-	//OnColSwapStart
-	//OnColSwapped
-	//OnEditVerify
-	//OnKeyDown
-	//OnKillFocusNewWnd
-	//OnMouseMove
-	//OnRowSized
-	//OnRowSizing
-	//OnSH_DClicked
-	//OnSH_LClicked
-	//OnSH_RClicked
-	//OnSideHdgSized
-	//OnSideHdgSizing
-	//OnTH_DClicked
-	//OnTH_LClicked
-	//OnTH_RClicked
-	//OnTopHdgSized
-	//OnTopHdgSizing
-	//RedrawAll
-	//SetCell
-	//SetColWidth
-	//SetTH_RowHeight
-	//TopHdgHeight
-	//VerifyCurrentRow
+#pragma region CUGGridInfoIF_fn_
 	virtual int OnCellTypeNotify(long ID, int col, long row, long msg, long long param) = 0;
 	virtual int GetCellIndirect(int col, long row, CUGCell* cell) = 0;
 	virtual CUGCellTypeIF* GetCellType(int type) = 0;
@@ -191,7 +125,9 @@ public:
 	virtual int MoveColPosition(int fromCol, int toCol, BOOL insertBefore) = 0;
 	virtual int SetRowHeight(long row, int height) = 0;
 	virtual void HScroll(UINT nSBCode, UINT nPos) = 0; 
+#pragma endregion CUGGridInfoIF_fn_
 
+#pragma region GettersSetters
 	virtual BOOL CancelMode() const = 0;			//m_bCancelMode
 	virtual BOOL Extend() const = 0;				//m_bExtend
 	virtual int BallisticDelay() const = 0;			//m_ballisticDelay
@@ -268,10 +204,69 @@ public:
 	virtual void SetSideHdgColWidth(int colIdx, int cx) = 0;
 	virtual int GetTopHdgRowHeight(int rowIdx) const = 0;	//m_topHdgHeights
 	virtual void SetTopHdgRowHeight(int rowIdx, int cy) = 0;
-	//virtual CUGMultiSelect* MultiSelect() const = 0;				//m_multiSelect
 	virtual int IsSelected(int col, long row, int* block = nullptr) const = 0;
+#pragma endregion GettersSetters
 };
 
+/*************************************************************************
+				Class Implementation : CUGDataSource
+**************************************************************************
+	Source file : UGDtaSrc.cpp
+	Copyright © Dundas Software Ltd. 1994 - 2002, All Rights Reserved
+*************************************************************************/
+/*************************************************************************
+				Class Declaration : CUGDataSource
+**************************************************************************
+	Source file : UGDtaSrc.cpp
+	Header file : UGDtaSrc.h
+	Copyright © Dundas Software Ltd. 1994 - 2002, All Rights Reserved
+
+	Purpose
+		The CUGDataSource class is used by the grid
+		as standard interface between the grid
+		and its data.  The Ultimate Grid relies
+		on CUGDataSource derived class to provide
+		it with all of the information that needs
+		to be displayed.
+
+		Datasources can be practically anything
+		i.e.	arrays
+				linked lists
+				databases
+				flat files
+				real-time feeds (sensors)
+				calculations
+
+	Details
+		This is a base class which all other datasources
+		must be derived from. By defining a standard
+		interface to the data, an abstract layer is
+		created which allows the uderlying data to
+		come from any source, plus allows the datasource
+		to be changed without any code re-write.
+
+		At the minimum only ONE virtual function must
+		be overwitten it is the GetCell. GetCell is
+		called by the grid when it needs information
+		about a particular cell.
+
+		Even though the grid generally works on a cell by
+		cell basis, many datasource (such as databases)
+		tend to work on a row by row basis. To allow data
+		to be written to the datasource in this manner
+		transaction writing can be used within a datasource
+		by overwritting the transaction functions.
+
+		If a derived datasource cannot return the number
+		of rows that is contains, then overwrite
+		the OnHitBottom virtual function. This allows for
+		the grid to ask the datasource for new rows on the fly.
+
+		Stanard return values from a datasource are
+			UG_NA		- not implemented (-1)
+			UG_SUCCESS	- success (0)
+			1 and up	- error codes
+*************************************************************************/
 export class CUGDataSource
 {
 protected:

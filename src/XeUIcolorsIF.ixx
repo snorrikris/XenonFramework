@@ -1,15 +1,13 @@
 module;
 
 #include "os_minimal.h"
-#include <algorithm>
-#include <string>
-#include <functional>
 #include <d2d1.h>
 #include <dwrite.h>
 #include <wincodec.h>
 
 export module Xe.UIcolorsIF;
 
+import std;
 export import Xe.UItypes;
 import Xe.UserSettingsForUI;
 import Xe.ThemeIF;

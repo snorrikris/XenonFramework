@@ -4,6 +4,7 @@ module;
 
 export module Xe.PopupCtrl;
 
+import std;
 import Xe.UIcolorsIF;
 export import Xe.PopupCtrlBase;
 import Xe.mfc_types;

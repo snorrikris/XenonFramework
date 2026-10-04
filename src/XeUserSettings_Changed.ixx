@@ -1,9 +1,8 @@
 module;
 
-#include <string>
-#include <vector>
-
 export module Xe.UserSettings_Changed;
+
+import std;
 
 export struct ChangedSetting
 {

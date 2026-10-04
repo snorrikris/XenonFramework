@@ -2,8 +2,6 @@ module;
 
 #include "os_minimal.h"
 #include <cstdint>
-#include <string>
-#include <functional>
 #include "XeAssert.h"
 
 // IMPORTANT - include this file ONLY here. (the compiler has problems if included in other modules).
@@ -11,6 +9,7 @@ module;
 
 export module Xe.UItypes;
 
+import std;
 export import Xe.UItypesPID;
 import Xe.mfc_types;
 

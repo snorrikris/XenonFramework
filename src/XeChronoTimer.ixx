@@ -1,9 +1,10 @@
 module;
 
-#include <chrono>
-#include <thread>
+#include <stdint.h>
 
 export module Xe.ChronoTimer;
+
+import std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -46,14 +47,15 @@ protected:
 	std::chrono::time_point<std::chrono::steady_clock> m_timer;
 };
 
+constexpr int64_t c_LLONG_MAX = std::numeric_limits<int64_t>::max();
 export class TimeoutTimer
 {
 	ChronoTimer m_timeoutTimer;
-	int64_t m_timeout_mS = LLONG_MAX;
+	int64_t m_timeout_mS = c_LLONG_MAX;
 	bool m_isTimeout = false;
 
 public:
-	void ResetTimeoutTimer(int64_t timeout_mS = LLONG_MAX)
+	void ResetTimeoutTimer(int64_t timeout_mS = c_LLONG_MAX)
 	{
 		m_timeoutTimer.Reset();
 		m_timeout_mS = timeout_mS;

@@ -1,16 +1,13 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
-#include <vector>
-#include <map>
-#include <functional>
+#include <cwchar>
 #include <d2d1.h>
 #include <dwrite.h>
 
 export module Xe.DurationCtrl;
 
+import std;
 import Xe.PopupCtrlBase;
 import Xe.PopupCtrl;
 import Xe.UIcolorsIF;

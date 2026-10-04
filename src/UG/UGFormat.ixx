@@ -22,11 +22,8 @@ module;
 
 
 #include "../os_minimal.h"
-//#include "UGFormat.h"
 
 export module Xe.UGFormat;
-
-//import Xe.UGCell;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

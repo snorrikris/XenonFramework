@@ -1,13 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
-#include <string_view>
 #include "XeResource.h"
 
 export module Xe.MainFrameBase;
 
+import std;
 import Xe.MainFrameIF;
 import Xe.TabsView;
 import Xe.UIcolorsIF;

@@ -1,14 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <functional>
-#include <memory>
-#include <string>
+#include <time.h>
 #include "..\scintilla\include\Scintilla.h"
-//#include "CustomWndMsgs.h"
 
 export module Xe.ScintillaEditControl;
 
+import std;
 import Xe.ScrollBar;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;

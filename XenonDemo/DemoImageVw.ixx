@@ -1,11 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <memory>
 
 export module Demo.ImageVw;
 
+import std;
 import Demo.FileVwBase;
 import Xe.ImageCtrl;
 import Xe.FileHelpers;

@@ -1,15 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
-#include <vector>
-#include <functional>
 #include <d2d1.h>
 #include <dwrite.h>
 
 export module Xe.ComboBoxEx;
 
+import std;
 import Xe.PopupCtrl;
 import Xe.ListBoxExCommon;
 import Xe.ScintillaEditControl;

@@ -30,19 +30,12 @@ module;
 *************************************************************************/
 
 #include "../os_minimal.h"
-#include <string>
 
 #include "ugdefine.h"
-//#include "UGCelTyp.h"
-//#include "uggdinfo.h"
-//#include "ugsidehd.h"
-
-//#include <memory>
-//#include "UGCell.h"
-//#include "UGDrwHnt.h"
 
 export module Xe.UGSidehd;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
 import Xe.UGGridInfoIF;

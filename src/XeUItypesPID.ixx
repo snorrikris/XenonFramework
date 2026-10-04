@@ -1,8 +1,8 @@
 module;
 
-#include <vector>
-
 export module Xe.UItypesPID;
+
+import std;
 
 /////////////////////////////////////////////////////////////////////////////
 // PNG images shared resources

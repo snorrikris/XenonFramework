@@ -1,9 +1,6 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
-#include <vector>
 #include "..\vsrollinglog\VSRL.h"
 #include "XeResource.h"
 
@@ -12,6 +9,7 @@ module;
 
 export module Xe.D2DAppBase;
 
+import std;
 import Xe.UIcolors;
 import Xe.FileHelpers;
 import Xe.UserSettingsForUI;

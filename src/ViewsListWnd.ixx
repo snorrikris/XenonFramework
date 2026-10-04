@@ -1,22 +1,16 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <cstring>
-#include <functional>
-#include <memory>
-//#include "CustomWndMsgs.h"
 
 export module Xe.ViewsListWnd;
 
+import std;
 import Xe.UserSettingsForUI;
 import Xe.ScrollBar;
 import Xe.FileVwIF;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
-//import Xe.FileContainerUI_IF;
 import Xe.Helpers;
-//import Xe.LogDefs;
 import Xe.DefData;
 
 #ifdef _DEBUG

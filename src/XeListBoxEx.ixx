@@ -1,12 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
-#include <vector>
 
 export module Xe.ListBoxEx;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.ScrollBar;
 import Xe.ListBoxExCommon;

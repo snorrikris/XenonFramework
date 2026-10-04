@@ -1,17 +1,14 @@
 module;
 
 #include "os_minimal.h"
-#include <vector>
-#include <string>
-#include <algorithm> 
-#include <cctype>
-#include <cwctype>
-#include <locale>
+//#include <cctype>
+//#include <cwctype>
+//#include <locale>
 #include <cwchar>
-#include <string_view>
-#include <ranges>
 
 export module Xe.StringTools;
+
+import std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

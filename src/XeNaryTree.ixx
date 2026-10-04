@@ -1,11 +1,10 @@
 module;
 
-#include <vector>
-#include <map>
-#include <memory>
 #include "XeAssert.h"
 
 export module Xe.NaryTree;
+
+import std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

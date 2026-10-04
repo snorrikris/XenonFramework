@@ -2,12 +2,11 @@ module;
 
 #include <fstream>
 #include "logging.h"
-#include <string>
-#include <functional>
 #include "nlohmann/json.hpp"
 
 export module Xe.FileHelpersJson;
 
+import std;
 import Xe.StringTools;
 import Xe.StringTools;
 

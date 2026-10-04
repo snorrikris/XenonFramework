@@ -1,9 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
+#include <cwchar>
 
 export module Xe.FileTimeX;
+
+import std;
 
 /* RESEARCH materals:
 https://www.codeproject.com/Articles/144159/Time-Format-Conversion-Made-Easy

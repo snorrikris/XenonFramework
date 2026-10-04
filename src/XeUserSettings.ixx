@@ -17,11 +17,10 @@ For LVS that is: C:\Users\{user}\AppData\Local\LogViewerStudio\UserSettings\
 
 #include "XeAssert.h"
 #include "nlohmann/json.hpp"
-#include <string>
-#include <map>
 
 export module Xe.UserSettings;
 
+import std;
 export import Xe.UserSetting;
 export import Xe.UserSettings_Changed;
 

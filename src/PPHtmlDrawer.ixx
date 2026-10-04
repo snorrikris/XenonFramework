@@ -79,19 +79,18 @@ module;
 /////////////////////////////////////////////////////////////////////
 
 #include "os_minimal.h"
-#include <memory>
-#include <vector>
-#include <map>
-#include <algorithm>
-#include <string>
-#include <map>
-#include <format>
 #define NOMINMAX
 #include <d2d1.h>
 #include <dwrite.h>
 #include <boost/algorithm/string.hpp>
 
 export module Xe.PPHtmlDrawer;
+
+import std;
+import Xe.UIcolorsIF;
+import Xe.mfc_types;
+import Xe.Helpers;
+import Xe.StringTools;
 
 //#pragma warning(disable : 4786)	// symbol greater than 255 character
 
@@ -124,11 +123,6 @@ export module Xe.PPHtmlDrawer;
 #define CPPString	CStdStringA	//non-MFC program ANSI
 #endif
 //#endif
-
-import Xe.UIcolorsIF;
-import Xe.mfc_types;
-import Xe.Helpers;
-import Xe.StringTools;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

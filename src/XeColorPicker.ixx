@@ -3,20 +3,14 @@ module;
 // Source: https://www.codeproject.com/Articles/5270027/A-Modern-Direct2D-Color-Picker-for-Plain-Win32
 
 #include "os_minimal.h"
-#include <string>
-#include <vector>
-#include <memory>
-#include <functional>
-#include <algorithm>
-#include <cmath>
-#include <numbers>
-#include <optional>
+#include <cwchar>
 #include <d2d1.h>
 #include <dwrite.h>
 
 
 export module Xe.ColorPicker;
 
+import std;
 import Xe.PopupCtrlBase;
 import Xe.PopupCtrl;
 import Xe.UIcolorsIF;

@@ -1,12 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <functional>
 #include "GridDefs.h"
-//#include "UG\UGCell.h"
 
 export module Xe.GridDataSource;
+
+import std;
 
 export import Xe.GridTableIF;
 
@@ -14,7 +13,6 @@ export import Xe.GridDataDefs;
 import Xe.UIcolorsIF;
 import Xe.Menu;
 import Xe.mfc_types;
-//import Xe.LogDefs;
 import Xe.DefData;
 import Xe.UGCell;
 import Xe.UGGridInfoIF;

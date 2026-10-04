@@ -1,14 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <algorithm>
 #include <wincodec.h>
 #include <D2d1_1.h>
-//#include "CustomWndMsgs.h"
 
 export module Xe.ImageCtrl;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
 

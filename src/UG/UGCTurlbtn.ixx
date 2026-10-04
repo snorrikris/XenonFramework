@@ -23,17 +23,12 @@ module;
 
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-#include <string>
 
 #include "ugdefine.h"
-//#include "uggdinfo.h"
-//#include "UGCTurlbtn.h"
-
-//#include "UGCelTyp.h"
 
 export module Xe.UGUrlBtnType;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.UGGridInfoIF;
 import Xe.UGCelTyp;

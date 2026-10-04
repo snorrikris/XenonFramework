@@ -1,10 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <vector>
 
 export module Xe.MainFrameIF;
 
+import std;
 export import Xe.TabsViewIF;
 import Xe.mfc_types;
 import Xe.D2DToolbarIF;

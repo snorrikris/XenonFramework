@@ -2,17 +2,15 @@ module;
 
 #include "XeResource.h"
 
-//#include "framework.h"
 #include "os_minimal.h"
-#include <memory>
 #include "..\vsrollinglog\VSRL.h"
 
 export module Demo.app;
 
+import std;
 import Demo.MainWnd;
 import Xe.UserSettingsForUI;
 import Xe.D2DAppBase;
-//import Xe.UIcolorsIF;
 
 export class CXenonDemoApp : public CXeD2DAppBase
 {

@@ -38,17 +38,11 @@ module;
 
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-//#include <afxole.h>			// Needed for drag and drop support in Grid
-#include <string>
-
 #include "ugdefine.h"
-//#include "UGCell.h"
-
-//#include "ugformat.h"
 
 export module Xe.UGCell;
 
+import std;
 import Xe.UItypes;
 
 import Xe.UIcolorsIF;
@@ -61,47 +55,11 @@ import Xe.UGFormat;
 //static char THIS_FILE[] = __FILE__;
 //#endif
 
-#ifndef _T
-#define _T(quote) TEXT(quote) 
-#endif
+//#ifndef _T
+//#define _T(quote) TEXT(quote) 
+//#endif
 
-//#define UGCELL_TEXT_SET			BIT0
-//#define UGCELL_STRING_SET		BIT0
-//#define UGCELL_MASK_SET			BIT1
-//#define UGCELL_LABEL_SET		BIT2
-//#define UGCELL_DATATYPE_SET		BIT3
-//#define UGCELL_PARAM_SET		BIT4
-//#define UGCELL_CELLTYPE_SET		BIT5
-//#define UGCELL_CELLTYPEEX_SET	BIT6
-//#define UGCELL_TEXTCOLOR_SET	BIT7
-//#define UGCELL_BACKCOLOR_SET	BIT8
-//#define UGCELL_HTEXTCOLOR_SET	BIT9
-//#define UGCELL_HBACKCOLOR_SET	BIT10
-//#define UGCELL_BORDERSTYLE_SET	BIT11
-//#define UGCELL_BORDER_SET		BIT11
-//#define UGCELL_BORDERCOLOR_SET	BIT12
-//#define UGCELL_FONT_SET			BIT13
-//#define UGCELL_BITMAP_SET 		BIT14
-//#define UGCELL_ALIGNMENT_SET	BIT15
-//#define UGCELL_EXTRAMEMORY_SET	BIT16
-//#define UGCELL_JOIN_SET			BIT17
-//#define UGCELL_FORMAT_SET		BIT21
-//#define UGCELL_NOTUSED			BIT22
-//#define UGCELL_STYLE_SET		BIT23
-//#define UGCELL_READONLY_SET		BIT24
-//#define UGCELL_NUMBERDEC_SET	BIT25
-//#define UGCELL_DONOT_LOCALIZE	BIT26
-//#define UGCELL_PNGIMG_SET		BIT27
-//#define UGCELL_TIME_GAP_FLAG	BIT28
-//#define UGCELL_TIME_JUMP_FLAG	BIT29
-//
-//#define UGCELLDATA_STRING		1
-//#define UGCELLDATA_NUMBER		2
-//#define UGCELLDATA_BOOL			3
-//#define UGCELLDATA_TIME			4
-//#define UGCELLDATA_CURRENCY		5
-//
-export class CUGCell //: public CObject
+export class CUGCell
 {
 protected:
 	unsigned long m_propSetFlags;	//one bit is used as a set/unset flag 
@@ -241,9 +199,9 @@ public:
 			UGCELL_HBACKCOLOR_SET |
 			UGCELL_ALIGNMENT_SET;
 
-		m_string = _T("");
-		m_mask = _T("");
-		m_label = _T("");
+		m_string = L"";
+		m_mask = L"";
+		m_label = L"";
 		m_format = NULL;
 		m_cellStyle = NULL;
 		// numberic datatype specific information

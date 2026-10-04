@@ -1,12 +1,6 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <memory>
-//#include "..\LogViewerStudio\resource.h"
-#include <algorithm>
-#include <optional>
-#include <functional>
 #include <tchar.h>
 #include <d2d1.h>
 #include <dwrite.h>
@@ -17,6 +11,7 @@ module;
 
 export module Xe.UIcolors;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.Theme;
 import Xe.UserSettings;

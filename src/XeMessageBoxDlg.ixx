@@ -1,11 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
 #include "XeResource.h"
 
 export module Xe.MessageBoxDlg;
 
+import std;
 import Xe.BaseDlg;
 import Xe.StringTools;
 import Xe.ViewManagerIF;

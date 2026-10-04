@@ -26,19 +26,14 @@ module;
 *************************************************************************/
 
 #include "../os_minimal.h"
-#include <string>
 #include <d2d1.h>
 #include <dwrite.h>
 
 #include "ugdefine.h"
-//#include "uggdinfo.h"
-//#include "UGGrid.h"
-
-//#include <memory>
-//#include "ugdrwhnt.h"
 
 export module Xe.UGGrid;
 
+import std;
 import Xe.UIcolorsIF;
 
 import Xe.D2DWndBase;
@@ -47,8 +42,6 @@ import Xe.UGDrawHint;
 import Xe.UGCelTyp;
 import Xe.UGCell;
 import Xe.UGMultiSelect;
-
-//import Xe.XSuperTooltip;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

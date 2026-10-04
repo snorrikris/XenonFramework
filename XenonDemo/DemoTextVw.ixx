@@ -1,11 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <memory>
 
 export module Demo.TextVw;
 
+import std;
 import Demo.FileVwBase;
 import Xe.ScintillaEditControl;
 import Xe.FileHelpers;

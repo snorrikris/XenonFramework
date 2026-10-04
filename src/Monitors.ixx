@@ -20,12 +20,10 @@ module;
 //
 
 #include "os_minimal.h"
-#include <vector>
-#include <string>
-#include <algorithm>
 
 export module Xe.Monitors;
 
+import std;
 import Xe.mfc_types;
 
 #ifdef _DEBUG

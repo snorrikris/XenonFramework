@@ -1,11 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
 #include "logging.h"
 
 export module Demo.MainWnd;
 
+import std;
 import Xe.MainFrameBase;
 import Demo.ViewManager;
 import Demo.Form;

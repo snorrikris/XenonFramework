@@ -26,16 +26,12 @@ module;
 
 
 #include "../os_minimal.h"
-#include <string>
 
 #include "ugdefine.h"
-//#include "UGCTsarw.h"
-
-//#include "UGCelTyp.h"
-//#include "ugstruct.h"
 
 export module Xe.UGSortArrowType;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.UGCelTyp;
 

@@ -1,12 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <vector>
-#include <atomic>
-#include <functional>
 #include "XeAssert.h"
 
 export module Xe.Utils;
+
+import std;
 
 export struct BoolFlags64
 {

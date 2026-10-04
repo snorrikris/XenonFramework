@@ -15,15 +15,13 @@ module;
 **************************************************************************/
 
 #include "../os_minimal.h"
-#include <string>
 #include <d2d1.h>
 
 #include "ugdefine.h"
-//#include "uggdinfo.h"
-//#include "UGCTprogress.h"
 
 export module Xe.UGProgressType;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.UGGridInfoIF;
 import Xe.UGCelTyp;

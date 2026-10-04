@@ -1,14 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <vector>
-#include <memory>
-#include <string>
-#include <cstring>
+//#include <cstring>
 #include "XeResource.h"
 
 export module Xe.SettingsDlg;
 
+import std;
 import Xe.BaseDlg;
 import Xe.UserSettingControl;
 import Xe.D2DButton;

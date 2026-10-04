@@ -1,7 +1,9 @@
 module;
-#include <string>
+#include <stdint.h>
 
 export module Xe.DefData;
+
+import std;
 
 // Wrapper class for data source id (for type safety).
 export class  dsid_t

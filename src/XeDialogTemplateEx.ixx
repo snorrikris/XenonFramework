@@ -1,9 +1,10 @@
 module;
 #include <windows.h>
-#include <string>
-#include <vector>
+#include <stdint.h>
 
 export module Xe.DialogTemplateEx;
+
+import std;
 
 // See: https://learn.microsoft.com/en-us/windows/win32/dlgbox/dlgtemplateex
 // and: https://devblogs.microsoft.com/oldnewthing/20040623-00/?p=38753

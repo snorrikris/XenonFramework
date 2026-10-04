@@ -1,13 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <list>
 #include <tchar.h>
 #include "nlohmann/json.hpp"
 
 export module Xe.MRUList;
 
+import std;
 import Xe.FileHelpersJson;
 import Xe.StringTools;
 

@@ -1,12 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
 #include "logging.h"
 
 export module Xe.UIWorkThread;
 
+import std;
 import Xe.Utils;
 
 #ifdef _DEBUG

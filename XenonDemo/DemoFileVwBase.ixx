@@ -1,10 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
 
 export module Demo.FileVwBase;
 
+import std;
 export import Xe.FileVwIF;
 export import Demo.ViewManager_IF;
 export import Xe.D2DWndBase;

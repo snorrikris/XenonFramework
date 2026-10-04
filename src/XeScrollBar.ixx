@@ -1,18 +1,15 @@
 module;
 
 #include "os_minimal.h"
-#include <vector>
-#include <memory>
-#include <string>
 #include <d2d1.h>
 #include <dwrite.h>
 
 export module Xe.ScrollBar;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
 import Xe.Helpers;
-//import Xe.HelpersMFC;
 import Xe.FileHelpers;
 
 #ifndef GET_X_LPARAM

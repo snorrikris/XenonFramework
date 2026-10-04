@@ -4,6 +4,7 @@ module;
 
 export module Xe.PopupCtrlBase;
 
+import std;
 import Xe.mfc_types;
 
 #ifdef _DEBUG

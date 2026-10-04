@@ -1,10 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <vector>
 
 export module Xe.VerifyDirectoryAccessible;
+
+import std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

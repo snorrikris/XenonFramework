@@ -1,12 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
 #include <d2d1.h>
 #include <dwrite.h>
 
 export module Xe.D2DButton;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.Helpers;
 import Xe.D2DWndBase;

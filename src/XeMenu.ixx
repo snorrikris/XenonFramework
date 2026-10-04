@@ -1,15 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <functional>
-#include <map>
-#include <cctype>
-#include <string>
-#include <memory>
+//#include <cctype>
 #include "XeResource.h"
 
 export module Xe.Menu;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.PopupCtrl;
 import Xe.ListBoxExCommon;

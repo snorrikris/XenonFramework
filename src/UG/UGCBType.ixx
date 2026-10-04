@@ -52,18 +52,12 @@ module;
 
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-#include <string>
 #include <d2d1.h>
-
 #include "ugdefine.h"
-//#include "uggdinfo.h"
-//#include "UGCBType.h"
-
-//#include "UGCelTyp.h"
 
 export module Xe.UGCheckBoxType;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.UGGridInfoIF;
 import Xe.UGCelTyp;
@@ -74,17 +68,12 @@ import Xe.UGCelTyp;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-//#ifndef _T
-//#define _T(quote) TEXT(quote) 
-//#endif
-
 //CUGCheckBoxType class definition
 export class CUGCheckBoxType : public CUGCellType
 {
 	HPEN	m_darkPen;
 	HPEN	m_lightPen;
 	HPEN	m_facePen;
-	//HBRUSH	m_hbrDither;
 
 	CUGCell m_cell;
 

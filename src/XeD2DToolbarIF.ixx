@@ -1,11 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <optional>
 
 export module Xe.D2DToolbarIF;
 
+import std;
 import Xe.Menu;
 import Xe.UserSettings_Changed;
 export import Xe.mfc_types;

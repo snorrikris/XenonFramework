@@ -1,13 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <algorithm>
-#include <list>
-#include <string>
 #include "logging.h"
 
 export module Xe.TabsList;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.FileVwIF;
 import Xe.mfc_types;

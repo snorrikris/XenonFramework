@@ -1,15 +1,13 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <memory>
-#include <optional>
 #include <d2d1.h>
 #include <dwrite.h>
 #include <boost/algorithm/string.hpp>
 
 export module Xe.D2DToolbarItems;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.Helpers;
 import Xe.D2DWndBase;

@@ -48,18 +48,12 @@ module;
 *************************************************************************/
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-#include <string>
 
 #include "ugdefine.h"
-//#include "UGMemMan.h"
-//#include "uggdinfo.h"
-
-//#include "UGCell.h"
-//#include "UGDtaSrc.h"
 
 export module Xe.UGMem;
 
+import std;
 import Xe.UGGridInfoIF;
 import Xe.UGCell;
 

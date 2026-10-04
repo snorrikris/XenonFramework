@@ -1,13 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <format>
 #include <d2d1.h>
 #include <dwrite.h>
 
 export module Xe.PPTooltipWindow;
 
+import std;
 import Xe.PPHtmlDrawer;
 import Xe.UIcolorsIF;
 import Xe.Helpers;

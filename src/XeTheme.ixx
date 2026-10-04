@@ -1,13 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <vector>
 #include "nlohmann/json.hpp"
 #include "XeAssert.h"
 
 export module Xe.Theme;
 
+import std;
 import Xe.ThemeIF;
 import Xe.FileHelpers;
 import Xe.StringTools;

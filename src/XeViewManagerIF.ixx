@@ -1,14 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <vector>
-#include <optional>
-#include <functional>
-#include <string>
-#include <memory>
 
 export module Xe.ViewManagerIF;
 
+import std;
 export import Xe.FileVwIF;
 export import Xe.DefData;
 import Xe.UIcolorsIF;

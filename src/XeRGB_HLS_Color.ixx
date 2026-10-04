@@ -1,9 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <algorithm>
 
 export module Xe.RGB_HLS_Color;
+
+import std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

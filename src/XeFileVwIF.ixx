@@ -1,18 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <list>
-#include <string>
 
 export module Xe.FileVwIF;
 
-//import Xe.FileContainerUI_Base;
+import std;
 import Xe.UserSettings;
-//import Xe.LogFileFindDefs;
 import Xe.mfc_types;
-//import Xe.LogDefs;
-//import Xe.LogFilterDefs;
-//import Xe.FileContainerIF_DataDefs;
 import Xe.DefData;
 import Xe.StringTools;
 import Xe.UItypesPID;

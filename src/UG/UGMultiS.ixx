@@ -8,17 +8,13 @@ module;
 *************************************************************************/
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
 #include <string>
 
 #include "ugdefine.h"
-//#include "UGMultiS.h"
-//#include "uggdinfo.h"
-
-//#include "UGDrwHnt.h"
 
 export module Xe.UGMultiSelect;
 
+import std;
 import Xe.UGGridInfoIF;
 import Xe.UGDrawHint;
 

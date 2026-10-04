@@ -29,7 +29,6 @@ module;
 #include "../os_minimal.h"
 
 #include "ugdefine.h"
-//#include "ugptrlst.h"
 #include "ugstruct.h"
 
 export module Xe.UGPtrList;

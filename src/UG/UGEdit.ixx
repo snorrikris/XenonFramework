@@ -40,16 +40,13 @@ module;
 #include <string>
 #include <ctype.h>
 #include <time.h>
-#include <tuple>
 #include "../os_minimal.h"
 #include "..\scintilla\include\Scintilla.h"
 #include "ugdefine.h"
-//#include "UGCelTyp.h"
-//#include "UGEdit.h"
-//#include "uggdinfo.h"
 
 export module Xe.UGEdit;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.Helpers;
 import Xe.StringTools;

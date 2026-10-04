@@ -31,8 +31,6 @@ module;
 
 #include "../os_minimal.h"
 
-//#include "UGDrwHnt.h"
-
 export module Xe.UGDrawHint;
 
 //#ifdef _DEBUG

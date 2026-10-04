@@ -8,91 +8,16 @@ module;
 *************************************************************************/
 
 #include "..\os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-//#include <afxole.h>			// Needed for drag and drop support in Grid
-#include <vector>
-#include <string>
-#include <functional>
-//#include <algorithm>
 #include <d2d1.h>
-//#include <dwrite.h>
 #include <tchar.h>
-#include <memory>
-//namespace Gdiplus
-//{
-//	using std::min;
-//	using std::max;
-//}
-//#include <gdiplus.h>
-
-// grid feature enable defines - rem out one or more of these defines 
-// to remove one or more features
-#define UG_ENABLE_MOUSEWHEEL
-//#define UG_ENABLE_PRINTING
-//#define UG_ENABLE_FINDDIALOG
-//#define UG_ENABLE_SCROLLHINTS
-
-#ifdef __AFXOLE_H__  //OLE must be included
-#define UG_ENABLE_DRAGDROP
-#endif
-
-#ifndef WS_EX_LAYOUTRTL
-#define WS_EX_LAYOUTRTL		0x00400000L
-#endif // WS_EX_LAYOUTRTL
-
 
 #include "ugdefine.h"
-//#include "UGDtaSrc.h"
-//#include "ugptrlst.h"
-//#include "UGCell.h"
-//#include "UGCelTyp.h"
-//#include "ugdltype.h"
-//#include "ugcbtype.h"
-//#include "ugctarrw.h"
-//#include "UGCTprogress.h"
-//#include "UGEditBase.h"
-//#include "UGEdit.h"
-//#include "UGMEdit.h"
-//#include "UGMemMan.h"
-//#include "UGDrwHnt.h"
-//#include "UGMultiS.h"
-//#include "uggdinfo.h"
-//#include "..\PPTooltip.h"
-//#include "..\XSuperTooltip.h"
-//#include "UGGrid.h"
-//#include "UGCell.h"
-//#include "UGTopHdg.h"
-//#include "ugvscrol.h"
-//#include "ughscrol.h"
-//#include "UGCnrBtn.h"
-//#include "ugtab.h"
-//#include "UGHint.h"
-//#include "ugsidehd.h"
-//#include "ugformat.h"
-//#include "UGCTsarw.h"
-//#include "UGCTurlbtn.h"
-//#ifdef UG_ENABLE_PRINTING
-//#undef UG_ENABLE_PRINTING
-//#endif
-
 #include "..\GridDefs.h"
-
-//#include "..\CustomWndMsgs.h"
-
-//#pragma warning(disable:5201)
-//#pragma warning(disable:4091)
 
 export module Xe.Grid;
 
-//#pragma warning(default:4091)
-//#pragma warning(default:5201)
-
-
-//#pragma warning(disable:5202)
+import std;
 import Xe.Helpers;
-//import Xe.HelpersMFC;
-
-//#include <vector>
 import Xe.GridDataSource;
 import Xe.ColorPicker;
 import Xe.UserSettings;
@@ -102,10 +27,7 @@ import Xe.Menu;
 import Xe.GridDataSource;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;
-//import Xe.LogDefs;
 import Xe.DefData;
-
-//#include "UGCtrl.h"
 
 import Xe.UGCell;
 import Xe.UGCelTyp;
@@ -125,6 +47,21 @@ import Xe.UGVScrol;
 import Xe.UGHScrol;
 import Xe.UGCTarrw;
 import Xe.UGEdit;
+
+// grid feature enable defines - rem out one or more of these defines 
+// to remove one or more features
+#define UG_ENABLE_MOUSEWHEEL
+//#define UG_ENABLE_PRINTING
+//#define UG_ENABLE_FINDDIALOG
+//#define UG_ENABLE_SCROLLHINTS
+
+#ifdef __AFXOLE_H__  //OLE must be included
+#define UG_ENABLE_DRAGDROP
+#endif
+
+#ifndef WS_EX_LAYOUTRTL
+#define WS_EX_LAYOUTRTL		0x00400000L
+#endif // WS_EX_LAYOUTRTL
 
 #define ID_EDIT_FIND                    0xE124
 

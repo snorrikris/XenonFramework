@@ -17,11 +17,11 @@ module;
 		classes where each sheet has one entry.
 *************************************************************************/
 #include "../os_minimal.h"
-#include <functional>
 #include "ugdefine.h"
 
 export module Xe.UGGridInfo;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.UGGridInfoIF;
 import Xe.UGCell;

@@ -1,23 +1,16 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
 #include "XeResource.h"
 #include "d2d1.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#undef THIS_FILE
-static char THIS_FILE[] = __FILE__;
-#endif
-
-#pragma warning(disable:5201)
+//#pragma warning(disable:5201)
 
 export module Xe.TabsView;
 
-#pragma warning(default:5201)
+//#pragma warning(default:5201)
 
+import std;
 import Xe.D2DWndBase;
 import Xe.FileVwIF;
 import Xe.TabsList;
@@ -32,6 +25,12 @@ import Xe.MainFrameIF;
 //import Xe.SendMessageToAllOtherAppInstances;
 //import Xe.FileContainerIF;
 //import Xe.ViewManagerIF_LVS;
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 constexpr UINT XSCROLL_TIMERID = 1003;		// Mouse wheel x scroll timer - to reset current view visible after scrolling.
 constexpr UINT XSCROLL_TIME = 5000;			// ms - time until current view visible reset.

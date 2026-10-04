@@ -3,12 +3,12 @@ module;
 #include "os_minimal.h"
 #include <shobjidl.h> 
 #include <atlbase.h>
-#include <vector>
-#include <string>
 #include "logging.h"
 #include "XeAssert.h"
 
 export module Xe.FileDlgHelpers;
+
+import std;
 
 VSRL::Logger& logger_filehelper() { return VSRL::s_pVSRL->GetInstance("FileDlgHelpers"); }
 

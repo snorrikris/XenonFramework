@@ -1,18 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <functional>
-#include <memory>
-#include <algorithm>
-#include <iterator>
-#include <vector>
-#include <string>
-#include <optional>
 
 #include "XeResource.h"
 
 export module Xe.ThemeEditorDlg;
 
+import std;
 import Xe.BaseDlg;
 import Xe.GridDataSource;
 import Xe.UIcolorsIF;

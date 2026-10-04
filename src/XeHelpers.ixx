@@ -1,17 +1,13 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <map>
-#include <random>
-#include <string>
-#include <format>
 #include "logging.h"
 
 #include <bcrypt.h>
 
 export module Xe.Helpers;
 
+import std;
 export import Xe.FileVersionInfo;
 export import Xe.FileHelpers;
 import Xe.mfc_types;

@@ -1,18 +1,14 @@
 module;
 
 #include "../os_minimal.h"
-#include <algorithm>
-#include <string>
 #include <d2d1.h>
 #include "ugdefine.h"
 
 export module Xe.UGCelTypIF;
 
+import std;
 import Xe.UGCell;
-//import Xe.UGGridInfoIF;
-//
 import Xe.UIcolorsIF;
-//
 import Xe.D2DRenderContext;
 
 //#ifdef UG_ENABLE_PRINTING

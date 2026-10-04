@@ -1,9 +1,9 @@
 module;
 #include "os_minimal.h"
-#include <vector>
 
 export module Xe.TabsViewIF;
 
+import std;
 export import Xe.FileVwIF;
 export import Xe.DefData;
 import Xe.UItypes;

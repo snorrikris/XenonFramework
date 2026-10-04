@@ -1,14 +1,13 @@
 module;
 
 #include "os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-//#include <afxole.h>
-#include <string>
 #include <shtypes.h>
 #include <Shlobj_core.h>
 #include "logging.h"
 
 export module Xe.OpenFileExplorerAsync;
+
+import std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -2,11 +2,10 @@ module;
 
 #include "XeAssert.h"
 #include <stdint.h>
-#include <string>
-#include <vector>
 
 export module Xe.GridTableIF;
 
+import std;
 import Xe.UserSettings;
 import Xe.StringTools;
 

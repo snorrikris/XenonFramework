@@ -39,27 +39,12 @@ module;
 *************************************************************************/
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-#include <algorithm>
-#include <string>
 #include <d2d1.h>
-//namespace Gdiplus
-//{
-//	using std::min;
-//	using std::max;
-//}
-//#include <gdiplus.h>
-
 #include "ugdefine.h"
-//#include "UGCelTyp.h"
-//#include "uggdinfo.h"
-
-//#include "ugstruct.h"
-//
-//#include "UGCell.h"
 
 export module Xe.UGCelTyp;
 
+import std;
 import Xe.UGCelTypIF;
 import Xe.UGCell;
 import Xe.UGGridInfoIF;
@@ -71,7 +56,6 @@ import Xe.D2DRenderContext;
 #ifdef UG_ENABLE_PRINTING
 #undef UG_ENABLE_PRINTING
 #endif
-//import Xe.FastStrings;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -95,8 +79,6 @@ static char THIS_FILE[] = __FILE__;
 //#define WIDTHBYTES(bits)        ((unsigned)((bits+31)&(~31))/8)  /* ULONG aligned ! */
 //#endif
 
-//class CUGGridInfo;
-
 export class CUGCellType : public CUGCellTypeIF
 {
 public:
@@ -107,10 +89,6 @@ protected:
 	BOOL	m_drawLabelText;	//draw the label instead of the string
 	BOOL	m_canOverLap;		//can the cell overlap over cells
 	double	m_dScaleFactor;
-
-	//CUGCtrl		*	m_ctrl;		//pointer to the main class
-
-	//friend CUGCtrl;
 
 	int		m_ID;				//ID which is the index in the celltype list
 	//once it is registered (see CUGCtrl::AddCellType)

@@ -56,20 +56,13 @@ module;
 
 
 #include "../os_minimal.h"
-#include <string>
 #include <d2d1.h>
-//#include <dwrite.h>
-#include <memory>
 
 #include "ugdefine.h"
-//#include "uggdinfo.h"
-//#include "UGDLType.h"
-
-//#include <memory>
-//#include "UGCelTyp.h"
 
 export module Xe.UGDropListType;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.PopupCtrl;
 import Xe.StringTools;

@@ -1,14 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
-#include <vector>
-#include <map>
-#include <functional>
+#include <cwchar>
 
 export module Xe.CalendarCtrl;
 
+import std;
 import Xe.PopupCtrlBase;
 import Xe.PopupCtrl;
 import Xe.UIcolorsIF;

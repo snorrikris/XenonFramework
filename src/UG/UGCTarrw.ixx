@@ -8,13 +8,14 @@ module;
 *************************************************************************/
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-#include <string>
-
 #include "ugdefine.h"
-//#include "uggdinfo.h"
-//#include "UGCTarrw.h"
-//#include "UGCelTyp.h"
+
+export module Xe.UGCTarrw;
+
+import std;
+import Xe.UIcolorsIF;
+import Xe.UGCelTyp;
+import Xe.UGGridInfoIF;
 
 // define cell type extensions
 #define UGCT_ARROWRIGHT		BIT4
@@ -25,12 +26,6 @@ module;
 // define size of each triangle
 #define UG_TRIANGLE_WIDTH	4
 #define UG_TRIANGLE_HEIGHT	7
-
-export module Xe.UGCTarrw;
-
-import Xe.UIcolorsIF;
-import Xe.UGCelTyp;
-import Xe.UGGridInfoIF;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

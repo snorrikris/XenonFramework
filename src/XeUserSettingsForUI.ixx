@@ -1,14 +1,10 @@
 module;
 
 #include "XeAssert.h"
-#include <memory>
-#include <string>
-#include <vector>
-#include <map>
-#include <functional>
 
 export module Xe.UserSettingsForUI;
 
+import std;
 export import Xe.UserSettings;
 
 #ifdef _DEBUG

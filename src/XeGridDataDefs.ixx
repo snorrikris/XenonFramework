@@ -1,8 +1,8 @@
 module;
 
-#include <functional>
-
 export module Xe.GridDataDefs;
+
+import std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

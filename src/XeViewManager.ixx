@@ -1,20 +1,13 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <algorithm>
-#include <iterator>
-#include <vector>
-#include <string>
-#include <map>
-#include <optional>
-#include <sstream>
 #include "logging.h"
 #include "XeResource.h"
 #include <boost/algorithm/string/erase.hpp>
 
 export module Xe.ViewManager;
 
+import std;
 export import Xe.ViewManagerIF;
 export import Xe.D2DToolbarIF;
 import Xe.FileHelpers;

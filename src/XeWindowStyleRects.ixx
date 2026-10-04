@@ -1,11 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <algorithm>
 #include <d2d1.h>
 
 export module Xe.WindowStyleRects;
 
+import std;
 import Xe.WindowStyleValue;
 import Xe.mfc_types;
 import Xe.UItypesPID;

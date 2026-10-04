@@ -1,11 +1,11 @@
 module;
 
 #include "../os_minimal.h"
-#include <string>
 #include "ugdefine.h"
 
 export module Xe.UGGridInfoIF;
 
+import std;
 import Xe.mfc_types;
 import Xe.UIcolorsIF;
 

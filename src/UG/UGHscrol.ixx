@@ -18,17 +18,12 @@ module;
 *************************************************************************/
 
 #include "../os_minimal.h"
-//#include <afxext.h>         // MFC extensions
-#include <string>
 
 #include "ugdefine.h"
-//#include "uggdinfo.h"
-//#include "ughscrol.h"
-// define WM_HELPHITTEST messages
-//#include <afxpriv.h>
 
 export module Xe.UGHScrol;
 
+import std;
 import Xe.UGGridInfoIF;
 
 #ifdef _DEBUG

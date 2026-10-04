@@ -1,10 +1,6 @@
 module;
 
 #include "os_minimal.h"
-#include <functional>
-#include <memory>
-#include <string>
-#include <vector>
 #include "XeAssert.h"
 #include <d2d1.h>
 #include <dwrite.h>
@@ -12,6 +8,7 @@ module;
 
 export module Xe.TreeCtrlEx;
 
+import std;
 import Xe.NaryTree;
 import Xe.UIcolorsIF;
 import Xe.ScrollBar;

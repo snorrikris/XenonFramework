@@ -1,11 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
 #include "XeResource.h"
 
 export module Xe.AskStringDlg;
 
+import std;
 import Xe.BaseDlg;
 
 #ifdef _DEBUG

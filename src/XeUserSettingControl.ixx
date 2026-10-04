@@ -1,11 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
 
 export module Xe.UserSettingControl;
 
+import std;
 import Xe.UIcolorsIF;
 export import Xe.UserSettingsForUI;
 import Xe.D2DButton;

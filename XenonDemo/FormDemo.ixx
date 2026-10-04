@@ -1,11 +1,11 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
 #include "XeResource.h"
 
 export module Demo.Form;
 
+import std;
 import Xe.FormBase;
 import Demo.ViewManager_IF;
 

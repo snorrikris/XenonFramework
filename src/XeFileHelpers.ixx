@@ -5,16 +5,13 @@ module;
 #include <Shlobj.h>
 #include <shobjidl.h> 
 #include <atlbase.h>
-#include <algorithm>
-#include <chrono>
-#include <cwctype>
-#include <map>
 #include "logging.h"
 #include "XeAssert.h"
 #pragma comment(lib, "shell32.lib")
 
 export module Xe.FileHelpers;
 
+import std;
 export import Xe.StringTools;
 import Xe.StringTools;
 

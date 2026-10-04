@@ -2,14 +2,11 @@ module;
 
 #include "os_minimal.h"
 #include <dwmapi.h>
-#include <memory>
-#include <vector>
-#include <string>
-#include <functional>
 #include "XeResource.h"
 
 export module Xe.BaseDlg;
 
+import std;
 import Xe.D2DWndBase;
 import Xe.UIcolorsIF;
 import Xe.Helpers;

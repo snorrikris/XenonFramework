@@ -1,10 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
 #include <winver.h>
+#include <cwchar>
 
 export module Xe.FileVersionInfo;
+
+import std;
 
 /********************************************************************
 *

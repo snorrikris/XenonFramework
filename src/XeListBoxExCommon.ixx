@@ -1,18 +1,13 @@
 module;
 
 #include "os_minimal.h"
-#include <memory>
-#include <string>
-#include <vector>
-#include <functional>
-#include <algorithm>
-#include <map>
 #include <d2d1.h>
 #include <dwrite.h>
 #include "XeResource.h"
 
 export module Xe.ListBoxExCommon;
 
+import std;
 import Xe.PopupCtrlBase;
 import Xe.UIcolorsIF;
 import Xe.D2DWndBase;

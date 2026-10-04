@@ -1,12 +1,12 @@
 module;
 
 #include "os_minimal.h"
-#include <mutex>
 #include "logging.h"
 #include "XeResource.h"
 
 export module Demo.ViewManager;
 
+import std;
 export import Demo.ViewManager_IF;
 import Xe.ViewManager;
 import Xe.UserSettings;

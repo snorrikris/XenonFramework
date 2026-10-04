@@ -93,13 +93,12 @@ This is often used to create labels that span multiple columns.< / indent>< / fo
 #endif // end example
 
 #include "os_minimal.h"
-#include <string>
-#include <format>
 #include <d2d1.h>
 #include <dwrite.h>
 
 export module Xe.PPTooltip;
 
+import std;
 import Xe.UIcolorsIF;
 import Xe.Helpers;
 

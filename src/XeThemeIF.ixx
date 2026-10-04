@@ -1,11 +1,10 @@
 module;
 
 #include "os_minimal.h"
-#include <string>
-#include <vector>
 
 export module Xe.ThemeIF;
 
+import std;
 export import Xe.UItypes;
 
 #ifdef _DEBUG

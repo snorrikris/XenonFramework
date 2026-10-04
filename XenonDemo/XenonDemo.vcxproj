@@ -113,6 +113,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>C:\_Dev\boost_1_82_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,6 +131,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalIncludeDirectories>C:\_Dev\boost_1_82_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -191,6 +193,7 @@
     <ClCompile Include="..\src\XeD2DToolbar.ixx" />
     <ClCompile Include="..\src\XeD2DToolbarIF.ixx" />
     <ClCompile Include="..\src\XeD2DToolbarItems.ixx" />
+    <ClCompile Include="..\src\XeD2D_UItypes.ixx" />
     <ClCompile Include="..\src\XeDefData.ixx" />
     <ClCompile Include="..\src\XeDialogTemplateEx.ixx" />
     <ClCompile Include="..\src\XeDirect2DBase.ixx" />

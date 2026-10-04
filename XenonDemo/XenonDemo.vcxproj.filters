@@ -380,6 +380,9 @@
     <ClCompile Include="..\src\UG\UGCelTypIF.ixx">
       <Filter>Source Files\XenonFramework\UG</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\XeD2D_UItypes.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\XeResource.rc2">

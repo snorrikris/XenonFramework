@@ -2,10 +2,6 @@ module;
 
 #include "os_minimal.h"
 #include <dwmapi.h>
-#include <memory>
-#include <string>
-#include <vector>
-#include <map>
 #include <d2d1.h>
 #include <dwrite.h>
 #include <d2d1effects.h>
@@ -14,6 +10,7 @@ module;
 
 export module Xe.D2DWndBase;
 
+import std;
 import Xe.UIcolorsIF;
 export import Xe.D2DRenderContext;
 import Xe.WindowStyle;

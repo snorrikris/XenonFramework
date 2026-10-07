@@ -1,34 +1,11 @@
 # XenonFramework
 Windows Desktop Application Development Framework
 
-Change project setting
-C++20
-C17
-
-Rename app.cpp to .ixx
-
-Clone the project:
-``` git clone --recurse-submodules git@github.com:snorrikris/XenonFramework.git ```
-
-Don't open in VS just yet, first we need to get the Scintilla source code.
-
-Download Scintilla source code from https://www.scintilla.org/ScintillaDownload.html
-
-Extract the Scintilla source code to the `XenonFramework/scintilla` directory.
-
-Now you can open the solution in VS.
-
-Note - the Scintilla project - in the XenonDemo solution - should be present (at XenonFramework\scintilla\win32\Scintilla.vcxproj).
-
-Add this to D:\_Dev\XenonFramework\scintilla\include\Scintilla.h - approx line 1352 (before struct Sci_CharacterRange):
-```
-#define WMU_SCI_SETSCROLLINFO 3334
-#define WMU_SCI_GETSCROLLINFO 3335
-```
-
+#### Get boost
 Download boost from https://www.boost.org/releases/latest/ and install it to C:\_Dev\boost_xxxx.
 E.g.: https://archives.boost.io/release/1.92.0/source/boost_1_92_0.zip
-Create hard link to C:\_Dev to the boost install folder.
+
+Create hard link to C:\\_Dev to the boost install folder.
 Open command promt (change "boost_1_90_0" to whatever the installed version is):
 ```
 cd C:\_Dev
@@ -36,7 +13,10 @@ mklink /J boost_latest boost_1_90_0
 ```
 Note - the XenonDemo project settings assume boost is accessed from C:\_Dev\boost_latest.
 
-TODO: (suggested by Google AI)
+#### Clone the project:
+``` git clone --recurse-submodules git@github.com:snorrikris/XenonFramework.git ```
+
+## TODO: (suggested by Google AI)
 
 ### Try module :private (to improve compile times)
 E.g.:
@@ -65,6 +45,8 @@ Note: If you rely heavily on the Windows SDK (<Windows.h>), wrap it tightly insi
 
 
 Try to use import std; instead of #include 
+
+<<< TRIED IT - THIS DID NOT WORK >>>
 
 
 ### Fine-Tune MSVC Project Compilation Switches

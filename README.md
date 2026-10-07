@@ -26,6 +26,16 @@ Add this to D:\_Dev\XenonFramework\scintilla\include\Scintilla.h - approx line 1
 #define WMU_SCI_GETSCROLLINFO 3335
 ```
 
+Download boost from https://www.boost.org/releases/latest/ and install it to C:\_Dev\boost_xxxx.
+E.g.: https://archives.boost.io/release/1.92.0/source/boost_1_92_0.zip
+Create hard link to C:\_Dev to the boost install folder.
+Open command promt (change "boost_1_90_0" to whatever the installed version is):
+```
+cd C:\_Dev
+mklink /J boost_latest boost_1_90_0
+```
+Note - the XenonDemo project settings assume boost is accessed from C:\_Dev\boost_latest.
+
 TODO: (suggested by Google AI)
 
 ### Try module :private (to improve compile times)

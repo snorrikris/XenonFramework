@@ -1,6 +1,7 @@
 module;
 
 #include "os_minimal.h"
+#include <shellscalingapi.h>
 #include "..\vsrollinglog\VSRL.h"
 #include "XeResource.h"
 
@@ -14,6 +15,8 @@ import Xe.UIcolors;
 import Xe.FileHelpers;
 import Xe.UserSettingsForUI;
 import Xe.Helpers;
+
+#pragma comment(lib, "Shcore.lib")
 
 #ifdef _UNICODE
 #if defined _M_IX86
@@ -61,6 +64,14 @@ public:
 public:
 	int Run(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 	{
+		PROCESS_DPI_AWARENESS dpiAwareness;
+		HRESULT hr = ::GetProcessDpiAwareness(NULL, &dpiAwareness);
+		XeASSERT(hr == S_OK);
+		std::string dpiAwarenes = dpiAwareness == PROCESS_DPI_UNAWARE ? "PROCESS_DPI_UNAWARE" :
+			dpiAwareness == PROCESS_SYSTEM_DPI_AWARE ? "PROCESS_SYSTEM_DPI_AWARE" :
+			dpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE ? "PROCESS_PER_MONITOR_DPI_AWARE" : "Unknown";
+		XeTRACE("dpiAwareness=%s\n", dpiAwarenes.c_str());
+
 		_Initialize(hInstance);
 
 		InitSettings();	// Derived class should add all it's settings for s_xeUIsettings and s_xeLastUsedUIsettings.
@@ -151,6 +162,7 @@ protected:
 		HMODULE hmod = ::LoadLibraryW(L"Scintilla.dll");
 		if (hmod == NULL)
 		{
+			XeASSERT(false);	// "Scintilla.dll" MUST exist.
 			::MessageBoxW(NULL,
 				L"The Scintilla DLL could not be loaded.",
 				L"Error loading Scintilla",

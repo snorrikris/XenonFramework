@@ -215,6 +215,9 @@ public:
 		case WM_QUERYENDSESSION:
 			return _OnQueryEndSession(wParam, lParam);
 
+		case WM_DPICHANGED:
+			return _OnDpiChanged(hWnd, wParam, lParam);
+
 		case WM_NOTIFY:
 			return _OnNotify(wParam, lParam);
 
@@ -350,6 +353,16 @@ protected:
 	virtual LRESULT _OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam)
+	{
+		UINT dpiX = LOWORD(wParam);
+		UINT dpiY = HIWORD(wParam);
+		RECT* prcNewWindow = (RECT*)lParam;
+		XeTRACE("DPI changed to %u x %u, new window rect: (%d, %d) - (%d, %d)\n", dpiX, dpiY,
+			prcNewWindow->left, prcNewWindow->top, prcNewWindow->right, prcNewWindow->bottom);
+		return 0; // ::DefWindowProc(hwnd, WM_DPICHANGED, wParam, lParam);
 	}
 
 	virtual LRESULT _OnNcCreate(HWND hwnd, WPARAM wParam, LPARAM lParam)

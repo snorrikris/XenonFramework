@@ -134,7 +134,7 @@ public:
 		int x = 2;
 		for (auto& item : m_itemlist)
 		{
-			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight);
+			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight, m_dpi);
 		}
 		for (auto& item : m_itemlist)
 		{
@@ -143,7 +143,7 @@ public:
 		x = 2;
 		for (auto& item : m_itemlist)
 		{
-			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight);
+			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight, m_dpi);
 
 			item->MoveWindowToCalculatedPosition();
 		}

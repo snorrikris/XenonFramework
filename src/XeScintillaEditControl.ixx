@@ -231,7 +231,7 @@ public:
 			m_vScr->Create(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | SBS_VERT, rc0, hWnd, 2002, nullptr);
 
 			XeWindowStyleValue ws(dwEditControlStyle, 0);
-			const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+			const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 			m_mode.Initialize(m_control_has_border, tm.GetHeight(), !ws.isES_MultiLine());
 			m_mode.SetClientRect(rcCtrl);
 
@@ -242,7 +242,7 @@ public:
 			m_hSciEdWnd = ::CreateWindowExW(0, L"Scintilla", L"EditCtrlWnd", dwEditControlStyle,
 					rcEC.left, rcEC.top, rcEC.Width(), rcEC.Height(),
 					hWndParent, 0, m_xeUI->GetInstanceHandle(), 0);
-			m_editStyle.Set(m_hSciEdWnd, dwEditControlStyle, 0, m_xeUI);
+			m_editStyle.Set(m_hSciEdWnd, dwEditControlStyle, 0, m_xeUI, m_dpi);
 
 			m_xeUI->RegisterScintillaKeyboardFilterCallback(m_hSciEdWnd,
 					[this](const MSG& msg) { return _OnKeyboardFilter(msg); });
@@ -251,7 +251,7 @@ public:
 			::SendMessage(m_hSciEdWnd, SCI_USEPOPUP, SC_POPUP_NEVER, 0);
 
 			// Note - uncomment following line to enable DirectWrite. (select not painted correctly, more flickering)
-			//::SendMessage(m_hSciEdWnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE, 0);
+			::SendMessage(m_hSciEdWnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE, 0);
 
 			::SendMessage(m_hSciEdWnd, SCI_SETMARGINS, 0, 0);
 
@@ -635,7 +635,7 @@ public:
 
 	void UpdateFont()
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		SetSciFont(tm.m_fontName.c_str(), tm.m_fontPointSize);
 	}
 

@@ -101,12 +101,12 @@ protected:
 			CVwInfo item(pView);
 			names.push_back(item.GetViewName());
 			paths.push_back(item.GetPathName());
-			CSize sizeTxt = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, item.GetViewName().c_str());
+			CSize sizeTxt = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, item.GetViewName().c_str());
 			item.m_cxViewName = sizeTxt.cx;
 			m_viewList.push_back(item);
 		}
-		m_cxMaxName = m_xeUI->GetMaxTextWidthUsingFontW(names, EXE_FONT::eUI_Font);
-		m_cxMaxPath = m_xeUI->GetMaxTextWidthUsingFontW(paths, EXE_FONT::eUI_Font);
+		m_cxMaxName = m_xeUI->GetMaxTextWidthUsingFontW(names, m_dpi, EXE_FONT::eUI_Font);
+		m_cxMaxPath = m_xeUI->GetMaxTextWidthUsingFontW(paths, m_dpi, EXE_FONT::eUI_Font);
 	}
 
 	virtual LRESULT _OnKeyDown(WPARAM wParam, LPARAM lParam) override
@@ -455,12 +455,12 @@ protected:
 protected:
 	int _GetViewsListTitleTextHeight()
 	{
-		return std::max((int)26, m_xeUI->GetFontMetric(EXE_FONT::eTabListTitleFont).GetHeight());
+		return std::max((int)26, m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eTabListTitleFont).GetHeight());
 	}
 
 	int _GetViewsListPathTextHeight()
 	{
-		return std::max((int)18, m_xeUI->GetFontMetric(EXE_FONT::eUI_Font).GetHeight());
+		return std::max((int)18, m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font).GetHeight());
 	}
 
 	void _DrawViewsListWndUI(ID2D1RenderTarget* pRT, D2D1_RECT_F rc)
@@ -499,7 +499,7 @@ protected:
 
 	void _DrawCurItemBg(ID2D1RenderTarget* pRT, CRect rcBG)
 	{
-		double cyTxt = std::max((double)m_xeUI->GetFontMetric(EXE_FONT::eUI_Font).GetHeight(), 18.0);
+		double cyTxt = std::max((double)m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font).GetHeight(), 18.0);
 		rcBG.top += (int)(((double)rcBG.Height() - cyTxt) / 2 + 0.5);
 		rcBG.bottom = rcBG.top + (int)cyTxt;
 		rcBG.left -= 3;

@@ -103,7 +103,7 @@ protected:
 		m_colorIDsListBox = _GetListBoxControl(IDC_LB_COLOR_ID);
 		m_paletteListBox = _GetListBoxControl(IDC_LB_PALETTE);
 		XeASSERT(m_colorIDsListBox && m_paletteListBox);
-		const XeFontMetrics& fm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& fm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		m_colorIDsListBox->SetTabStops({ (UINT)fm.DialogUnitsXtoPixels(109), (UINT)fm.DialogUnitsXtoPixels(98) });
 		m_paletteListBox->SetTabStops({ (UINT)fm.DialogUnitsXtoPixels(120) });
 

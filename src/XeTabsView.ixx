@@ -1408,7 +1408,7 @@ protected:
 				item.m_item_data.SetColor(pView->GetViewTitleTextColor());
 			}
 			list.push_back(item);
-			CSize sizeTxt = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, pView->GetViewName().c_str());
+			CSize sizeTxt = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, pView->GetViewName().c_str());
 			cxMaxName = std::max((int)sizeTxt.cx, cxMaxName);
 			if (pView->GetDataSourceId() == dwCurViewDSId)
 			{
@@ -1416,7 +1416,7 @@ protected:
 			}
 			++idx;
 		}
-		listBox.SetItemsList(list);
+		listBox.SetItemsListBeforeWindowCreated(m_dpi, list);
 		listBox.SetCheckBoxesMode(true, false, true, L"Close selected");
 		listBox.OnSetCurSelMsg(cur_idx, 0);
 
@@ -1425,7 +1425,7 @@ protected:
 		CRect rc;
 		GetWindowRect(rc);
 		int x = rc.left;
-		CSize sizeXtra = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, L"XXXXXX");
+		CSize sizeXtra = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, L"XXXXXX");
 		rc = listBox.CalcPopupWindowSize(x, rc.bottom, cxMaxName + sizeXtra.cx, 1, 20);
 		CXePopupCtrl popup(m_xeUI, &listBox, XeShowPopup::FadeIn80);
 		popup.ShowPopup(Hwnd(), rc, rcParentCtrl);

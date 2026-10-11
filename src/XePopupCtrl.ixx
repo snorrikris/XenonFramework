@@ -214,7 +214,7 @@ public:
 		XeASSERT(m_pCtrl);
 		CREATESTRUCT* pCS = (CREATESTRUCT*)lParam;
 		::SetWindowLongPtr(hwnd, GWLP_USERDATA, (LPARAM)this);
-		m_pCtrl->PopupDropDown(hwnd, pCS->style, pCS->dwExStyle);
+		m_pCtrl->PopupDropDown(hwnd, pCS);
 		return ::DefWindowProc(hwnd, uiMsg, wParam, lParam);
 	}
 

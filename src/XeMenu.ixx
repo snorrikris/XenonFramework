@@ -221,7 +221,8 @@ public:
 		{
 			m_updateMenuCallback(this, topLevelSubMenuIndex);
 		}
-		m_cmn->SetItemsList(_GetTopLevelSubMenu(topLevelSubMenuIndex));
+		XeDPI dpi(::GetDpiForWindow(hParentWnd));
+		m_cmn->SetItemsListBeforeWindowCreated(dpi, _GetTopLevelSubMenu(topLevelSubMenuIndex));
 		m_cmn->m_suppressMouseMoveMessages = 2;
 		_UpdateShortcutKeyMap();
 		CRect rcParentCtrl(ptScreenPos, ptScreenPos);
@@ -488,12 +489,13 @@ protected:
 	{
 		std::vector<ListBoxExItem> list = m_getSubMenuCallback((UINT)pSelItem->m_extra_data);
 		if (list.size() == 0) { return; }
+		XeDPI dpi(::GetDpiForWindow(m_hParentWnd));
 		std::unique_ptr<CXeMenu> submenu = std::make_unique<CXeMenu>(m_xeUI, list, m_getSubMenuCallback);
 		submenu->m_pParentMenu = this;
 		submenu->m_hParentWnd = m_hParentWnd;
 		submenu->m_cmn->m_pParentMenu = m_cmn.get();
 		submenu->m_cmn->m_rcParentMenuItemScreenPos = rcItemScr;
-		submenu->m_cmn->SetItemsList(submenu->_GetTopLevelSubMenu(0), nSelIdx);
+		submenu->m_cmn->SetItemsListBeforeWindowCreated(dpi, submenu->_GetTopLevelSubMenu(0), nSelIdx);
 		submenu->_UpdateShortcutKeyMap();
 		submenu->SetTopLevelMenuNavigationCallback(m_cmn->m_topLevelMenuNavigationCallback);
 		CRect rc = submenu->m_cmn->CalcPopupMenuSize(rcItemScr.right, rcItemScr.top);

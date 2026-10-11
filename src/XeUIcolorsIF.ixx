@@ -256,9 +256,9 @@ public:
 			{ L"GridFontName", L"GridFontPointSize", L"GridRowPitch" });
 	}
 
-	virtual void OnChangedSettings(const ChangedSettings& chg_settings) = 0;
+	virtual void OnChangedSettings(const ChangedSettings& chg_settings, XeDPI dpi) = 0;
 
-	virtual int GetValue(UIV val) const = 0;
+	virtual int GetValue(UIV val, XeDPI dpi) const = 0;
 
 	virtual HICON GetAppIconHandle() = 0;
 
@@ -281,46 +281,34 @@ public:
 
 	//virtual CXeGdiPng* GetFileIconPng(FileIcon icn) const = 0;
 
-	//virtual CFont* GetFont(EXE_FONT eFont) const = 0;
-	//virtual HFONT GetFontHandle(EXE_FONT eFont) const = 0;
+	// Create fonts for a specific monitor DPI (96 DPI is "normal" monitor Dots Per Inch).
+	// Note - framework calls this in the WM_NCCREATE handler and in the WM_DPICHANGED handler.
+	virtual void CreateFonts(XeDPI dpi) = 0;
 
-	virtual const XeFontMetrics& GetFontMetric(EXE_FONT eFont) const = 0;
-
-	//virtual const LOGFONTW& GetLogFontStruct(EXE_FONT eFont) const = 0;
+	virtual const XeFontMetrics& GetFontMetric(XeDPI dpi, EXE_FONT eFont) const = 0;
 
 	virtual UIScaleFactor GetUIScaleFactor() const = 0;
 
 	// Get text size using font and desktop window DC.
-	//virtual CSize GetTextSize(EXE_FONT eFont, const char* szText) const = 0;
-	virtual CSize GetTextSizeW(EXE_FONT eFont, const wchar_t* szText) = 0;
-	//virtual CSize GetTextSize(EXE_FONT eFont, const char* szText, size_t length) const = 0;
-	virtual CSize GetTextSizeW(EXE_FONT eFont, const wchar_t* szText, size_t length) = 0;
+	virtual CSize GetTextSizeW(XeDPI dpi, EXE_FONT eFont, const wchar_t* szText) = 0;
+	virtual CSize GetTextSizeW(XeDPI dpi, EXE_FONT eFont, const wchar_t* szText, size_t length) = 0;
 
 	// Get text size using font and window DC.
 	// if pWnd is null then desktop window is used.
-	//virtual CSize GetTextSizeUsingFont(HWND hWnd, EXE_FONT eFontconst, const char* szText) const = 0;
-	virtual CSize GetTextSizeUsingFontW(HWND hWnd, EXE_FONT eFontconst, const wchar_t* szText) = 0;
+	virtual CSize GetTextSizeUsingFontW(HWND hWnd, XeDPI dpi, EXE_FONT eFontconst, const wchar_t* szText) = 0;
 
 	// Get text widths using font and window DC.
 	// if pWnd is null then desktop window is used.
-	//virtual std::vector<uint32_t> GetTextWidthsUsingFont(const std::vector<std::string> texts,
-	//	EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) const = 0;
 	virtual std::vector<uint32_t> GetTextWidthsUsingFontW(const std::vector<std::wstring> texts,
-			EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) = 0;
+			XeDPI dpi, EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) = 0;
 
 	// Get max. text width of supplied strings using font and window DC.
 	// if pWnd is null then desktop window is used.
-	//virtual uint32_t GetMaxTextWidthUsingFont(const std::vector<std::string> texts,
-	//	EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) const = 0;
 	virtual uint32_t GetMaxTextWidthUsingFontW(const std::vector<std::wstring> texts,
-			EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) = 0;
+			XeDPI dpi, EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) = 0;
 
-	//virtual CSize GetMultilineTextExtent(const char* szTxt,
-	//		EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) const = 0;
 	virtual CSize GetMultilineTextExtentW(const wchar_t* szTxt,
-			EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) = 0;
-
-	//virtual int GetUI_FontGridRowHeight() const = 0;
+			XeDPI dpi, EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) = 0;
 
 	// Get string to append to PNG resource names - used by XePngButton class.
 	//virtual CString GetThemePngAppend() const = 0;
@@ -399,8 +387,8 @@ public:
 	virtual IDWriteFactory* D2D_GetWriteFactory() const = 0;
 	virtual IWICImagingFactory* D2D_GetWICFactory() const = 0;
 	virtual HRESULT D2D_CreateDCRenderTarget(_COM_Outptr_ ID2D1DCRenderTarget** dcRenderTarget) const = 0;
-	virtual IDWriteTextFormat* D2D_GetFont(EXE_FONT font) = 0;
-	virtual HRESULT D2D_GetTextSize(const std::wstring& txt, EXE_FONT font, D2D1_SIZE_F& size) = 0;
+	virtual IDWriteTextFormat* D2D_GetFont(XeDPI dpi, EXE_FONT font) = 0;
+	virtual HRESULT D2D_GetTextSize(const std::wstring& txt, XeDPI dpi, EXE_FONT font, D2D1_SIZE_F& size) = 0;
 
 	virtual IWICFormatConverter* D2D_GetImage(PID pId, CSize* pSize = nullptr) = 0;
 

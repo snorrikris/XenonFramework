@@ -188,9 +188,9 @@ struct TreeUIparams
 	int m_cxCurItemBgMargin = 2;
 	int m_cxyImgDec = 2, m_cxImgMargin = 2;
 
-	void Initialize(CXeUIcolorsIF* pUI)
+	void Initialize(CXeUIcolorsIF* pUI, XeDPI dpi)
 	{
-		const XeFontMetrics& tm = pUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = pUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		m_cyItem = tm.GetLineHeight();
 		if (m_cyItem == 0) { m_cyItem = 15; }
 		if (!(m_cyItem & 1)) { ++m_cyItem; }
@@ -312,9 +312,9 @@ struct TreeItemPaintData
 		}
 	}
 
-	void CalculateTextRect(CXeUIcolorsIF* pUI)
+	void CalculateTextRect(CXeUIcolorsIF* pUI, XeDPI dpi)
 	{
-		CSize sizeText = pUI->GetTextSizeW(EXE_FONT::eUI_Font, m_text.c_str());
+		CSize sizeText = pUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, m_text.c_str());
 		m_rcTxt.right = m_rcTxt.left + sizeText.cx;
 		m_rcItem.right = m_rcTxt.right;
 	}
@@ -492,7 +492,6 @@ public:
 	CXeTreeCtrlEx(CXeUIcolorsIF* pUIcolors) : CXeD2DCtrlBase(pUIcolors)
 	{
 		m_xeUI->RegisterWindowClass(XETREECTRLEXWND_CLASSNAME, D2DCtrl_WndProc);
-		m_uiParams.Initialize(m_xeUI);
 		m_cxSysSbV = ::GetSystemMetrics(SM_CXVSCROLL);
 		m_cySysSbH = ::GetSystemMetrics(SM_CYHSCROLL);
 	}
@@ -508,6 +507,7 @@ public:
 		}
 		HWND hWnd = CreateD2DWindow(dwExStyle, XETREECTRLEXWND_CLASSNAME, nullptr, dwStyle,
 				rect, hParentWnd, nID);
+		m_uiParams.Initialize(m_xeUI, m_dpi);
 		return hWnd != 0;
 	}
 
@@ -590,7 +590,7 @@ protected:
 	void _CalculatePaintData()
 	{
 		m_paint_data.clear();
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 
 		m_paint_data.m_visible_nodes = m_tree.GetVisibleNodesIdxRange(0, ((size_t)-1));
 		m_paint_data.m_visible_nodes_paint_data.resize(m_paint_data.m_visible_nodes.size());
@@ -629,7 +629,7 @@ protected:
 		{
 			pdata.m_text = pdata.m_pNode->m_data.m_string;
 		}
-		pdata.CalculateTextRect(m_xeUI);
+		pdata.CalculateTextRect(m_xeUI, m_dpi);
 
 		if (pdata.m_rcTxt.right > m_paint_data.m_cxMaxItemWidth)
 		{

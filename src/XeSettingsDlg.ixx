@@ -172,7 +172,7 @@ protected:
 	void _AdjustListBoxWidth()
 	{
 		CXeListBoxEx* pSettingsList = _GetListBoxControl(IDC_SETTINGS_LIST);
-		int cxLongestStr = m_xeUI->GetMaxTextWidthUsingFontW(m_settings_names, EXE_FONT::eUI_Font, Hwnd());
+		int cxLongestStr = m_xeUI->GetMaxTextWidthUsingFontW(m_settings_names, m_dpi, EXE_FONT::eUI_Font, Hwnd());
 		if (cxLongestStr)
 		{
 			m_nGridWidth = cxLongestStr + _GetAvgCharCX(2.0);
@@ -366,20 +366,20 @@ protected:
 
 	int _GetTxtCY(double multiplier)
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		return (int)((double)tm.GetHeight() * multiplier + 0.5);
 	}
 
 	int _GetAvgCharCX(double multiplier)
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		return (int)((double)tm.m_aveCharWidth * multiplier + 0.5);
 	}
 
 	uint32_t _AddControl(uint32_t x, uint32_t y,
 		const CXeUserSetting& setting, uint32_t ctrl_id)
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		uint32_t ctrl_h = _GetTxtCY(2.0);
 
 		CXeUserSettingControl ui_setting(m_xeUI, setting);
@@ -390,7 +390,7 @@ protected:
 		SettingType val_type = setting.m_typeEnum;
 		if (val_type == SettingType::Bool)
 		{
-			CSize sizeCB = m_xeUI->GetTextSizeUsingFontW(Hwnd(), EXE_FONT::eUI_Font, setting.m_display_name.c_str());
+			CSize sizeCB = m_xeUI->GetTextSizeUsingFontW(Hwnd(), m_dpi, EXE_FONT::eUI_Font, setting.m_display_name.c_str());
 			CRect rcCB(x, y, x + sizeCB.cx + _GetAvgCharCX(4.0), y + _GetTxtCY(1.2));
 			ui_setting.CreateCheckBox(Hwnd(), rcCB, tooltip);
 			if (m_cur_grp_right_edge < (uint32_t)rcCB.right) { m_cur_grp_right_edge = (uint32_t)rcCB.right; }
@@ -501,8 +501,8 @@ protected:
 
 	CRect _CalculateLabel(const std::wstring& text, uint32_t x, uint32_t y, bool isBold = false)
 	{
-		CSize sizeLbl = m_xeUI->GetTextSizeUsingFontW(Hwnd(),
-			isBold ? EXE_FONT::eUI_FontBold : EXE_FONT::eUI_Font, text.c_str());
+		CSize sizeLbl = m_xeUI->GetTextSizeUsingFontW(Hwnd(), m_dpi,
+				isBold ? EXE_FONT::eUI_FontBold : EXE_FONT::eUI_Font, text.c_str());
 		CRect rcLabel(x, y + 3, x + sizeLbl.cx + 5, y + 3 + _GetTxtCY(1.2));
 		return rcLabel;
 	}

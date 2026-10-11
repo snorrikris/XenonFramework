@@ -324,7 +324,7 @@ protected:
 	virtual LRESULT _OnNcCalcSize(WPARAM wParam, LPARAM lParam) override
 	{
 		m_pToolBar->RecalculateItems();
-		m_style.SetToolbarSize(m_pToolBar->GetToolBarSize());
+		m_style.SetToolbarSize(m_pToolBar->GetToolBarSize(), m_dpi);
 		return CXeD2DWndBase::_OnNcCalcSize(wParam, lParam);
 	}
 		
@@ -1069,7 +1069,7 @@ protected:
 			ShowWindow(SW_HIDE);
 		}
 
-		m_xeUI->OnChangedSettings(chg_settings);
+		m_xeUI->OnChangedSettings(chg_settings, m_dpi);
 		m_pToolBar->OnChangedSettings(chg_settings);
 
 		if (isFontSettingsChanged)

@@ -408,8 +408,8 @@ public:
 	{
 		m_xeUI->RegisterWindowClass(XECALENDARWND_CLASSNAME, D2DCtrl_WndProc);
 
-		m_xeUI->D2D_GetFont(EXE_FONT::eTabListTitleFont);	// Create big text UI font.
-		m_xeUI->D2D_GetFont(EXE_FONT::eMediumBig);
+		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eTabListTitleFont);	// Create big text UI font.
+		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eMediumBig);
 
 		m_fromDT = FILETIMEX::LocalNow(), m_toDT = mode == CalCtrlMode::FullRange ? FILETIMEX::LocalNow() : FILETIMEX();
 		m_actDT = ActiveDT::From;
@@ -445,10 +445,9 @@ public:
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
 
 	// Called by XePopupParent when processing the NC_CREATE message.
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) override
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) override
 	{
-		SetHwnd(hWnd);
-		m_style.Set(hWnd, dwStyle, dwExStyle, m_xeUI);
+		InitializeThis(hWnd, pCS);
 		m_control_has_border = true;
 	}
 
@@ -795,26 +794,26 @@ protected:
 		D2D1_SIZE_F szF{};
 		EXE_FONT mode_font = m_mode.GetDateTimeFontForMode();
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"W"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"W"), m_dpi, EXE_FONT::eUI_Font, szF);
 		float mul = m_mode.IsFullMode() ? 1.5f : m_mode.IsMinimalMode() ? 0.5f : 1.0f;
 		float marginL = szF.width * mul, spaceV = marginL * 0.5f, wndCX = 0;
 		float marginT = marginL;
 		float x = marginL, y = marginT;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"WED"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"WED"), m_dpi, EXE_FONT::eUI_Font, szF);
 		labelCX = szF.width * 1.8f;
 		labelCY = szF.height * 1.5f;
 
 		monthColCX = (7 * labelCX) / 2;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"Cancel"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"Cancel"), m_dpi, EXE_FONT::eUI_Font, szF);
 		float okBtnCX = szF.width * (m_mode.IsFullMode() ? 1.8f : 1.4f);
 		float okBtnCY = szF.height * (m_mode.IsFullMode() ? 1.5f : 1.2f);
 
 		if (m_mode.IsFullMode())
 		{
 			// From / To boxes
-			m_xeUI->D2D_GetTextSize(std::wstring(L"0000-00-00 00:00:00,000"), EXE_FONT::eUI_Font, szF);
+			m_xeUI->D2D_GetTextSize(std::wstring(L"0000-00-00 00:00:00,000"), m_dpi, EXE_FONT::eUI_Font, szF);
 			float dateBoxCX = szF.width * 1.1f;
 			float dateBoxCY = szF.height * 1.3f;
 			m_rr.Set((int)RCT::FromOnBox, x, y, dateBoxCY, dateBoxCY);
@@ -830,7 +829,7 @@ protected:
 			wndCX = (3 * marginL) + (2 * dateBoxCY) + (2 * dateBoxCX);
 
 			// Month Year line
-			m_xeUI->D2D_GetTextSize(std::wstring(L"0"), mode_font, szF);
+			m_xeUI->D2D_GetTextSize(std::wstring(L"0"), m_dpi, mode_font, szF);
 			float monthDecCXY = szF.height;
 			D2D1_ROUNDED_RECT monthDecBox = m_rr.Set((int)RCT::MonthDecBox, marginL, y, monthDecCXY, monthDecCXY);
 			D2D1_ROUNDED_RECT monthIncBox = m_rr.Set((int)RCT::MonthIncBox, wndCX - marginL - monthDecCXY, y, monthDecCXY, monthDecCXY);
@@ -855,12 +854,12 @@ protected:
 		}
 
 		// Calculate timeBox time boxes
-		m_xeUI->D2D_GetTextSize(std::wstring(L"0000"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"0000"), m_dpi, mode_font, szF);
 		float yyyyCX = szF.width * 1.2f;
-		m_xeUI->D2D_GetTextSize(std::wstring(L"00"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"00"), m_dpi, mode_font, szF);
 		float hhCX = szF.width * 1.2f;
 		float hhCY = szF.height;
-		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), m_dpi, mode_font, szF);
 		float msCX = szF.width * 1.2f;
 		float cx_dot = hhCY * 0.3f;
 		float cy_inc = hhCY * 0.3f, cx_inc = hhCX * 0.8f;
@@ -906,7 +905,7 @@ protected:
 		if (m_mode.IsFullMode())
 		{
 			// Now button
-			m_xeUI->D2D_GetTextSize(std::wstring(L"Now"), EXE_FONT::eUI_Font, szF);
+			m_xeUI->D2D_GetTextSize(std::wstring(L"Now"), m_dpi, EXE_FONT::eUI_Font, szF);
 			float nowBtnCX = szF.width * 1.8f;
 			x = wndCX - nowBtnCX - marginL;
 			y = msIncBox.rect.top + (((msDecBox.rect.bottom - msIncBox.rect.top) - okBtnCY) / 2);

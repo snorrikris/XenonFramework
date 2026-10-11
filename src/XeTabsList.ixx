@@ -791,7 +791,8 @@ protected:
 
 	int _GetTabViewRowHeight() const
 	{
-		return std::max((int)20, m_xeUI->GetFontMetric(EXE_FONT::eUI_Font).GetHeight()) + c_cyTEXT_Y_MARGIN;
+		XeDPI dpi(::GetDpiForWindow(m_hParent));
+		return std::max((int)20, m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font).GetHeight()) + c_cyTEXT_Y_MARGIN;
 	}
 
 	void _RecalculateTabsViewUI()
@@ -818,11 +819,12 @@ protected:
 		int cxForOneRow = listBtn.cx;
 		int cxUnpinnedTabsTotal = 0;
 		int numPinnedTabs = 0, numUnpinnedTabs = 0;
+		XeDPI dpi(::GetDpiForWindow(m_hParent));
 		for (CVwInfo& tabInfo : m_list)
 		{
 			XeASSERT(tabInfo.m_pView);
 			CSize sizeText = tabInfo.m_pView
-				? m_xeUI->GetTextSizeW(EXE_FONT::eUI_FontBold, tabInfo.m_pView->GetViewName().c_str())
+				? m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_FontBold, tabInfo.m_pView->GetViewName().c_str())
 				: CSize();
 			bool hasIcon = tabInfo.m_pView->GetViewPID() != PID::None;
 			tabInfo.m_cxTabNeeded = c_cxTEXT_X_MARGIN

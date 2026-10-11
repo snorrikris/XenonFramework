@@ -127,19 +127,36 @@ public:
 
 			m_control_has_border = true;
 		}
-		m_style.Set(0, dwStyle, dwExStyle, m_xeUI);
 		HINSTANCE hInstance = m_xeUI->GetInstanceHandle();
 		HWND hWnd = ::CreateWindowExW(dwExStyle, class_name.c_str(), pTitle, dwStyle,
 				rcWnd.left, rcWnd.top, rcWnd.Width(), rcWnd.Height(), hParentWnd, (HMENU)(uint64_t)uID, hInstance,
 				this);  // <-- pass 'this' pointer as parameter (to WM_NCCREATE)
 		// Note - WM_NCCREATE is the first message sent to the new window.
-		// When D2DCtrl_WndProc handles that message - the m_hWnd and m_style members are set.
+		// When D2DCtrl_WndProc handles WM_NCCREATE - the m_hWnd and m_style members are set.
 		XeASSERT(m_hWnd && m_style.IsInitialized());
 		if (isEnableTooltip)
 		{
 			_EnableTooltip(class_name);
 		}
 		return hWnd;
+	}
+
+	// Called from D2DCtrl_WndProc when handling WM_NCCREATE message.
+	void InitializeThis(HWND hWnd, CREATESTRUCT* pCS)
+	{
+		XeASSERT(::IsWindow(hWnd) && m_xeUI);
+		s_xeUI->SetHwndD2DBasePtr(hWnd, this, pCS->lpszClass);
+		SetHwnd(hWnd);
+		m_dpi.set(::GetDpiForWindow(Hwnd()));
+		m_xeUI->CreateFonts(m_dpi);
+		m_style.Set(hWnd, pCS->style, pCS->dwExStyle, m_xeUI, m_dpi);
+
+		if (m_style.WS().hasCaption())
+		{
+			// Disable DWM (Desktop Window Manager) rendering of NC window area.
+			DWMNCRENDERINGPOLICY ncrp = DWMNCRP_DISABLED;
+			::DwmSetWindowAttribute(m_hWnd, DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp));
+		}
 	}
 
 protected:
@@ -217,6 +234,9 @@ public:
 
 		case WM_DPICHANGED:
 			return _OnDpiChanged(hWnd, wParam, lParam);
+
+		case WM_DPICHANGED_AFTERPARENT:
+			return _OnDpiChangedAfterParent(hWnd, wParam, lParam);
 
 		case WM_NOTIFY:
 			return _OnNotify(wParam, lParam);
@@ -359,21 +379,30 @@ protected:
 	{
 		UINT dpiX = LOWORD(wParam);
 		UINT dpiY = HIWORD(wParam);
-		RECT* prcNewWindow = (RECT*)lParam;
+		m_dpi.set(dpiY);
+		m_xeUI->CreateFonts(m_dpi);
+		m_style.Update(m_dpi);
+		CRect rcWnd((RECT*)lParam);
 		XeTRACE("DPI changed to %u x %u, new window rect: (%d, %d) - (%d, %d)\n", dpiX, dpiY,
-			prcNewWindow->left, prcNewWindow->top, prcNewWindow->right, prcNewWindow->bottom);
+				rcWnd.left, rcWnd.top, rcWnd.right, rcWnd.bottom);
+		::SetWindowPos(hwnd, NULL, rcWnd.left, rcWnd.top, rcWnd.Width(), rcWnd.Height(),
+				SWP_NOZORDER | SWP_NOACTIVATE);
 		return 0; // ::DefWindowProc(hwnd, WM_DPICHANGED, wParam, lParam);
+	}
+
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam)
+	{
+		XeDPI newDPI(::GetDpiForWindow(Hwnd()));
+		if (newDPI != m_dpi)
+		{
+			m_dpi = newDPI;
+			m_style.Update(m_dpi);
+		}
+		return 0;
 	}
 
 	virtual LRESULT _OnNcCreate(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	{
-		if (m_style.WS().hasCaption())
-		{
-			// Disable DWM (Desktop Window Manager) rendering of NC window area.
-			DWMNCRENDERINGPOLICY ncrp = DWMNCRP_DISABLED;
-			::DwmSetWindowAttribute(m_hWnd, DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp));
-		}
-
 		return ::DefWindowProc(hwnd, WM_NCCREATE, wParam, lParam);
 	}
 
@@ -580,7 +609,7 @@ protected:
 		if (!::IsIconic(m_hWnd))
 		{
 			CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			return m_style.NcHitTest(point);
+			return m_style.NcHitTest(point, m_dpi);
 			//return HTCLIENT;
 		}
 		return ::DefWindowProc(m_hWnd, WM_NCHITTEST, wParam, lParam);
@@ -603,13 +632,13 @@ protected:
 
 	virtual LRESULT _OnStyleChanged(WPARAM wParam, LPARAM lParam)
 	{
-		m_style.Update();
+		m_style.Update(m_dpi);
 		return 0;
 	}
 
 	virtual LRESULT _OnMove(WPARAM wParam, LPARAM lParam)
 	{
-		m_style.Update();
+		m_style.Update(m_dpi);
 		//return ::DefWindowProc(m_hWnd, WM_MOVE, wParam, lParam);
 		return 0;
 	}
@@ -621,13 +650,13 @@ protected:
 		//int cx = GET_X_LPARAM(lParam);
 		//int cy = GET_Y_LPARAM(lParam);
 
-		m_style.Update();
+		m_style.Update(m_dpi);
 		return 0;
 	}
 
 	virtual LRESULT _OnExitSizeMove()
 	{
-		m_style.Update();
+		m_style.Update(m_dpi);
 		return ::DefWindowProc(m_hWnd, WM_EXITSIZEMOVE, 0, 0);
 	}
 
@@ -1484,9 +1513,7 @@ export LRESULT CALLBACK D2DCtrl_WndProc(HWND hwnd, UINT uiMsg, WPARAM wParam, LP
 		CREATESTRUCT* pCS = (CREATESTRUCT*)lParam;
 		pThis = (CXeD2DWndBase*)pCS->lpCreateParams;
 		XeASSERT(pThis);	// 'this' pointer is passed to 'us' as lpParam in CreateWindowExW.
-		s_xeUI->SetHwndD2DBasePtr(hwnd, pThis, pCS->lpszClass);
-		pThis->SetHwnd(hwnd);
-		pThis->m_style.Set(hwnd, pCS->style, pCS->dwExStyle, s_xeUI);
+		pThis->InitializeThis(hwnd, pCS);
 	}
 	else if (uiMsg == WM_GETMINMAXINFO)
 	{

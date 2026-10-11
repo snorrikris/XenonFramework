@@ -551,7 +551,8 @@ protected:
 		XeASSERT(dlg_template.m_hdr.windowClass.size() == 0);	// Only default dialog class supported (that we then ignore).
 
 		// We use 'our' UI font to convert from dialog units to pixels.
-		const XeFontMetrics& otm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		XeDPI dpi(::GetDpiForWindow(m_hDlgParentWnd));
+		const XeFontMetrics& otm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 
 		// Dialog client area size.
 		int dlg_cx = otm.DialogUnitsXtoPixels(dlg_template.m_hdr.s1.cx);
@@ -563,8 +564,8 @@ protected:
 
 		// Add caption and barders to size of window.
 		XeWindowStyleValue xe_style(style, 0);
-		int cyCaption = xe_style.hasCaption() ? m_xeUI->GetValue(UIV::cyWindowCaption) : 0;
-		int cxyBorder = m_xeUI->GetValue(xe_style.hasThickBorder() ? UIV::cxyThickBorder : UIV::cxyThinBorder);
+		int cyCaption = xe_style.hasCaption() ? m_xeUI->GetValue(UIV::cyWindowCaption, dpi) : 0;
+		int cxyBorder = m_xeUI->GetValue(xe_style.hasThickBorder() ? UIV::cxyThickBorder : UIV::cxyThinBorder, dpi);
 
 		dlg_cy += (cyCaption + (2 * cxyBorder));
 		dlg_cx += (2 * cxyBorder);
@@ -743,7 +744,7 @@ protected:
 	void _CreateCombobox(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		// rc is including listbox height - we need height of (scaled) ComboBox here.
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		CRect rcCB(rc);
 		rcCB.bottom = rcCB.top + tm.GetLineHeight();
 		auto cb = std::make_unique<CXeComboBoxEx>(m_xeUI);

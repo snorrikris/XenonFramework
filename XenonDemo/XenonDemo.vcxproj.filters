@@ -383,6 +383,9 @@
     <ClCompile Include="..\src\XeD2D_UItypes.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\XeUI_helpers.ixx">
+      <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\XeResource.rc2">

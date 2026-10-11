@@ -1668,7 +1668,8 @@ public:
 			//::DrawTextW(hDC, pStr, (int)len, rect, style );
 			//s.cx = rect.Width();
 			//s.cy = rect.Height();
-			s = m_GI->GetXeUI()->GetTextSizeW(font, cell->GetText());
+			XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
+			s = m_GI->GetXeUI()->GetTextSizeW(dpi, font, cell->GetText());
 		}
 
 		//use margins

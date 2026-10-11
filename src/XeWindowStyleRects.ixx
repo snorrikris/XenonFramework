@@ -29,6 +29,8 @@ export class XeWindowStyleRects
 protected:
 	CXeUIcolorsIF* m_xeUI = nullptr;
 
+	XeDPI m_dpi{ 0 };
+
 	CRect m_rcWnd;					// Window rect in screen coords.
 
 	CRect m_rcClient;				// Client rect in screen coords.
@@ -64,12 +66,16 @@ public:
 		m_xeUI = pUIcolors;
 	}
 
-	void Calculate(const XeWindowStyleValue& style, HWND hWnd)
+	XeDPI GetDPI() const { return m_dpi; }
+
+	void Calculate(const XeWindowStyleValue& style, HWND hWnd, XeDPI dpi)
 	{
 		XeASSERT(m_xeUI);
+		XeASSERT(dpi.is_valid());
+		m_dpi = dpi;
 		::GetWindowRect(hWnd, &m_rcWnd);
-		_CalculateBorderThickness(style, hWnd);
-		_CalculateNCrects(style);
+		_CalculateBorderThickness(style, hWnd, dpi);
+		_CalculateNCrects(style, dpi);
 	}
 
 	void SetToolbarSize(CSize sizeToolbar)
@@ -289,7 +295,7 @@ public:
 	}
 
 protected:
-	void _CalculateBorderThickness(const XeWindowStyleValue& style, HWND hWnd)
+	void _CalculateBorderThickness(const XeWindowStyleValue& style, HWND hWnd, XeDPI dpi)
 	{
 		m_cxyBorder = 0;
 		if (style.isMaximized())
@@ -316,22 +322,22 @@ protected:
 		}
 		else if (style.hasThickBorder())
 		{
-			m_cxyBorder = m_xeUI->GetValue(UIV::cxyThickBorder);
+			m_cxyBorder = m_xeUI->GetValue(UIV::cxyThickBorder, dpi);
 		}
 		else if (style.hasBorder())
 		{
-			m_cxyBorder = m_xeUI->GetValue(UIV::cxyThinBorder);
+			m_cxyBorder = m_xeUI->GetValue(UIV::cxyThinBorder, dpi);
 		}
 	}
 
-	void _CalculateNCrects(const XeWindowStyleValue& style)
+	void _CalculateNCrects(const XeWindowStyleValue& style, XeDPI dpi)
 	{
 		_ResetNCrects();
 
 		int cyCaption = 0;
 		if (style.hasCaption())
 		{
-			int cyNeeded = m_xeUI->GetValue(UIV::cyWindowCaption);
+			int cyNeeded = m_xeUI->GetValue(UIV::cyWindowCaption, dpi);
 			if (m_sizeToolbar.cy)
 			{
 				cyNeeded = std::max((int)m_sizeToolbar.cy + m_cxyBorder, cyNeeded);

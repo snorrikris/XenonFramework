@@ -95,7 +95,7 @@ protected:
 #pragma region UI_Drawing
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 	{
-		bool isStyleChanged = m_style.Update();
+		bool isStyleChanged = m_style.Update(m_dpi);
 		if (isStyleChanged && m_textLayout.Get())
 		{
 			m_textLayout.Reset();	// Re-create text object.
@@ -200,9 +200,9 @@ public:
 protected:
 	void _CreateTextLayout(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcText, const std::wstring& txt, CID fgCID)
 	{
-		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(m_font);
+		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(m_dpi, m_font);
 		HRESULT hr = m_xeUI->D2D_GetWriteFactory()->CreateTextLayout(txt.c_str(), (UINT32)txt.size(),
-			pUIfont, (rcText.right - rcText.left), (rcText.bottom - rcText.top), &m_textLayout);
+				pUIfont, (rcText.right - rcText.left), (rcText.bottom - rcText.top), &m_textLayout);
 		XeASSERT(hr == S_OK);
 		if (m_textLayout.Get())
 		{

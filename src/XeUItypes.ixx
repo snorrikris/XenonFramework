@@ -350,3 +350,30 @@ export struct NM_PPTOOLTIP_NEED_TT
 	}
 };
 
+// Wrapper class for DPI (for type safety).
+export class XeDPI
+{
+	UINT m_dpi = 0;
+
+public:
+	XeDPI() = default;
+	explicit XeDPI(UINT dpi) : m_dpi(dpi) {}
+
+	bool operator==(const XeDPI& rhs) const { return m_dpi == rhs.m_dpi; }
+	bool operator!=(const XeDPI& rhs) const { return !operator==(rhs); }
+	bool operator<(const XeDPI& rhs) const { return m_dpi < rhs.m_dpi; }
+
+	UINT get() const { return m_dpi; }
+	void set(UINT dpi)
+	{
+		XeASSERT(dpi != 0);
+		m_dpi = dpi;
+	}
+	void set(const XeDPI& other)
+	{
+		m_dpi = other.m_dpi;
+	}
+
+	bool is_valid() const { return m_dpi != 0; }
+};
+

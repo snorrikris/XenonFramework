@@ -122,9 +122,9 @@ protected:
 			int cxDlgMin = cxDlgMargin * 2 + rcB3.Width() * 3;
 
 			// Calculate text size.
-			const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+			const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 			std::vector<std::wstring> lines = splitW(std::wstring(m_pMsg), L"\n");
-			int cx_txt = m_xeUI->GetMaxTextWidthUsingFontW(lines, EXE_FONT::eUI_Font, Hwnd())
+			int cx_txt = m_xeUI->GetMaxTextWidthUsingFontW(lines, m_dpi, EXE_FONT::eUI_Font, Hwnd())
 					+ (4 * tm.m_aveCharWidth);// Add a little margin to text size.
 			int cy_txt = ((int)lines.size() + 1) * tm.m_height;
 			
@@ -140,7 +140,7 @@ protected:
 				if ((cx_grow && cx_grow < cx_grow_txt) || (cy_grow && cy_grow < cy_grow_txt))
 				{
 					// Text box will be smaller than needed for text - add space for scrollbars.
-					int cxySB = m_xeUI->GetValue(UIV::cxyScrollbar);
+					int cxySB = m_xeUI->GetValue(UIV::cxyScrollbar, m_dpi);
 					cx_grow += cxySB;
 					cy_grow += cxySB;
 				}

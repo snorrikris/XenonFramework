@@ -169,7 +169,7 @@ protected:
 
 		TT_Render rndr;
 		rndr.m_pRT = pRT;
-		rndr.m_font = m_xeUI->D2D_GetFont(EXE_FONT::eUI_Font);
+		rndr.m_font = m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eUI_Font);
 		rndr.m_text_brush = GetBrush(CID::TT_Text);
 		rndr.m_bg_brush = GetBrush(CID::TT_Bg);
 		rndr.m_border_brush = GetBrush(CID::TT_BgBorder);
@@ -300,7 +300,7 @@ protected:
 
 		//calculate the width and height of the box dynamically
 		CSize sz(0, 0);
-		m_drawer->PrepareOutput(m_tiNextTool.sTooltip.c_str(), &sz);
+		m_drawer->PrepareOutput(m_hCurrentParentWnd, m_tiNextTool.sTooltip.c_str(), &sz);
 
 		m_rcTipArea.SetRect(0, 0, sz.cx, sz.cy);
 		m_rcTooltip = m_rcTipArea;

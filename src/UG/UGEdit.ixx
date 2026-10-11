@@ -189,7 +189,8 @@ protected:
 
 	void _UpdateScintillaFont()
 	{
-		const XeFontMetrics& tm = m_GI->GetXeUI()->GetFontMetric(EXE_FONT::eUI_Font);
+		XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
+		const XeFontMetrics& tm = m_GI->GetXeUI()->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		_SetScintillaFont(tm.m_fontName.c_str(), tm.m_fontPointSize);
 	}
 

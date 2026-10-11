@@ -445,10 +445,9 @@ public:
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
 
 	// Called by XePopupParent when processing the NC_CREATE message.
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) override
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) override
 	{
-		SetHwnd(hWnd);
-		m_style.Set(hWnd, dwStyle, dwExStyle, m_xeUI);
+		InitializeThis(hWnd, pCS);
 		m_control_has_border = true;
 	}
 
@@ -709,21 +708,21 @@ protected:
 	void _CalculateDimensions()
 	{
 		D2D1_SIZE_F szF{};
-		m_xeUI->D2D_GetTextSize(std::wstring(L"GREEN"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"GREEN"), m_dpi, EXE_FONT::eUI_Font, szF);
 		labelCX = szF.width * 1.3f;
 		txtCY = szF.height;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), m_dpi, EXE_FONT::eUI_Font, szF);
 		valueCX = szF.width * 1.1f;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"More>"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"More>"), m_dpi, EXE_FONT::eUI_Font, szF);
 		moreBtnCX = szF.width * 1.1f;
 		smallBtnCY = szF.height * 1.2f;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"{+}"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"{+}"), m_dpi, EXE_FONT::eUI_Font, szF);
 		pickerBtnCX = szF.width * 1.3f;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"HH"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"HH"), m_dpi, EXE_FONT::eUI_Font, szF);
 		sliderCX = szF.width;
 		spcCX = sliderCX * 0.5f;
 
@@ -1080,7 +1079,7 @@ protected:
 				D2D1::Point2F(rect.right, rect.bottom)), pGradientStops.Get(), lbr.GetAddressOf());
 		pRT->FillRectangle(rect, lbr.Get());
 
-		IDWriteTextFormat* Text = m_xeUI->D2D_GetFont(EXE_FONT::eUI_Font);
+		IDWriteTextFormat* Text = m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eUI_Font);
 		Text->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 		Text->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		auto r2 = rect;

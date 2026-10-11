@@ -95,6 +95,9 @@ private:
 public:
 	// Current render target we are using for painting (can be used by external classes to paint - e.g. D2DToolbar)
 	ID2D1RenderTarget* m_pCurrentRT = nullptr;
+
+	XeDPI m_dpi{ 0 };
+
 #pragma endregion Class_data
 
 #pragma region Create
@@ -193,7 +196,7 @@ public:
 		pRT->FillRoundedRectangle(btn_rect, GetBrush(bgCID));
 		ID2D1SolidColorBrush* pBrdBrsh = GetBrush(isAct ? CID::CtrlBtnDefBorder : CID::CtrlBtnBorder);
 		pRT->DrawRoundedRectangle(btn_rect, pBrdBrsh, 1);
-		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(EXE_FONT::eUI_Font);
+		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eUI_Font);
 		pUIfont->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 		pUIfont->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pRT->DrawText(txt.c_str(), (UINT32)txt.size(), pUIfont, btn_rect.rect, GetBrush(fgCID));
@@ -244,7 +247,7 @@ public:
 			DWRITE_WORD_WRAPPING wrapping = DWRITE_WORD_WRAPPING_NO_WRAP)
 	{
 		Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
-		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(font);
+		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(m_dpi, font);
 		HRESULT hr = m_xeUI->D2D_GetWriteFactory()->CreateTextLayout(txt.c_str(), (UINT32)txt.size(),
 			pUIfont, sizeBox.width, sizeBox.height, textLayout.GetAddressOf());
 		XeASSERT(hr == S_OK);
@@ -566,7 +569,7 @@ public:
 
 	void _DrawSubMenuArrow(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcBtn, CID fgColor)
 	{
-		float cyTri = (float)m_xeUI->GetValue(UIV::cySubMenuArrow);
+		float cyTri = (float)m_xeUI->GetValue(UIV::cySubMenuArrow, m_dpi);
 		float cxTri = cyTri / 2.0f;
 		float cyTriMargin = (HeightOf(rcBtn) - cyTri) / 2.0f;
 		float x1 = rcBtn.left, x2 = x1 + (cyTri / 2.0f);
@@ -585,7 +588,7 @@ public:
 			pRT->FillRectangle(rcBtn, GetBrush(bgColor));
 		}
 
-		float cxTri = (float)m_xeUI->GetValue(UIV::cxComboBoxButtonArrow);
+		float cxTri = (float)m_xeUI->GetValue(UIV::cxComboBoxButtonArrow, m_dpi);
 		float cyTri = cxTri / 2.0f, cxTriMargin = (WidthOf(rcBtn) - cxTri) / 2.0f;
 		float cyTriMargin = (HeightOf(rcBtn) - cyTri) / 2.0f;
 		float x1 = rcBtn.right - (cxTriMargin + cxTri), x2 = rcBtn.right - cxTriMargin;

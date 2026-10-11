@@ -81,7 +81,7 @@ public:
 		{
 			CRect rcEdit(rect);
 			rcEdit.OffsetRect(-rcEdit.left, -rcEdit.top);	// Make top, left = 0,0
-			rcEdit.right -= m_xeUI->GetValue(UIV::cxComboBoxButton);
+			rcEdit.right -= m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
 			if (m_control_has_border)
 			{
 				rcEdit.DeflateRect(1, 1);
@@ -120,7 +120,7 @@ protected:
 
 		if (m_edit->GetSafeHwnd())
 		{
-			int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton);
+			int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
 			bool hasBorder = m_control_has_border;
 			int x = hasBorder ? 1 : 0, y = x;
 			cx = cx > cxButton ? cx - cxButton : 0;
@@ -216,7 +216,7 @@ protected:
 		bool isWindowEnabled = IsWindowEnabled();
 
 		D2D1_RECT_F rcBtn(rcClient);
-		float cxButton = (float)m_xeUI->GetValue(UIV::cxComboBoxButton);
+		float cxButton = (float)m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
 		rcBtn.left = rcBtn.right - cxButton;
 		CID cidBtnFg = isWindowEnabled ? CID::CtrlTxt : CID::CtrlTxtDis;
 		_DrawComboBoxButton(pRT, rcBtn, cidBtnFg, CID::CtrlBg);
@@ -344,7 +344,7 @@ protected:
 		GetClientRect(&rcButton);
 		if (!m_isStatic)	// Click anywhere in a static control to initiate the popup.
 		{
-			rcButton.left = rcButton.right - m_xeUI->GetValue(UIV::cxComboBoxButton);
+			rcButton.left = rcButton.right - m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
 		}
 		if (rcButton.PtInRect(point))
 		{
@@ -539,6 +539,7 @@ protected:
 public:
 	void SetItemsList(const std::vector<ListBoxExItem>& list)
 	{
+		XeASSERT(::IsWindow(Hwnd()));
 		m_listbox->SetItemsList(list);
 	}
 
@@ -968,7 +969,7 @@ protected:
 		CRect rcClient;
 		GetClientRect(&rcClient);
 		CRect rcEdit(rcClient);
-		int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton);
+		int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
 		rcEdit.right -= cxButton;
 		CRect rcButton(rcClient);
 		rcButton.left = rcButton.right - cxButton;

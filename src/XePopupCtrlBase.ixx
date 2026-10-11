@@ -46,7 +46,7 @@ public:
 	virtual DropWndOffset GetDropWndOffsetPreference() const = 0;
 
 	// Called by XePopupParent when processing the NC_CREATE message.
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) = 0;
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) = 0;
 
 	// Return true if 'this' is the first instance of the 'control'.
 	// The derived control should return true - unless 'this' instance is a 'sub-control' window (e.g. sub-menu).

@@ -574,7 +574,8 @@ protected:
 
 		LOGFONT		lf;
 		// set default font height
-		lf.lfHeight = m_GI->GetXeUI()->GetFontMetric(EXE_FONT::eUI_Font).GetHeight();
+		XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
+		lf.lfHeight = m_GI->GetXeUI()->GetFontMetric(dpi, EXE_FONT::eUI_Font).GetHeight();
 
 		//get the font
 		EXE_FONT font = EXE_FONT::eUI_Font;
@@ -614,7 +615,7 @@ protected:
 			if (item.m_item_data.m_hasIcon) { hasIcons = true; }
 			texts.push_back(item.m_string);
 		}
-		uint32_t cxMax = m_xeUI->GetMaxTextWidthUsingFontW(texts);
+		uint32_t cxMax = m_xeUI->GetMaxTextWidthUsingFontW(texts, dpi);
 		// Add a little extra H space when list has icons.
 		if (hasIcons) { cxMax += m_xeUI->GetUIScaleFactor().ScaleX(24); }
 		cxMax += m_xeUI->GetUIScaleFactor().ScaleX(12);	// H margin
@@ -630,7 +631,7 @@ protected:
 		m_listBox = listBox.get();
 
 		// add the items to the list
-		listBox->SetItemsList(list);
+		listBox->SetItemsListBeforeWindowCreated(dpi, list);
 
 		if (list.size() && list[0].m_item_data.m_isCheckbox)
 		{

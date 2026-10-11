@@ -6812,7 +6812,7 @@ void OnSheetSetup(int sheetNumber)
 
 	//EnableCellOverLap(FALSE); 			// Allow cell overlapping
 
-	const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+	const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 	int cyFont = tm.GetHeight() + tm.GetInternalLeading();
 	SetDefRowHeight(cyFont); 					// Set the grid's default row height 
 
@@ -7699,7 +7699,7 @@ void GetGridSizeFromGrid()
 void SetGridSizeToGrid()
 {
 	//******* Set the total height of the top heading 
-	int nTHrowHeight = m_xeUI->GetValue(UIV::s_cyGridTH_RowHeight);
+	int nTHrowHeight = m_xeUI->GetValue(UIV::s_cyGridTH_RowHeight, m_dpi);
 	int nNumTHrows = 1;
 	if (GetDataSource()->HasGridHeader())
 		nNumTHrows++;
@@ -7718,7 +7718,7 @@ void SetGridSizeToGrid()
 
 	CGridTblInfo& tblInfo = GetDataSource()->GetGridTblInfo();
 	SetSH_Width(tblInfo.GetSHwidth());
-	const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+	const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 	SetDefRowHeight(tm.GetHeight() + tm.GetInternalLeading());
 	for (int col = 0; col < GetNumberCols(); col++)
 	{
@@ -10097,7 +10097,7 @@ LRESULT MakeSuperTooltip(NM_PPTOOLTIP_NEED_TT * pNeedTT, HWND hWnd, int section)
 			//sti.hWnd = GetSafeHwnd();
 
 			//CSize sizeTxt = GetMultilineTextExtentW(this, pNeedTT->ti->sTooltip.c_str());
-			CSize sizeTxt = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, pNeedTT->ti->sTooltip.c_str());
+			CSize sizeTxt = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, pNeedTT->ti->sTooltip.c_str());
 			//CSize sizeTxt = GetMultilineTextExtentW(this, sti.m_sBody.c_str());
 			//sti.nSizeX = sizeTxt.cx;
 

@@ -45,40 +45,40 @@ export constexpr uint8_t XETB_ST_BG_RED = 0x80;		// BG color of item is red (sig
 export constexpr uint8_t XETB_ST_BG_GREEN = 0x40;	// BG color of item is green (signal upgrade ready).
 export constexpr uint8_t XETB_ST_GRAY = 0x20;		// Gray text in label type item.
 
-export CSize GetToolBarItemTextSize(CXeUIcolorsIF* pUIcolors, XETBItemType type, const wchar_t* pTxt)
-{
-	CSize sizeTxt;
-	if (pTxt)
-	{
-		sizeTxt = pUIcolors->GetTextSizeW(EXE_FONT::eUI_Font, pTxt);
-	}
-	switch (type)
-	{
-	case XETBItemType::LABEL:
-	case XETBItemType::LABEL_BORDER:
-		sizeTxt.cx += 8;
-		break;
-	case XETBItemType::STD_BUTTON:
-		sizeTxt.cx += 18;
-		break;
-	case XETBItemType::CHECKBOX:
-		sizeTxt.cx += 24;
-		break;
-	case XETBItemType::MENU_ITEM:
-		break;	// No extra margin needed.
-	case XETBItemType::COMBOBOX:
-		sizeTxt.cx += 25;	// add space for drop down button.
-		break;
-	case XETBItemType::PNG_ICON_BUTTON:
-	case XETBItemType::PNG_NRW_BUTTON:
-	case XETBItemType::PNG_BUTTON:
-	case XETBItemType::DROP_LIST_BTN:
-	case XETBItemType::SEPARATOR:
-		XeASSERT(FALSE);	// text size has no meaning for this type of control.
-		break;
-	}
-	return sizeTxt;
-}
+//export CSize GetToolBarItemTextSize(CXeUIcolorsIF* pUIcolors, XETBItemType type, const wchar_t* pTxt)
+//{
+//	CSize sizeTxt;
+//	if (pTxt)
+//	{
+//		sizeTxt = pUIcolors->GetTextSizeW(EXE_FONT::eUI_Font, pTxt);
+//	}
+//	switch (type)
+//	{
+//	case XETBItemType::LABEL:
+//	case XETBItemType::LABEL_BORDER:
+//		sizeTxt.cx += 8;
+//		break;
+//	case XETBItemType::STD_BUTTON:
+//		sizeTxt.cx += 18;
+//		break;
+//	case XETBItemType::CHECKBOX:
+//		sizeTxt.cx += 24;
+//		break;
+//	case XETBItemType::MENU_ITEM:
+//		break;	// No extra margin needed.
+//	case XETBItemType::COMBOBOX:
+//		sizeTxt.cx += 25;	// add space for drop down button.
+//		break;
+//	case XETBItemType::PNG_ICON_BUTTON:
+//	case XETBItemType::PNG_NRW_BUTTON:
+//	case XETBItemType::PNG_BUTTON:
+//	case XETBItemType::DROP_LIST_BTN:
+//	case XETBItemType::SEPARATOR:
+//		XeASSERT(FALSE);	// text size has no meaning for this type of control.
+//		break;
+//	}
+//	return sizeTxt;
+//}
 
 export struct XETBItem
 {
@@ -123,7 +123,7 @@ export struct XETBItem
 	virtual void OnDestroy() = 0;
 
 	// Calculate item position, return next item x pos.
-	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB) = 0;
+	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) = 0;
 
 	virtual void MoveWindowToCalculatedPosition() = 0;
 
@@ -182,17 +182,17 @@ export struct XETBItem_Menu : public XETBItem
 	{
 		m_cxRmargin = 2;
 		m_sText = szText;
-		CalculateItemRect(xPos, cyTopMargin, cyTB);
+		CalculateItemRect(xPos, cyTopMargin, cyTB, XeDPI(::GetDpiForWindow(hWndParent)));
 	}
 
 	virtual void OnDestroy() override {}
 
-	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB) override
+	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
 		int cxItem = 0, cyItem = cyTB;
 		if (m_isVisible)
 		{
-			CSize sizeTxt = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, m_sText.c_str());
+			CSize sizeTxt = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, m_sText.c_str());
 			cxItem = sizeTxt.cx + 6;
 			cyItem = sizeTxt.cy;
 		}
@@ -243,12 +243,12 @@ export struct XETBItem_Separator : public XETBItem
 		: XETBItem(pUIcolors, 0, XETBItemType::SEPARATOR, nullptr)
 	{
 		m_cxRmargin = 4;
-		CalculateItemRect(xPos, cyTopMargin, cyTB);
+		CalculateItemRect(xPos, cyTopMargin, cyTB, XeDPI(96));
 	}
 
 	virtual void OnDestroy() override {}
 
-	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB) override
+	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
 		int cxItem = m_isVisible ? 6 : 0, cyItem = cyTB;
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);
@@ -285,17 +285,17 @@ export struct XETBItem_Label : public XETBItem
 	{
 		m_cxRmargin = 4;
 		m_sText = szText;
-		CalculateItemRect(xPos, cyTopMargin, cyTB);
+		CalculateItemRect(xPos, cyTopMargin, cyTB, XeDPI(::GetDpiForWindow(hWndParent)));
 	}
 
 	virtual void OnDestroy() override {}
 
-	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB) override
+	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
 		int cxItem = 0, cyItem = cyTB;
 		if (m_isVisible)
 		{
-			CSize sizeTxt = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, m_sText.c_str());
+			CSize sizeTxt = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, m_sText.c_str());
 			cxItem = sizeTxt.cx + 8 + (m_itemType == XETBItemType::LABEL_BORDER ? 6 : 0);
 			cyItem = sizeTxt.cy + (m_itemType == XETBItemType::LABEL_BORDER ? 6 : 0);
 		}
@@ -352,7 +352,7 @@ export struct XETBItem_Button : public XETBItem
 		m_cxRmargin = 4;
 		//m_bState = 0;
 		m_sText = szText;
-		CalculateItemRect(xPos, cyTopMargin, cyTB);
+		CalculateItemRect(xPos, cyTopMargin, cyTB, XeDPI(::GetDpiForWindow(hWndParent)));
 		m_button_object = std::make_unique<CXeD2DButton>(m_xeUI);
 		DWORD dwStyle = type == XETBItemType::STD_BUTTON ? BS_PUSHBUTTON : BS_AUTOCHECKBOX;
 		m_button_object->CreateTBmode(szText, WS_CHILD | WS_VISIBLE | dwStyle, m_rItem, hWndParent,
@@ -365,7 +365,7 @@ export struct XETBItem_Button : public XETBItem
 	{
 		XeASSERT(type == XETBItemType::PNG_NRW_BUTTON || type == XETBItemType::PNG_ICON_BUTTON);
 		m_cxRmargin = 4;
-		CalculateItemRect(xPos, cyTopMargin, cyTB);
+		CalculateItemRect(xPos, cyTopMargin, cyTB, XeDPI(::GetDpiForWindow(hWndParent)));
 		m_button_object = std::make_unique<CXeD2DButton>(m_xeUI);
 		m_button_object->CreateTBmode(L"", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_BITMAP,
 				m_rItem, hWndParent, m_uIDcommand, szTooltip);
@@ -380,12 +380,12 @@ export struct XETBItem_Button : public XETBItem
 		}
 	}
 
-	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB) override
+	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
 		int cxItem = 0, cyItem = cyTB;
 		if (m_isVisible && m_itemType == XETBItemType::STD_BUTTON || m_itemType == XETBItemType::CHECKBOX)
 		{
-			CSize sizeTxt = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, m_sText.c_str());
+			CSize sizeTxt = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, m_sText.c_str());
 			cxItem = sizeTxt.cx + (m_itemType == XETBItemType::STD_BUTTON ? 18 : 24);
 			cyItem = sizeTxt.cy;
 		}
@@ -556,7 +556,7 @@ export struct XETBItem_DropButton : public XETBItem
 		: XETBItem(pUIcolors, uID, XETBItemType::DROP_LIST_BTN, szTooltip)
 	{
 		m_cxRmargin = 2;
-		CalculateItemRect(xPos, cyTopMargin, cyTB);
+		CalculateItemRect(xPos, cyTopMargin, cyTB, XeDPI(::GetDpiForWindow(hWndParent)));
 		m_button_object = std::make_unique<CXeD2DButton>(m_xeUI);
 		m_droplist_object = std::make_unique<CXeTB_DropListPopup>(m_xeUI);
 		m_button_object->CreateTBmode(L"", WS_CHILD | WS_VISIBLE | BS_SPLITBUTTON, m_rItem, hWndParent,
@@ -584,9 +584,9 @@ export struct XETBItem_DropButton : public XETBItem
 		}
 	}
 
-	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB) override
+	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
-		int cxItem = m_isVisible ? 20 + 4 + m_xeUI->GetValue(UIV::cxComboBoxButton) : 0;
+		int cxItem = m_isVisible ? 20 + 4 + m_xeUI->GetValue(UIV::cxComboBoxButton, dpi) : 0;
 		int cyItem = 20 + 4;
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);
 	}
@@ -658,7 +658,7 @@ export struct XETBItem_ComboBox : public XETBItem
 		m_combobox_size = sizeItem;
 		//m_bState = 0;
 		m_cyComboBoxDropDown = cyDropDown;
-		CalculateItemRect(xPos, cyTopMargin, cyTB);
+		CalculateItemRect(xPos, cyTopMargin, cyTB, XeDPI(::GetDpiForWindow(hWndParent)));
 		m_combobox_object = std::make_unique<CXeComboBoxEx>(m_xeUI);
 		m_combobox_object->Create(WS_CHILD | WS_VISIBLE | dwStyle, 0, m_rItem, hWndParent, m_uIDcommand,
 				m_cyComboBoxDropDown, 0, szTooltip);
@@ -672,7 +672,7 @@ export struct XETBItem_ComboBox : public XETBItem
 		}
 	}
 
-	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB) override
+	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
 		int cxItem = m_isVisible ? m_combobox_size.cx : 0, cyItem = cyTB;
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);

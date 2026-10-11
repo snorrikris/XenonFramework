@@ -75,13 +75,13 @@ struct ListBoxBottomButtons
 	bool HasOkCancelButtons() const { return m_hasButtons && m_isOkCancelButtons; }
 	bool HasCustomButton() const { return m_hasButtons && !m_isOkCancelButtons; }
 	
-	void CalculateSize(CXeUIcolorsIF* xeUI)
+	void CalculateSize(CXeUIcolorsIF* xeUI, XeDPI dpi)
 	{
-		const XeFontMetrics& tm = xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		m_cyButtonsArea = tm.GetHeight() * 2;
 		m_cyButtons = (int)((double)tm.GetHeight() * 1.5 + 0.5);
 		m_cyButtonsMargin = (m_cyButtonsArea - m_cyButtons) / 2;
-		CSize sTxt = xeUI->GetTextSizeW(EXE_FONT::eUI_Font, (m_isOkCancelButtons ? L"Cancel" : m_txtButton.c_str()));
+		CSize sTxt = xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, (m_isOkCancelButtons ? L"Cancel" : m_txtButton.c_str()));
 		m_cxButtons = sTxt.cx + (tm.m_aveCharWidth * 2);
 		m_cxButtonsMaxMargin = tm.m_aveCharWidth * 3;
 		m_cxMinForButtons = m_isOkCancelButtons ? m_cxButtons * 2 + 6 : m_cxButtons + 6;
@@ -250,13 +250,18 @@ public:
 	{
 		m_type = type;
 		m_notifyComboBoxCallback = notifyComboBoxCallback;
-		_InitializeLBitemUIsize();
 	}
 
 protected:
+	virtual LRESULT _OnNcCreate(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		_InitializeLBitemUIsize();
+		return CXeD2DCtrlBase::_OnNcCreate(hwnd, wParam, lParam);
+	}
+
 	void _InitializeLBitemUIsize()
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		float cyText = (float)tm.GetHeight();
 		if (cyText == 0.0f)
 		{
@@ -363,7 +368,7 @@ protected:
 	virtual LRESULT _OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam) override
 	{
 		XeASSERT(::IsWindow(Hwnd()));
-		m_style.Update();
+		m_style.Update(XeDPI(::GetDpiForWindow(hWnd)));
 		XeASSERT(!m_style.WS().hasLBS_UnsupportedStyle());
 
 		if (m_isEnsureVisibleNeeded)
@@ -420,6 +425,7 @@ public:
 
 	void SetItemsList(const std::vector<ListBoxExItem>& list, int nSelIdx = -1, size_t topIdx = 0xFFFFFFFF)
 	{
+		XeASSERT(m_dpi.is_valid());
 		if (topIdx != 0xFFFFFFFF && topIdx >= list.size()) { topIdx = 0xFFFFFFFF; }
 		if (nSelIdx != -1 && nSelIdx >= (int)list.size()) { nSelIdx = -1; }
 		m_curIdx = nSelIdx >= 0 ? (size_t)nSelIdx : 0xFFFFFFFF;
@@ -429,6 +435,14 @@ public:
 		_Update_cx_max(0xFFFFFFFF);
 		_AdjustScrollBars();
 		_RedrawDirectly();
+	}
+
+	void SetItemsListBeforeWindowCreated(XeDPI dpi, const std::vector<ListBoxExItem>& list,
+			int nSelIdx = -1, size_t topIdx = 0xFFFFFFFF)
+	{
+		XeASSERT(dpi.is_valid());
+		m_dpi = dpi;
+		SetItemsList(list, nSelIdx, topIdx);
 	}
 
 	const std::vector<ListBoxExItem>& GetItemsList() const { return m_items; }
@@ -493,13 +507,13 @@ public:
 		m_isCheckBoxesMode = isCheckBoxesMode;
 		if (hasOkCancelButtons)
 		{
-			m_buttonsHlpr.CalculateSize(m_xeUI);
+			m_buttonsHlpr.CalculateSize(m_xeUI, m_dpi);
 		}
 		else if (pTxtCustomButton)
 		{
 			m_buttonsHlpr.m_isOkCancelButtons = false;
 			m_buttonsHlpr.m_txtButton = pTxtCustomButton;	// Text of button (when custom text button used).
-			m_buttonsHlpr.CalculateSize(m_xeUI);
+			m_buttonsHlpr.CalculateSize(m_xeUI, m_dpi);
 		}
 	}
 
@@ -576,12 +590,9 @@ public:
 		return m_type == LBType::Menu ? DropWndOffset::OnParentCtrl : DropWndOffset::AboveParentCtrl;
 	}
 
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) override
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) override
 	{
-		XeASSERT(::IsWindow(hWnd));
-		SetHwnd(hWnd);
-		XeASSERT(Hwnd() && m_xeUI);
-		m_style.Set(Hwnd(), dwStyle, dwExStyle, m_xeUI);
+		InitializeThis(hWnd, pCS);
 		m_control_has_border = true;
 		m_isSelEndOk = m_isSelEndCancel = m_isSelEndCancelWithESCkey = false;
 		m_curIdxOriginal = m_curIdx;
@@ -705,7 +716,7 @@ protected:
 		}
 		pRT->PushAxisAlignedClip(rcClipSB, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 
 		bool isComboBoxDropDown = m_notifyComboBoxCallback != nullptr;
 
@@ -830,7 +841,7 @@ protected:
 			if (item.m_item_data.m_isSubMenu)
 			{
 				CID clrId_FG = !m_isEnabled || item.m_item_data.m_isItemDisabled ? CID::CtrlTxtDis : CID::CtrlTxt;
-				float cxTri = (float)m_xeUI->GetValue(UIV::cxComboBoxButtonArrow);
+				float cxTri = (float)m_xeUI->GetValue(UIV::cxComboBoxButtonArrow, m_dpi);
 				D2D1_RECT_F rcArw(rcTxtF);
 				rcArw.left = rcArw.right - m_cxMenuRmargin - cxTri;
 				_DrawSubMenuArrow(pRT, rcArw, clrId_FG);
@@ -1289,7 +1300,7 @@ protected:
 		std::function<void(size_t, const std::wstring&)>
 			set_cxTextCol = [&](size_t tabIdx, const std::wstring& str)
 		{
-			CSize sizeStr = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, str.c_str());
+			CSize sizeStr = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, str.c_str());
 			if (cxTextCol.size() < tabIdx + 1) { cxTextCol.resize(tabIdx + 1); }
 			if (cxTextCol[tabIdx] < (uint32_t)sizeStr.cx) { cxTextCol[tabIdx] = (uint32_t)sizeStr.cx; }
 		};

@@ -708,6 +708,7 @@ public:
 		//get the best size
 		CSize tempSize(0, 0);
 		EXE_FONT font = EXE_FONT::eUI_Font;
+		XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
 
 		if (!(cell->GetCellTypeEx() & UGCT_CHECKBOXUSEALIGN))
 		{
@@ -729,7 +730,7 @@ public:
 				//if ( cell->GetCellTypeEx() & UGCT_NORMALELLIPSIS )
 				//	style |= DT_END_ELLIPSIS;
 
-				tempSize = m_GI->GetXeUI()->GetTextSizeW(font, cell->GetLabelText());
+				tempSize = m_GI->GetXeUI()->GetTextSizeW(dpi, font, cell->GetLabelText());
 				//const wchar_t* pStr = cell->GetLabelText();
 				//size_t len = wcslen(pStr);
 				//::DrawTextW(hDC, pStr, (int)len, rect, style );

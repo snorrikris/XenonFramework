@@ -2,6 +2,7 @@ module;
 
 #include "os_minimal.h"
 #include <cstdint>
+#include <dcommon.h>
 #include "XeAssert.h"
 
 // IMPORTANT - include this file ONLY here. (the compiler has problems if included in other modules).
@@ -355,9 +356,13 @@ export class XeDPI
 {
 	UINT m_dpi = 0;
 
+	float m_pixels_scale = 1.0f;
+
+	float m_font_point_size_to_pixels_scale = 96.0f / 72.0f;
+
 public:
 	XeDPI() = default;
-	explicit XeDPI(UINT dpi) : m_dpi(dpi) {}
+	explicit XeDPI(UINT dpi) : m_dpi(dpi) { _on_set(); }
 
 	bool operator==(const XeDPI& rhs) const { return m_dpi == rhs.m_dpi; }
 	bool operator!=(const XeDPI& rhs) const { return !operator==(rhs); }
@@ -368,12 +373,68 @@ public:
 	{
 		XeASSERT(dpi != 0);
 		m_dpi = dpi;
+		_on_set();
 	}
 	void set(const XeDPI& other)
 	{
 		m_dpi = other.m_dpi;
+		_on_set();
 	}
 
 	bool is_valid() const { return m_dpi != 0; }
+
+	// Calculate "normal" monitor (96 DPI) size pixels - to pixel value for current DPI.
+	int size_to_pixels(int cxy) const
+	{
+		float scaled = size_to_pixelsF_rounded((float)cxy);
+		return (int)(scaled + 0.5f);
+	}
+	CSize size_to_pixels(const CSize& s) const
+	{
+		return CSize(size_to_pixels(s.cx), size_to_pixels(s.cy));
+	}
+	float size_to_pixelsF_rounded(float cxy) const
+	{
+		float scaled = size_to_pixelsF(cxy);
+		return std::round(scaled);
+	}
+	float size_to_pixelsF(float cxy) const
+	{
+		return cxy * m_pixels_scale;
+	}
+	D2D_SIZE_F size_to_pixelsF_rounded(const CSize& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF_rounded((float)s.cx), size_to_pixelsF_rounded((float)s.cy));
+	}
+	D2D_SIZE_F size_to_pixelsF(const CSize& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF((float)s.cx), size_to_pixelsF((float)s.cy));
+	}
+	D2D_SIZE_F size_to_pixelsF_rounded(const D2D_SIZE_F& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF_rounded(s.width), size_to_pixelsF_rounded(s.height));
+	}
+	D2D_SIZE_F size_to_pixelsF(const D2D_SIZE_F& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF(s.width), size_to_pixelsF(s.height));
+	}
+
+	float font_point_size_to_pixels(int point_size) const
+	{
+		return (float)point_size * m_font_point_size_to_pixels_scale;
+	}
+
+protected:
+	void _on_set()
+	{
+		if (m_dpi == 0)
+		{
+			m_pixels_scale = 1.0f;
+			m_font_point_size_to_pixels_scale = 96.0f / 72.0f;
+			return;
+		}
+		m_pixels_scale = (float)m_dpi / 96.0f;
+		m_font_point_size_to_pixels_scale = (float)m_dpi / 72.0f;
+	}
 };
 

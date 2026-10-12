@@ -584,9 +584,6 @@ protected:
 		XeASSERT(m_logPixelsY > 1);
 		::DeleteDC(hDC);
 
-		// Convert font point size to DIPs conversion factor .
-		float FONT_PT_TO_DIPS = (float)dpi.get() / 72.0f;
-
 		// Honestly stolen from: https://chromium.googlesource.com/chromium/src/+/51ba3e6902ecd7284d3be51db648127d1be2187f/ui/gfx/platform_font_win.cc
 		Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
 		HRESULT hrFC = m_d2d_writeFactory->GetSystemFontCollection(font_collection.GetAddressOf());
@@ -603,7 +600,7 @@ protected:
 			XeFontMetrics tm = m_d2d_fonts.GetFontInfoConst(dpi, eFont);
 			std::string fontnameA = xet::toUTF8(tm.m_fontName);
 
-			float fsDIPs = (float)tm.m_fontPointSize * FONT_PT_TO_DIPS;	// font size is in points - D2D wants DIPs.
+			float fsDIPs = dpi.font_point_size_to_pixels(tm.m_fontPointSize);	// font size is in points - D2D wants DIPs.
 
 			// Create font object (note - is managed by font map class).
 			IDWriteTextFormat* pTextFmt = nullptr;

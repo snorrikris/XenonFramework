@@ -71,19 +71,7 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////
 	// Font data
 
-	int m_monospacedFontSize = 14, /*m_gridRowPitch = 6,*/ m_uiFontSize = 14;
-	//std::wstring m_strUI_FontName;
-	//int m_uiFontGridRowHeight = 20;
-
-	int m_cxTooltipDefaultUnscaled = 212;
-
-	double m_cxScaleFactor = 1.0, m_cyScaleFactor = 1.0;
-
-	int s_cyGridTH_RowHeight = 0;
-
-	int m_cxDefaultTooltip = 212;
-
-	MonospacedCharSize m_monospacedCharSize;
+	XeDWFontMap m_d2d_fonts;
 
 	/////////////////////////////////////////////////////////////////////////////
 	// Other data
@@ -102,9 +90,6 @@ protected:
 	Microsoft::WRL::ComPtr<ID2D1Factory> m_d2d_fa;
 	Microsoft::WRL::ComPtr<IDWriteFactory> m_d2d_writeFactory;
 
-	XeDWFontMap m_d2d_fonts;
-	int m_logPixelsY = 1;	// Logical pixels/inch in Y - of the desktop monitor (UI screen).
-
 	std::map<PID, Microsoft::WRL::ComPtr<IWICFormatConverter>> m_d2d_pid_map_img;
 	std::map<PID, CSize> m_d2d_pid_map_size;
 
@@ -120,14 +105,12 @@ public:
 		m_hInstance = hInstance;
 		m_appName = app_name;
 
-		//m_monospacedCharSize.cySingleLineRowHeight = 0/*20*/;
-		m_monospacedCharSize.cyMultiLineTextHeight = 0/*14*/;
-		m_monospacedCharSize.cxGridCharWidth = 8;
-
 		_ReadAllThemeFiles();
 		_InitializeThemeData(theme_name);
 
 		_InitializeDirect2D();
+
+		m_d2d_fonts.SetFactoryPointer(m_d2d_writeFactory.Get());
 	}
 
 	void Destroy()
@@ -363,7 +346,7 @@ protected:
 	{
 		if (!m_d2d_fonts.VerifyFontExists(dpi, EXE_FONT::eUI_Font))
 		{
-			_CreateFonts(dpi);
+			_CreateFonts(dpi, false);
 		}
 	}
 
@@ -372,9 +355,9 @@ protected:
 		return m_d2d_fonts.GetFontInfoConst(dpi, eFont);
 	}
 
-	virtual UIScaleFactor GetUIScaleFactor() const override
+	virtual UIScaleFactor GetUIScaleFactor(XeDPI dpi) const override
 	{
-		return UIScaleFactor(m_cxScaleFactor, m_cyScaleFactor);
+		return m_d2d_fonts.GetUIScaleFactor(dpi);
 	}
 
 	virtual CSize GetTextSizeW(XeDPI dpi, EXE_FONT eFont, const wchar_t* szText) override
@@ -383,28 +366,13 @@ protected:
 	}
 	virtual CSize GetTextSizeW(XeDPI dpi, EXE_FONT eFont, const wchar_t* szText, size_t length) override
 	{
-		CSize size1;
-
-		HRESULT hr = S_OK;
-		IDWriteTextFormat* pUIfont = D2D_GetFont(dpi, eFont);
-		Microsoft::WRL::ComPtr<IDWriteTextLayout> pTextLayout;
-		float floatDim = 2500.0f;
-		// Create a text layout 
-		hr = m_d2d_writeFactory->CreateTextLayout(szText, (UINT32)length,
-				pUIfont, floatDim, floatDim, &pTextLayout);
-		XeASSERT(hr == S_OK);
+		D2D1_SIZE_F sizeF;
+		HRESULT hr = m_d2d_fonts.GetTextSize(szText, length, dpi, eFont, sizeF);
 		if (SUCCEEDED(hr))
 		{
-			// Get text size  
-			DWRITE_TEXT_METRICS textMetrics;
-			hr = pTextLayout->GetMetrics(&textMetrics);
-			D2D1_SIZE_F size = D2D1::SizeF((float)ceil(textMetrics.widthIncludingTrailingWhitespace),
-				(float)ceil(textMetrics.height));
-			size1.cx = (int)(size.width + 0.5f);
-			size1.cy = (int)(size.height + 0.5f);
+			return CSize((int)(sizeF.width + 0.5f), (int)(sizeF.height + 0.5f));
 		}
-
-		return size1;
+		return CSize();
 	}
 
 	virtual CSize GetTextSizeUsingFontW(HWND hWnd, XeDPI dpi, EXE_FONT eFontconst, const wchar_t* szText) override
@@ -486,9 +454,9 @@ protected:
 		return sizeTotal;
 	}
 
-	virtual MonospacedCharSize GetLogGridCharSize() const override
+	virtual MonospacedCharSize GetLogGridCharSize(XeDPI dpi) const override
 	{
-		return m_monospacedCharSize;
+		return m_d2d_fonts.GetLogGridCharSize(dpi);
 	}
 
 protected:
@@ -507,234 +475,57 @@ protected:
 		return SUCCEEDED(hr);
 	}
 
-	bool _CreateFonts(XeDPI dpi)
+	bool _CreateFonts(XeDPI dpi, bool isRecreateFonts)
 	{
-		_DeleteFonts();
-		m_d2d_fonts.InitializeMap(dpi);
-		m_cxScaleFactor = m_cyScaleFactor = 1.0;
+		if (isRecreateFonts)
+		{
+			_DeleteFonts();
+		}
 
-		// Handle deprecated font size settings - use new font point size unless user has selected font pixel size.
-		//const CXeUserSetting& settingGridFontPointSize = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontPointSize");
-		//m_monospacedFontSize = xen::stoi(settingGridFontPointSize.getString().c_str());
-		//if (settingGridFontPointSize.m_value_is_default)
-		//{
-		//	const CXeUserSetting& settingGridFontSize = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontSize");
-		//	if (!settingGridFontSize.m_value_is_default)	// Deprecated "GridFontSize" is not default value?
-		//	{
-		//		int fontSizePixels = xen::stoi(settingGridFontSize.getString().c_str());
-		//		m_monospacedFontSize = (int)(((float)fontSizePixels / 1.3333f) + 0.5f);
-		//	}
-		//}
 		if (!s_xeUIsettings.Exists(L"GeneralSettings"))
 		{
 			XeASSERT(false);	// "GeneralSettings" MUST exist!
 		}
 		const CXeUserSettings& generalSettings = s_xeUIsettings[L"GeneralSettings"];
 		std::wstring fontSize = generalSettings.GetString_or_Val(L"UI_FontPointSize", L"10");
-		m_uiFontSize = xen::stoi(fontSize);
-		XeASSERT(m_uiFontSize > 0);
+		int uiFontSize = xen::stoi(fontSize);
+		XeASSERT(uiFontSize > 0);
 		const CXeUserSetting& settingUIFontPointSize = generalSettings.Get(L"UI_FontPointSize");
-		//m_uiFontSize = xen::stoi(settingUIFontPointSize.getString().c_str());
 		if (settingUIFontPointSize.m_value_is_default && generalSettings.Exists(L"UI_FontSize"))
 		{
 			const CXeUserSetting& settingUIFontSize = generalSettings.Get(L"UI_FontSize");
 			if (!settingUIFontSize.m_value_is_default)	// Deprecated "UI_FontSize" is not default value?
 			{
 				int fontSizePixels = xen::stoi(settingUIFontSize.getString().c_str());
-				m_uiFontSize = (int)(((float)fontSizePixels / 1.3333f) + 0.5f);
+				uiFontSize = (int)(((float)fontSizePixels / 1.3333f) + 0.5f);
 			}
 		}
-		m_monospacedFontSize = m_uiFontSize;
 
 		std::wstring monospacedFontName = generalSettings.GetString_or_Val(L"UI_MonospacedFontName", L"Consolas");
-		//XeASSERT(monospacedFontName.size() > 0);
-		//if (monospacedFontName.size() == 0)
-		//{
-		//	monospacedFontName = L"Consolas";
-		//}
-		//std::wstring monospacedFontName = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontName").getString();
-		//std::wstring gridRowPitch = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridRowPitch").getString();
-		//m_gridRowPitch = xen::stoi(gridRowPitch.c_str());
 
 		std::wstring strUI_FontName = generalSettings.GetString_or_Val(L"UI_FontName", L"Segoe UI");
 
-		m_d2d_fonts.SetFontInfo(dpi, EXE_FONT::eMonospacedFont, XeFontMetrics(monospacedFontName, m_monospacedFontSize));
+		std::vector<XeFontDescription> fonts;
+		fonts.push_back({ EXE_FONT::eMonospacedFont, true, monospacedFontName, uiFontSize });
 
-		m_d2d_fonts.SetFontInfo(dpi, EXE_FONT::eUI_Font, XeFontMetrics(strUI_FontName, m_uiFontSize));
+		fonts.push_back({ EXE_FONT::eUI_Font, false, strUI_FontName, uiFontSize });
 
-		XeFontMetrics tmUIfontBold(strUI_FontName, m_uiFontSize, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);
-		m_d2d_fonts.SetFontInfo(dpi, EXE_FONT::eUI_FontBold, tmUIfontBold);
+		fonts.push_back({ EXE_FONT::eUI_FontBold, false, strUI_FontName, uiFontSize,
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });
 
-		double dbl_size = m_uiFontSize;
-		XeFontMetrics tmUIfontMedBig(strUI_FontName, (int)(dbl_size * 1.25 + 0.5),
-				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);// eMediumBig is 25% bigger font.
-		m_d2d_fonts.SetFontInfo(dpi, EXE_FONT::eMediumBig, tmUIfontMedBig);
+		double dbl_size = uiFontSize;
+		fonts.push_back({ EXE_FONT::eMediumBig, false, strUI_FontName, (int)(dbl_size * 1.25 + 0.5),
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });// eMediumBig is 25% bigger font.
 
-		XeFontMetrics tmUIfontTabTitle(strUI_FontName, (int)(dbl_size * 1.43 + 0.5),
-				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);// 43% bigger size than uiFontSize - default is 14 - resulting in 20
-		m_d2d_fonts.SetFontInfo(dpi, EXE_FONT::eTabListTitleFont, tmUIfontTabTitle);
+		fonts.push_back({ EXE_FONT::eTabListTitleFont, false, strUI_FontName, (int)(dbl_size * 1.43 + 0.5),
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });// 43% bigger size than uiFontSize - default is 14 - resulting in 20
 
-		XeFontMetrics tmUIfontBig(strUI_FontName, (int)(dbl_size * 2.85 + 0.5),
-				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);// 285% bigger size than uiFontSize - default is 14 - resulting in 40
-		m_d2d_fonts.SetFontInfo(dpi, EXE_FONT::eBigMsgFont, tmUIfontBig);
+		fonts.push_back({ EXE_FONT::eBigMsgFont, false, strUI_FontName, (int)(dbl_size * 2.85 + 0.5),
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });// 285% bigger size than uiFontSize - default is 14 - resulting in 40
 
-		// Get metrics for all fonts.
-		HDC hDC = ::CreateCompatibleDC(0);
-		m_logPixelsY = ::GetDeviceCaps(hDC, LOGPIXELSY);
-		XeASSERT(m_logPixelsY > 1);
-		::DeleteDC(hDC);
+		m_d2d_fonts.InitializeFontsForDPI(dpi, fonts);
 
-		// Honestly stolen from: https://chromium.googlesource.com/chromium/src/+/51ba3e6902ecd7284d3be51db648127d1be2187f/ui/gfx/platform_font_win.cc
-		Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
-		HRESULT hrFC = m_d2d_writeFactory->GetSystemFontCollection(font_collection.GetAddressOf());
-		if (!_LogIfErrorAndAssert(hrFC, "GetSystemFontCollection"))
-		{
-			return false;
-		}
-		std::wstring dt(L"0000-00-00 00:00:00,000");
-		std::wstring ab(L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-		for (size_t i = 0; i < static_cast<size_t>(EXE_FONT::eLastFont); ++i)
-		{
-			EXE_FONT eFont = static_cast<EXE_FONT>(i);
-
-			XeFontMetrics tm = m_d2d_fonts.GetFontInfoConst(dpi, eFont);
-			std::string fontnameA = xet::toUTF8(tm.m_fontName);
-
-			float fsDIPs = dpi.font_point_size_to_pixels(tm.m_fontPointSize);	// font size is in points - D2D wants DIPs.
-
-			// Create font object (note - is managed by font map class).
-			IDWriteTextFormat* pTextFmt = nullptr;
-			HRESULT hr = m_d2d_writeFactory->CreateTextFormat(tm.m_fontName.c_str(), 0, tm.m_weight, tm.m_style,
-					tm.m_stretch, fsDIPs, L"", &pTextFmt);
-			if (_LogIfErrorAndAssert(hr, std::string("CreateTextFormat ") + fontnameA))
-			{
-				m_d2d_fonts.SetFont(dpi, eFont, pTextFmt);
-			}
-
-			D2D1_SIZE_F sizeF, sizeF_ab;
-			HRESULT hr1 = D2D_GetTextSize(dt, dpi, eFont, sizeF);
-			HRESULT hr2 = D2D_GetTextSize(ab, dpi, eFont, sizeF_ab);
-			XeASSERT(hr1 == S_OK && hr2 == S_OK);
-			if (_LogIfErrorAndAssert(hr1, "GetTextSize " + fontnameA) && SUCCEEDED(hr2))
-			{
-				tm.m_aveCharWidth = (int)(sizeF_ab.width / (float)ab.size() + 0.5f);
-				tm.m_height = (int)(sizeF.height + 0.5f);
-				tm.m_sizeDatetime.cx = (int)(sizeF.width + 0.5f), tm.m_sizeDatetime.cy = (int)(sizeF.height + 0.5f);
-
-				// Calculate some guessed values - in case get font metrics fails.
-				tm.m_descent = (int)(sizeF.height / 6.0f + 0.5f);
-				tm.m_ascent = tm.m_height - tm.m_descent;
-				tm.m_intLeading = (int)(sizeF.height / 6.0f + 0.5f);
-				tm.m_extLeading = 0;
-			}
-
-			if (eFont == EXE_FONT::eUI_Font)
-			{
-				double cyUIfont = tm.GetHeight();
-				//m_uiFontGridRowHeight = tm.GetHeight() + tm.GetInternalLeading();
-
-				// Calculate Data Grid row sizes.
-				s_cyGridTH_RowHeight = (int)(cyUIfont * 1.125);//tm.GetHeight() + m_gridRowPitch;
-
-				double scaleFactor = (double)cyUIfont / 18.0;
-				if (scaleFactor > 1.0)
-				{
-					m_cxScaleFactor = m_cyScaleFactor = scaleFactor;
-				}
-				m_cxDefaultTooltip = (int)(212.0 * m_cxScaleFactor + 0.5);
-			}
-			else if (eFont == EXE_FONT::eMonospacedFont)
-			{
-				// Set fall-back values in case calculate metrics fails.
-				//m_monospacedCharSize.cySingleLineRowHeight = tm.GetHeight() + m_gridRowPitch;
-				m_monospacedCharSize.cyMultiLineTextHeight = tm.GetHeight();
-				//m_monospacedCharSize.cyMultiLineTextTopMargin = (int)((double)tm.GetHeight() / 8.0 + 0.5);
-				//m_monospacedCharSize.cyMultiLineTextBottomMargin = (int)((double)tm.GetHeight() / 8.0 + 0.5);
-				m_monospacedCharSize.cxGridCharWidth = tm.m_aveCharWidth;
-			}
-
-			if (SUCCEEDED(hrFC))
-			{
-				_CalculateFontMetrics(eFont, fsDIPs, tm, font_collection.Get());
-			}
-			m_d2d_fonts.SetFontInfo(dpi, eFont, tm);
-		}
 		return true;
-	}
-
-	void _CalculateFontMetrics(EXE_FONT eFont, const float& fsDIPs, XeFontMetrics& tm, IDWriteFontCollection* pCollection)
-	{
-		std::string fontnameA = xet::toUTF8(tm.m_fontName);
-		BOOL exists = FALSE;
-		uint32_t index = 0;
-		HRESULT hr = pCollection->FindFamilyName(tm.m_fontName.c_str(), &index, &exists);
-		if (!_LogIfErrorAndAssert(hr, "FindFamilyName " + fontnameA))
-		{
-			return;
-		}
-		Microsoft::WRL::ComPtr<IDWriteFontFamily> font_family;
-		if (index != UINT_MAX && exists)
-		{
-			hr = pCollection->GetFontFamily(index, font_family.GetAddressOf());
-		}
-		else
-		{
-			// If we fail to find a matching font, then fallback to the first font in
-			// the list. This is what skia does as well.
-			hr = pCollection->GetFontFamily(0, font_family.GetAddressOf());
-		}
-		if (!_LogIfErrorAndAssert(hr, "GetFontFamily " + fontnameA))
-		{
-			return;
-		}
-		Microsoft::WRL::ComPtr<IDWriteFont> dwrite_font;
-		hr = font_family->GetFirstMatchingFont(tm.m_weight, tm.m_stretch, tm.m_style, dwrite_font.GetAddressOf());
-		if (!_LogIfErrorAndAssert(hr, "GetFirstMatchingFont " + fontnameA))
-		{
-			return;
-		}
-
-		dwrite_font->GetMetrics(&tm.m_dfm);
-
-		tm.m_ascent = (int)(tm.m_dfm.ascent * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-		tm.m_descent = (int)(tm.m_dfm.descent * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-		int capHeightPixels = (int)(tm.m_dfm.capHeight * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-		tm.m_intLeading = tm.m_ascent - capHeightPixels;
-		tm.m_extLeading = (int)(tm.m_dfm.lineGap * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-
-		if (eFont == EXE_FONT::eMonospacedFont)
-		{
-			Microsoft::WRL::ComPtr<IDWriteFontFace> fontFace;
-			hr = dwrite_font->CreateFontFace(fontFace.GetAddressOf());
-			if (_LogIfErrorAndAssert(hr, "CreateFontFace"))
-			{
-				uint32_t codepoints[2]{ wchar_t{L'M'}, wchar_t{L'y'} };
-				uint16_t glyphIdc[2]{ 0, 0 };
-
-				hr = fontFace->GetGlyphIndicesW(codepoints, 2, glyphIdc);
-				if (_LogIfErrorAndAssert(hr, "GetGlyphIndicesW"))
-				{
-					BOOL useGdiNatural = TRUE;
-					// When set to FALSE, the metrics are the same as the metrics of GDI aliased text.
-					// When set to TRUE, the metrics are the same as the metrics of text measured by GDI
-					// using a font created with CLEARTYPE_NATURAL_QUALITY.
-
-					DWRITE_GLYPH_METRICS glyph_meterics[2]{ 0, 0 };
-					hr = fontFace->GetGdiCompatibleGlyphMetrics(fsDIPs, 1.0f, nullptr, useGdiNatural, glyphIdc, 2, glyph_meterics);
-					if (_LogIfErrorAndAssert(hr, "GetGdiCompatibleGlyphMetrics"))
-					{
-						float cyHeight = (float)glyph_meterics[0].advanceHeight * 1.075f;
-						float cy = cyHeight * fsDIPs / (float)tm.m_dfm.designUnitsPerEm;
-						//m_monospacedCharSize.cySingleLineRowHeight = (int)(cy + 0.5) + m_gridRowPitch;
-						m_monospacedCharSize.cyMultiLineTextHeight = (int)(cy + 0.5);
-						//m_monospacedCharSize.cyMultiLineTextTopMargin = (int)(cy / 8.0 + 0.5);
-						//m_monospacedCharSize.cyMultiLineTextBottomMargin = (int)(cy / 8.0 + 0.5);
-						m_monospacedCharSize.cxGridCharWidth
-								= (int)((float)glyph_meterics[0].advanceWidth * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-					}
-				}
-			}
-		}
 	}
 #pragma endregion Fonts
 
@@ -744,8 +535,6 @@ public:
 	{
 		m_theOneAndOnlyTooltipWindow->HideTooltip(hWndParent);
 	}
-
-	virtual int GetTooltipDefaultWidth() const override { return m_cxDefaultTooltip; }
 
 	virtual void SetNewTooltip(HWND hWndParent, CPoint point, const PPTOOLTIP_INFO& ttInfo) override
 	{
@@ -1326,7 +1115,7 @@ protected:
 	{
 		if (IsFontSettingsChanged(chg_settings))
 		{
-			_CreateFonts(dpi);
+			_CreateFonts(dpi, true);
 		}
 		else if (chg_settings.IsChanged(L"Colors", L"Color"))
 		{
@@ -1337,33 +1126,7 @@ protected:
 
 	virtual int GetValue(UIV val, XeDPI dpi) const override
 	{
-		switch (val)
-		{
-		case UIV::s_cyGridTH_RowHeight:
-			return s_cyGridTH_RowHeight;
-		case UIV::cxTooltipDefault:
-			return (int)((double)m_cxTooltipDefaultUnscaled * m_cxScaleFactor + 0.5);
-		case UIV::cxComboBoxButton:
-			return (int)((double)18 * m_cxScaleFactor + 0.5);
-		case UIV::cxComboBoxButtonArrow: {
-			int cxTri = (int)((double)8 * m_cxScaleFactor + 0.5);
-			if ((cxTri & 1)) { ++cxTri; }			// Must be even number
-			return cxTri; }
-		case UIV::cySubMenuArrow: {
-			int cxTri = (int)((double)6 * m_cxScaleFactor + 0.5);
-			if ((cxTri & 1)) { ++cxTri; }			// Must be even number
-			return cxTri; }
-		case UIV::cxyThickBorder:
-			return 6;
-		case UIV::cxyThinBorder:
-			return 3;
-		case UIV::cyWindowCaption:
-			return GetFontMetric(dpi, EXE_FONT::eUI_FontBold).GetHeight();
-		case UIV::cxyScrollbar:
-			return std::max(::GetSystemMetrics(SM_CXVSCROLL), ::GetSystemMetrics(SM_CYHSCROLL));		//pixels
-		}
-		XeASSERT(FALSE);
-		return 0;
+		return m_d2d_fonts.GetValue(val, dpi);
 	}
 
 	virtual HICON GetAppIconHandle() override
@@ -1492,32 +1255,7 @@ public:
 
 	virtual HRESULT D2D_GetTextSize(const std::wstring& txt, XeDPI dpi, EXE_FONT font, D2D1_SIZE_F& size) override
 	{
-		HRESULT hr = S_OK;
-		IDWriteTextFormat* pUIfont = D2D_GetFont(dpi, font);
-		Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
-		float cxDim = 10000.0f, cyDim = 1000.f;
-		// Create a text layout
-		if (font != EXE_FONT::eMonospacedFont)
-		{
-			hr = m_d2d_writeFactory->CreateTextLayout(txt.c_str(), (UINT32)txt.size(),
-					pUIfont, cxDim, cyDim, textLayout.GetAddressOf());
-		}
-		else
-		{
-			float pixelsPerDip = 1.0f;
-			hr = m_d2d_writeFactory->CreateGdiCompatibleTextLayout(txt.c_str(), (UINT32)txt.size(),
-					pUIfont, cxDim, cyDim, pixelsPerDip, nullptr, TRUE, textLayout.GetAddressOf());
-		}
-		XeASSERT(hr == S_OK);
-		if (SUCCEEDED(hr))
-		{
-			// Get text size  
-			DWRITE_TEXT_METRICS textMetrics;
-			hr = textLayout->GetMetrics(&textMetrics);
-			size = D2D1::SizeF((float)ceil(textMetrics.widthIncludingTrailingWhitespace),
-					(float)ceil(textMetrics.height));
-		}
-		return hr;
+		return m_d2d_fonts.GetTextSize(txt, dpi, font, size);
 	}
 
 	virtual IWICFormatConverter* D2D_GetImage(PID pid, CSize* pSize = nullptr) override

@@ -106,11 +106,12 @@ export enum class CMTX
 export struct XeFontMetrics
 {
 	XeFontMetrics() = default;
-	XeFontMetrics(const std::wstring& fontname, int fontpointsize,
+	XeFontMetrics(XeDPI dpi, EXE_FONT fontId, bool isMonoSpaced, const std::wstring& fontname, int fontpointsize,
 			DWRITE_FONT_STYLE style = DWRITE_FONT_STYLE_NORMAL,
 			DWRITE_FONT_WEIGHT weight = DWRITE_FONT_WEIGHT_NORMAL,
 			DWRITE_FONT_STRETCH stretch = DWRITE_FONT_STRETCH_NORMAL)
-			: m_fontName(fontname), m_fontPointSize(fontpointsize), m_style(style), m_weight(weight), m_stretch(stretch) {}
+			: m_dpi(dpi), m_fontId(fontId), m_isMonoSpaced(isMonoSpaced), m_fontName(fontname), m_fontPointSize(fontpointsize), 
+			  m_style(style), m_weight(weight), m_stretch(stretch) {}
 
 	CSize m_sizeDatetime;	// size of "0000-00-00 00:00:00,000"
 
@@ -122,6 +123,9 @@ export struct XeFontMetrics
 	int m_intLeading = 0;	// Height of "box" above a typical english capital letter, e.g. 'H'.
 	int m_extLeading = 0;	// Recommended additional white space to add between lines (can be 0 or negative).
 
+	XeDPI				m_dpi;
+	EXE_FONT			m_fontId;
+	bool				m_isMonoSpaced;
 	std::wstring        m_fontName;
 	int                 m_fontPointSize = 0;	// User requested font point size.
 	DWRITE_FONT_STYLE   m_style   = DWRITE_FONT_STYLE_NORMAL;
@@ -287,7 +291,7 @@ public:
 
 	virtual const XeFontMetrics& GetFontMetric(XeDPI dpi, EXE_FONT eFont) const = 0;
 
-	virtual UIScaleFactor GetUIScaleFactor() const = 0;
+	virtual UIScaleFactor GetUIScaleFactor(XeDPI dpi) const = 0;
 
 	// Get text size using font and desktop window DC.
 	virtual CSize GetTextSizeW(XeDPI dpi, EXE_FONT eFont, const wchar_t* szText) = 0;
@@ -313,7 +317,7 @@ public:
 	// Get string to append to PNG resource names - used by XePngButton class.
 	//virtual CString GetThemePngAppend() const = 0;
 
-	virtual MonospacedCharSize GetLogGridCharSize() const = 0;
+	virtual MonospacedCharSize GetLogGridCharSize(XeDPI dpi) const = 0;
 
 	// Get background color for log level
 	//virtual COLORREF GetLogLevelColor(LOGLEVEL logLevel) const = 0;
@@ -347,8 +351,6 @@ public:
 	virtual void HideTooltip(HWND hWndParent = 0) const = 0;
 
 	virtual void SetNewTooltip(HWND hWndParent, CPoint point, const PPTOOLTIP_INFO& ttInfo) = 0;
-
-	virtual int GetTooltipDefaultWidth() const = 0;
 
 	// Is mouse over tooltip - hWnd = 0 ? any tooltip,
 	// otherwise - ? tooltip parent is hWndParent.

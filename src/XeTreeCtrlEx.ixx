@@ -194,7 +194,7 @@ struct TreeUIparams
 		m_cyItem = tm.GetLineHeight();
 		if (m_cyItem == 0) { m_cyItem = 15; }
 		if (!(m_cyItem & 1)) { ++m_cyItem; }
-		UIScaleFactor sf = pUI->GetUIScaleFactor();
+		UIScaleFactor sf = pUI->GetUIScaleFactor(dpi);
 		m_cxyBox = sf.ScaleX(m_cxyBox);
 		if (!(m_cxyBox & 1)) { ++m_cxyBox; }			// Must be odd number
 		m_cxyBoxSign = sf.ScaleX(m_cxyBoxSign);

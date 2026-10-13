@@ -1349,7 +1349,7 @@ protected:
 				size_t n = cxTabSetting.size();
 				cxTabSetting.push_back((n > 0 ? cxTabSetting[n - 1] : 0) + (int)m_cxDefaultTab);
 			}
-			UIScaleFactor sf = m_xeUI->GetUIScaleFactor();
+			UIScaleFactor sf = m_xeUI->GetUIScaleFactor(m_dpi);
 			for (uint32_t& ts : cxTabSetting)
 			{
 				ts = sf.ScaleX(ts);

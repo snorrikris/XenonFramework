@@ -104,7 +104,8 @@ public:
 		m_xeUI = pUIcolors;
 		//set up the variables
 		m_btnWidth = GetSystemMetrics(SM_CXVSCROLL);
-		UIScaleFactor sf = m_xeUI->GetUIScaleFactor();
+		XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
+		UIScaleFactor sf = m_xeUI->GetUIScaleFactor(dpi);
 		m_btnWidth = sf.ScaleX(m_btnWidth);
 
 		m_btnDown = FALSE;
@@ -617,8 +618,8 @@ protected:
 		}
 		uint32_t cxMax = m_xeUI->GetMaxTextWidthUsingFontW(texts, dpi);
 		// Add a little extra H space when list has icons.
-		if (hasIcons) { cxMax += m_xeUI->GetUIScaleFactor().ScaleX(24); }
-		cxMax += m_xeUI->GetUIScaleFactor().ScaleX(12);	// H margin
+		if (hasIcons) { cxMax += m_xeUI->GetUIScaleFactor(dpi).ScaleX(24); }
+		cxMax += m_xeUI->GetUIScaleFactor(dpi).ScaleX(12);	// H margin
 		if (rect.Width() > 0 && rect.Width() < (int)cxMax)
 		{
 			rect.right = rect.left + cxMax;

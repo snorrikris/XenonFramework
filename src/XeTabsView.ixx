@@ -1416,7 +1416,7 @@ protected:
 			}
 			++idx;
 		}
-		listBox.SetItemsListBeforeWindowCreated(m_dpi, list);
+		listBox.SetItemsList(list);
 		listBox.SetCheckBoxesMode(true, false, true, L"Close selected");
 		listBox.OnSetCurSelMsg(cur_idx, 0);
 

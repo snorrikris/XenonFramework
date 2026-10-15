@@ -271,6 +271,7 @@ protected:
 		m_cySysSbH = ::GetSystemMetrics(SM_CYHSCROLL);
 		m_cbDim.Calculate(cyText);
 		m_cyItem = m_type == LBType::Menu ? cyText * 1.5f : cyText;
+		_Update_cx_max(0xFFFFFFFF);
 	}
 
 	virtual LRESULT _OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override
@@ -425,7 +426,6 @@ public:
 
 	void SetItemsList(const std::vector<ListBoxExItem>& list, int nSelIdx = -1, size_t topIdx = 0xFFFFFFFF)
 	{
-		XeASSERT(m_dpi.is_valid());
 		if (topIdx != 0xFFFFFFFF && topIdx >= list.size()) { topIdx = 0xFFFFFFFF; }
 		if (nSelIdx != -1 && nSelIdx >= (int)list.size()) { nSelIdx = -1; }
 		m_curIdx = nSelIdx >= 0 ? (size_t)nSelIdx : 0xFFFFFFFF;
@@ -435,14 +435,6 @@ public:
 		_Update_cx_max(0xFFFFFFFF);
 		_AdjustScrollBars();
 		_RedrawDirectly();
-	}
-
-	void SetItemsListBeforeWindowCreated(XeDPI dpi, const std::vector<ListBoxExItem>& list,
-			int nSelIdx = -1, size_t topIdx = 0xFFFFFFFF)
-	{
-		XeASSERT(dpi.is_valid());
-		m_dpi = dpi;
-		SetItemsList(list, nSelIdx, topIdx);
 	}
 
 	const std::vector<ListBoxExItem>& GetItemsList() const { return m_items; }
@@ -546,8 +538,9 @@ public:
 		return CRect(x, y, x + cxNeeded, y + cyHeight);
 	}
 
-	CRect CalcPopupMenuSize(int x, int y)
+	CRect CalcPopupMenuSize(XeDPI dpi, int x, int y)
 	{
+		m_dpi = dpi;
 		_InitializeLBitemUIsize();
 		int numItemsToShow = (int)m_items.size();
 		int cyHeight = numItemsToShow * GetItemHeight();
@@ -1294,6 +1287,7 @@ protected:
 
 	bool _Update_cx_max(size_t new_item_idx)
 	{
+		if (!m_dpi.is_valid()) { return false; }	// Not created (yet).
 		bool isUseTabStops = m_style.WS().hasLBS_USETABSTOPS();
 
 		std::vector<uint32_t> cxTextCol;
@@ -2227,7 +2221,7 @@ public:
 		if (idx < m_items.size())
 		{
 			m_items.erase(m_items.begin() + idx);
-			_Update_cx_max(idx);
+			_Update_cx_max(0xFFFFFFFF);
 			_AdjustScrollBars();
 			_RedrawDirectly();
 			return m_items.size();

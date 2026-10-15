@@ -632,7 +632,7 @@ protected:
 		m_listBox = listBox.get();
 
 		// add the items to the list
-		listBox->SetItemsListBeforeWindowCreated(dpi, list);
+		listBox->SetItemsList(list);
 
 		if (list.size() && list[0].m_item_data.m_isCheckbox)
 		{

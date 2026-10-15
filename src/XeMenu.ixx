@@ -222,11 +222,11 @@ public:
 			m_updateMenuCallback(this, topLevelSubMenuIndex);
 		}
 		XeDPI dpi(::GetDpiForWindow(hParentWnd));
-		m_cmn->SetItemsListBeforeWindowCreated(dpi, _GetTopLevelSubMenu(topLevelSubMenuIndex));
+		m_cmn->SetItemsList(_GetTopLevelSubMenu(topLevelSubMenuIndex));
 		m_cmn->m_suppressMouseMoveMessages = 2;
 		_UpdateShortcutKeyMap();
 		CRect rcParentCtrl(ptScreenPos, ptScreenPos);
-		CRect rc = m_cmn->CalcPopupMenuSize(ptScreenPos.x, ptScreenPos.y);
+		CRect rc = m_cmn->CalcPopupMenuSize(dpi, ptScreenPos.x, ptScreenPos.y);
 		ShowPopup(m_hParentWnd, rc, rcParentCtrl);
 		UINT uSelectedID = 0;
 		if (m_cmn->m_isSelEndOk || m_uSubmenuSelectedID)
@@ -495,10 +495,10 @@ protected:
 		submenu->m_hParentWnd = m_hParentWnd;
 		submenu->m_cmn->m_pParentMenu = m_cmn.get();
 		submenu->m_cmn->m_rcParentMenuItemScreenPos = rcItemScr;
-		submenu->m_cmn->SetItemsListBeforeWindowCreated(dpi, submenu->_GetTopLevelSubMenu(0), nSelIdx);
+		submenu->m_cmn->SetItemsList(submenu->_GetTopLevelSubMenu(0), nSelIdx);
 		submenu->_UpdateShortcutKeyMap();
 		submenu->SetTopLevelMenuNavigationCallback(m_cmn->m_topLevelMenuNavigationCallback);
-		CRect rc = submenu->m_cmn->CalcPopupMenuSize(rcItemScr.right, rcItemScr.top);
+		CRect rc = submenu->m_cmn->CalcPopupMenuSize(dpi, rcItemScr.right, rcItemScr.top);
 		m_pCurrentSubMenu = pSelItem;
 		submenu->ShowPopup(m_hParentWnd, rc, rcItemScr);
 		m_pCurrentSubMenu = nullptr;

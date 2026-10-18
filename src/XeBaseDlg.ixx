@@ -1470,6 +1470,52 @@ protected:
 		}
 		return CXeD2DWndBase::_OnOtherMessage(hWnd, uMsg, wParam, lParam);
 	}
+
+	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		XeDPI old_dpi = m_dpi;
+
+		LRESULT result = CXeD2DWndBase::_OnDpiChanged(hwnd, wParam, lParam);
+
+		_ScaleControlsOnDPIchange(old_dpi);
+
+		return result;
+	}
+
+	// Note - _OnDpiChangedAfterParent is called when the dialog is not POPUP style, e.g. when form view.
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		XeDPI old_dpi = m_dpi;
+
+		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
+
+		_ScaleControlsOnDPIchange(old_dpi);
+
+		return result;
+	}
+
+	void _ScaleControlsOnDPIchange(const XeDPI& old_dpi)
+	{
+		XeDPI_Calculator dpi_calc(old_dpi, m_dpi);
+
+		XeEnumChildWindows enumchildWnds(Hwnd(), true);
+
+		CRect rcCtrl;
+		if (enumchildWnds.m_children.size() > 0)
+		{
+			HDWP hDWP = ::BeginDeferWindowPos((int)enumchildWnds.m_children.size());
+			for (HWND hWndChild : enumchildWnds.m_children)
+			{
+				::GetWindowRect(hWndChild, rcCtrl);
+				ScreenToClient(rcCtrl);
+				CRect rcNewPos = dpi_calc.CalculateRect(rcCtrl);
+				hDWP = ::DeferWindowPos(hDWP, hWndChild, NULL,
+					rcNewPos.left, rcNewPos.top, rcNewPos.Width(), rcNewPos.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+			}
+			::EndDeferWindowPos(hDWP);
+			_RedrawDirectly();
+		}
+	}
 #pragma endregion MessageHandlers
 
 #pragma region CustomWindowFramesupport

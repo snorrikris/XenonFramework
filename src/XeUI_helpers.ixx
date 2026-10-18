@@ -5,6 +5,7 @@ module;
 #include <dwrite.h>
 #include "logging.h"
 
+// Note - this module is ONLY used by XeUIcolors module - don't put anything else in here.
 export module Xe.UI_helpers;
 
 import std;

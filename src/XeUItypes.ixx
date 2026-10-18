@@ -438,3 +438,25 @@ protected:
 	}
 };
 
+export class XeDPI_Calculator
+{
+public:
+	XeDPI m_beforeDPI, m_currentDPI;
+	double m_convFactor;
+
+	XeDPI_Calculator(XeDPI beforeDPI, XeDPI currentDPI) : m_beforeDPI(beforeDPI), m_currentDPI(currentDPI)
+	{
+		bool isValid = m_beforeDPI.is_valid() && m_currentDPI.is_valid();
+		XeASSERT(isValid);
+		m_convFactor = isValid ? (double)m_currentDPI.get() / (double)m_beforeDPI.get() : 1.0;
+	}
+
+	CRect CalculateRect(const CRect& rcBefore)
+	{
+		int x = (int)((double)rcBefore.left * m_convFactor + 0.5);
+		int y = (int)((double)rcBefore.top * m_convFactor + 0.5);
+		int cx = (int)((double)rcBefore.Width() * m_convFactor + 0.5);
+		int cy = (int)((double)rcBefore.Height() * m_convFactor + 0.5);
+		return CRect(CPoint(x, y), CSize(cx, cy));
+	}
+};

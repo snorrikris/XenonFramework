@@ -1261,11 +1261,17 @@ protected:
 				}
 			}
 
-			PID uID_MinZe = m_style.GetMinimizeBtnImg();
-			_DrawButtonImage(pRT, uID_MinZe, rcMinZe, false, true, false);
+			if (m_style.WS().hasMinimizeBtn())
+			{
+				PID uID_MinZe = m_style.GetMinimizeBtnImg();
+				_DrawButtonImage(pRT, uID_MinZe, rcMinZe, false, true, false);
+			}
 
-			PID uID_MaxZe = m_style.GetMaximizeBtnImg();
-			_DrawButtonImage(pRT, uID_MaxZe, rcMaxZe, false, true, false);
+			if (m_style.WS().hasMaximizeBtn())
+			{
+				PID uID_MaxZe = m_style.GetMaximizeBtnImg();
+				_DrawButtonImage(pRT, uID_MaxZe, rcMaxZe, false, true, false);
+			}
 
 			PID uID_Close = m_style.GetCloseBtnImg();
 			_DrawButtonImage(pRT, uID_Close, rcClose, false, true, false);

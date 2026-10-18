@@ -201,6 +201,14 @@ protected:
 		return CXeD2DWndBase::_OnSize(hWnd, wParam, lParam);
 	}
 
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
+		m_listTabs->CalculateUI(m_listTabs->GetTabViewWidth());	// Recalculate tab row height.
+		_RecalculateUIandRepositionWindowsIfNeeded();
+		return result;
+	}
+
 	// WM_TIMER message handler.
 	virtual LRESULT _OnTimer(WPARAM ww, LPARAM ll) override
 	{

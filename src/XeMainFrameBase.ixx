@@ -224,6 +224,13 @@ protected:
 		return 0;
 	}
 
+	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		LRESULT result = CXeD2DWndBase::_OnDpiChanged(hwnd, wParam, lParam);
+		RepositionWindows();
+		return result;
+	}
+
 	virtual LRESULT _OnWmCommand(WORD wSource, WORD wID, HWND sender) override
 	{
 		m_pVwMgr->ProcessCommand(wID, 0);

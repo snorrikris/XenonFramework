@@ -226,198 +226,6 @@ CUGCtrl(CXeGridDataSource* pDS, const wchar_t* strRegSectionName,
 	m_pInitialDataSource = pDS;
 
 	m_GridNotifyCallback = gridNotifyCallback;
-
-	m_dropListType = std::make_unique<CUGDropListType>(pDS->m_xeUI);
-
-	//m_ppenWvBorder = new CPen(PS_SOLID, 1, RGB(128, 128, 192));
-
-	m_fCancelNext_OnEditContinue = FALSE;
-
-	//m_pDropSource = new CXeOleDropSource;
-
-	m_contructorResults = UG_SUCCESS;
-
-	m_menu = std::make_unique<CXeMenu>(m_xeUI);
-	m_menu->SetUpdateMenuCallback(
-		[this](CXeMenu* pMenu, size_t top_level_index) { _UpdateMenuCallback(pMenu, top_level_index); });
-
-	/********************************************
-	set up the internal classes
-	*********************************************/
-	try {
-		//data source
-		m_dataSrcList = NULL;
-		m_dataSrcListLength = 0;
-		m_dataSrcListMaxLength = 0;
-
-		//m_fontList =			new CUGPtrList;
-		//m_bitmapList = new CUGPtrList;
-		m_cellTypeList = new CUGPtrList;
-		m_cellStylesList = new CUGPtrList;
-		m_validateList = new CUGPtrList;
-		m_displayFormatList = new CUGPtrList;
-		m_CUGGrid = new CUGGrid(pDS->m_xeUI);
-		m_CUGTopHdg = new CUGTopHdg(pDS->m_xeUI);
-		m_CUGSideHdg = new CUGSideHdg(pDS->m_xeUI);
-		m_CUGVScroll = new CUGVScroll(pDS->m_xeUI);
-		m_CUGHScroll = new CUGHScroll(pDS->m_xeUI);
-		//m_CUGCnrBtn = new CUGCnrBtn;
-		//m_CUGTab = new CUGTab;
-
-		//scroll hint window
-//#ifdef UG_ENABLE_SCROLLHINTS
-//		m_CUGHint = new CUGHint;
-//#endif
-
-//#ifdef UG_ENABLE_PRINTING
-//		m_CUGPrint = new CUGPrint;
-//#endif
-	}
-	catch (...) {
-		m_contructorResults = 1;
-		return;
-	}
-
-	//tacking window
-	//m_trackingWnd = NULL;
-
-	//Set up the 1 sheet and get the GridInfo class pointer
-	//to that sheet
-	m_currentSheet = 0;
-	m_numberSheets = 0;
-	m_GIList = NULL;
-	m_GI = NULL;
-	SetNumberSheets(1);
-	m_GI = m_GIList[0];
-
-	m_CUGGrid->m_GI = m_GI;
-	m_CUGTopHdg->m_GI = m_GI;
-	m_CUGSideHdg->m_GI = m_GI;
-	//m_CUGCnrBtn->m_GI = m_GI;
-	m_CUGVScroll->m_GI = m_GI;
-	m_CUGHScroll->m_GI = m_GI;
-	//m_CUGTab->m_GI = m_GI;
-
-//#ifdef UG_ENABLE_SCROLLHINTS
-//	//m_CUGHint->m_ctrl		= this;
-//	m_CUGHint->m_GI = m_GI;
-//#endif
-
-	//#ifdef UG_ENABLE_PRINTING
-	//	m_CUGPrint->m_ctrl	= this;
-	//	m_CUGPrint->m_GI	= m_GI;
-	//#endif
-
-	//#ifdef UG_ENABLE_DRAGDROP
-	//m_dropTarget.m_ctrl = this;
-	//#endif
-	//m_defEditCtrl.m_ctrl	= this;
-	//m_defMaskedEditCtrl.m_ctrl	= this;
-	m_defEditCtrl.m_GI = m_GI;
-	//m_defMaskedEditCtrl.m_GI = m_GI;
-
-	m_GI->m_editInProgress = FALSE;
-
-	//add the standard cell types
-	AddCellType(&m_normalCellType);
-	AddCellType(m_dropListType.get());
-	AddCellType(&m_checkBoxType);
-	AddCellType(&m_arrowType);
-	AddCellType(&m_progressType);
-
-	//add a NULL datasource to the beginning of the
-	//data source list, since index 0 is not used
-	AddDataSource(NULL);
-
-	m_enableUpdate = TRUE;
-
-	//m_findReplaceDialog = NULL;
-	//m_GI->m_findDialogRunning = FALSE;
-	//m_GI->m_findDialogStarted = FALSE;
-	//m_GI->m_findInAllCols = FALSE;
-
-	m_GI->m_tabSizing = FALSE;
-
-	// Set all function pointers in grid info class
-	m_GI->_fn_OnCellTypeNotify = [this](long ID, int col, long row, long msg, long long param) { return OnCellTypeNotify(ID, col, row, msg, param); };
-	m_GI->_fn_GetCellIndirect = [this](int col, long row, CUGCell* cell) { return GetCellIndirect(col, row, cell); };
-	m_GI->_fn_GetCellType = [this](int type) { return GetCellType(type); };
-	m_GI->_fn_GetCellTypeColRow = [this](int col, long row) { return GetCellType(col, row); };
-	m_GI->_fn_GetRowHeight = [this](long row) { return GetRowHeight(row); };
-	m_GI->_fn_GetNonUniformRowHeight = [this](long row) { return GetNonUniformRowHeight(row); };
-	m_GI->_fn_SetCell = [this](int col, long row, CUGCell* cell) { return SetCell(col, row, cell); };
-	m_GI->_fn_RedrawAll = [this]() { return RedrawAll(); };
-	m_GI->_fn_RedrawCell = [this](int col, long row) { return RedrawCell(col, row); };
-	m_GI->_fn_GetCellRect = [this](int col, long row, RECT* rect) { return GetCellRect(col, row, rect); };
-	m_GI->_fn_GetRangeRect = [this](int startCol, long startRow, int endCol, long endRow, RECT* rect) { return GetRangeRect(startCol, startRow, endCol, endRow, rect); };
-	m_GI->_fn_OnKillFocusNewWnd = [this](int section, HWND hNewWnd) { OnKillFocus(section, hNewWnd); };
-	m_GI->_fn_OnSetFocus = [this](int section) { OnSetFocus(section); };
-	m_GI->_fn_OnKillFocus = [this](int section) { OnKillFocus(section); };
-	m_GI->_fn_EditCtrlFinished = [this](LPCTSTR string, BOOL cancelFlag, BOOL continueFlag, int continueCol, long continueRow) { return EditCtrlFinished(string, cancelFlag, continueFlag, continueCol, continueRow); };
-	m_GI->_fn_GotoCell = [this](int col, long row) { return GotoCell(col, row); };
-	m_GI->_fn_GotoCol = [this](int col) { return GotoCol(col); };
-	m_GI->_fn_GotoRow = [this](long row) { return GotoRow(row); };
-	m_GI->_fn_OnEditVerify = [this](int col, long row, HWND edit, UINT* vcKey) { return OnEditVerify(col, row, edit, vcKey); };
-	m_GI->_fn_GetCellFromPointColRow = [this](int x, int y, int* col, long* row) { return GetCellFromPoint(x, y, col, row); };
-	m_GI->_fn_GetCellFromPoint = [this](int x, int y, int* ptcol, long* ptrow, RECT* rect) { return GetCellFromPoint(x, y, ptcol, ptrow, rect); };
-	m_GI->_fn_OnSortEvaluate = [this](CUGCell* cell1, CUGCell* cell2, int flags) { return OnSortEvaluate(cell1, cell2, flags); };
-	m_GI->_fn_GetNumberRows = [this]() { return GetNumberRows(); };
-	m_GI->_fn_AdjustComponentSizes = [this]() { AdjustComponentSizes(); };
-	m_GI->_fn_StartMenu = [this](int col, long row, CPoint point, int section) { return StartMenu(col, row, point, section); };
-	m_GI->_fn_OnLClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnLClicked(col, row, updn, rect, point, processed); };
-	m_GI->_fn_OnRClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnRClicked(col, row, updn, rect, point, processed); };
-	m_GI->_fn_OnDClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnDClicked(col, row, rect, point, processed); };
-	m_GI->_fn_OnMouseMove = [this](int col, long row, POINT* point, UINT nFlags, BOOL processed) { OnMouseMove(col, row, point, nFlags, processed); };
-	m_GI->_fn_OnTH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_LClicked(col, row, updn, rect, point, processed); };
-	m_GI->_fn_OnTH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_RClicked(col, row, updn, rect, point, processed); };
-	m_GI->_fn_OnTH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnTH_DClicked(col, row, rect, point, processed); };
-	m_GI->_fn_OnSH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_LClicked(col, row, updn, rect, point, processed); };
-	m_GI->_fn_OnSH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_RClicked(col, row, updn, rect, point, processed); };
-	m_GI->_fn_OnSH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnSH_DClicked(col, row, rect, point, processed); };
-	m_GI->_fn_OnCB_LClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_LClicked(updn, rect, point, processed); };
-	m_GI->_fn_OnCB_RClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_RClicked(updn, rect, point, processed); };
-	m_GI->_fn_OnCB_DClicked = [this](RECT* rect, POINT* point, BOOL processed) { OnCB_DClicked(rect, point, processed); };
-	m_GI->_fn_OnKeyDown = [this](UINT* vcKey, BOOL processed) { OnKeyDown(vcKey, processed); };
-	m_GI->_fn_OnKeyUp = [this](UINT* vcKey, BOOL processed) { OnKeyUp(vcKey, processed); };
-	m_GI->_fn_OnCharDown = [this](UINT* vcKey, BOOL processed) { OnCharDown(vcKey, processed); };
-	m_GI->_fn_OnCanSizeCol = [this](int col) { return OnCanSizeCol(col); };
-	m_GI->_fn_OnColSizing = [this](int col, int* width) { OnColSizing(col, width); };
-	m_GI->_fn_OnColSized = [this](int col, int* width) { OnColSized(col, width); };
-	m_GI->_fn_OnCanSizeRow = [this](long row) { return OnCanSizeRow(row); };
-	m_GI->_fn_OnRowSizing = [this](long row, int* height) { OnRowSizing(row, height); };
-	m_GI->_fn_OnRowSized = [this](long row, int* height) { OnRowSized(row, height); };
-	m_GI->_fn_OnCanSizeTopHdg = [this]() { return OnCanSizeTopHdg(); };
-	m_GI->_fn_OnCanSizeSideHdg = [this]() { return OnCanSizeSideHdg(); };
-	m_GI->_fn_OnTopHdgSizing = [this](int* height) { return OnTopHdgSizing(height); };
-	m_GI->_fn_OnSideHdgSizing = [this](int* width) { return OnSideHdgSizing(width); };
-	m_GI->_fn_OnTopHdgSized = [this](int height) { return OnTopHdgSized(height); };
-	m_GI->_fn_OnSideHdgSized = [this](int width) { return OnSideHdgSized(width); };
-	m_GI->_fn_OnColRowSizeFinished = [this]() { OnColRowSizeFinished(); };
-	m_GI->_fn_SetTH_Height = [this](int height) { return SetTH_Height(height); };
-	m_GI->_fn_SetSH_Width = [this](int width) { return SetSH_Width(width); };
-	m_GI->_fn_OnHint = [this](int col, long row, int section, TOOLTIP_SETTINGS& ttSettings) { return OnHint(col, row, section, ttSettings); };
-	m_GI->_fn_MoveTopRow = [this](int flag) { return MoveTopRow(flag); };
-	m_GI->_fn_SetTopRow = [this](long row) { return SetTopRow(row); };
-	m_GI->_fn_MoveCurrentRow = [this](int flag) { return MoveCurrentRow(flag); };
-	m_GI->_fn_SetLeftCol = [this](int col) { return SetLeftCol(col); };
-	m_GI->_fn_MoveLeftCol = [this](int flag) { return MoveLeftCol(flag); };
-	m_GI->_fn_MoveCurrentCol = [this](int flag) { return MoveCurrentCol(flag); };
-	m_GI->_fn_OnViewMoved = [this](int nScrolDir, long oldPos, long newPos) { OnViewMoved(nScrolDir, oldPos, newPos); };
-	m_GI->_fn_GetJoinStartCell = [this](int* col, long* row, CUGCell* cell) { return GetJoinStartCell(col, row, cell); };
-	m_GI->_fn_GetJoinRange = [this](int* col, long* row, int* col2, long* row2) { return GetJoinRange(col, row, col2, row2); };
-	m_GI->_fn_SetColWidth = [this](int col, int width, bool notify) { return SetColWidth(col, width, notify); };
-	m_GI->_fn_VerifyCurrentRow = [this](long* newRow) { return VerifyCurrentRow(newRow); };
-	m_GI->_fn_BestFit = [this](int startCol, int endCol, int CalcRange, int flag) { return BestFit(startCol, endCol, CalcRange, flag); };
-	m_GI->_fn_SetTH_RowHeight = [this](int row, int height) { return SetTH_RowHeight(row, height); };
-	m_GI->_fn_SetSH_ColWidth = [this](int col, int width) { return SetSH_ColWidth(col, width); };
-	m_GI->_fn_MakeSuperTooltip = [this](NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section) { return MakeSuperTooltip(pNeedTT, hWnd, section); };
-	m_GI->_fn_HideTooltip = [this]() { HideTooltip(); };
-	m_GI->_fn_OnColSwapStart = [this](int col) { return OnColSwapStart(col); };
-	m_GI->_fn_OnCanColSwap = [this](int fromCol, int toCol) { return OnCanColSwap(fromCol, toCol); };
-	m_GI->_fn_OnColSwapped = [this](int fromCol, int toCol) { OnColSwapped(fromCol, toCol); };
-	m_GI->_fn_MoveColPosition = [this](int fromCol, int toCol, BOOL insertBefore) { return MoveColPosition(fromCol, toCol, insertBefore); };
-	m_GI->_fn_SetRowHeight = [this](long row, int height) { return SetRowHeight(row, height); };
-	m_GI->_fn_HScroll = [this](UINT nSBCode, UINT nPos) { HScroll(nSBCode, nPos); };
 }
 
 /***************************************************
@@ -506,10 +314,462 @@ virtual ~CUGCtrl()
 		}
 		delete[] m_GIList;
 	}
-
-
 }
 
+/***************************************************
+****************************************************/
+BOOL CreateGrid(DWORD dwStyle, DWORD dwExStyle, const CRect& rect, HWND hParentWnd, UINT nID)
+{
+	//BOOL rt = Create((LPCTSTR)NULL,(LPCTSTR)_T(""),(DWORD) dwStyle, (const RECT&) rect, 
+	//	CWnd::FromHandle(hParentWnd),(UINT) nID, (CCreateContext*)NULL);
+
+	std::wstring classname = L"CUGCtrl_WNDCLASS";
+	m_xeUI->RegisterWindowClass(classname, D2DCtrl_WndProc);
+	HINSTANCE hInstance = m_xeUI->GetInstanceHandle();
+	dwStyle = dwStyle | WS_CLIPCHILDREN | WS_TABSTOP;
+	HWND hWnd = CreateD2DWindow(dwExStyle, classname.c_str(), nullptr, dwStyle,
+		rect, hParentWnd, nID);
+	if (GetSafeHwnd())
+	{
+		_CreateInternalObjects();
+
+		//SetDefFont(m_xeUI->GetFont(EXE_FONT::eUI_Font) /*nIndex*/);
+
+		CUGCell cell;
+		GetHeadingDefault(&cell);
+		cell.SetFont(EXE_FONT::eUI_FontBold);
+		SetHeadingDefault(&cell);
+
+		if (CreateChildWindows())
+		{
+			m_GI->m_gridWnd = m_CUGGrid->GetSafeHwnd();
+			m_GI->m_sideHdgWnd = m_CUGSideHdg->GetSafeHwnd();
+
+			m_isComponentsCreated = true;
+			m_GI->m_editCtrl = m_defEditCtrl.m_hWnd;
+
+			OnSetup();
+			OnSheetSetup(0);
+		}
+
+	}
+
+	// Allow drawing after the grid is initialized
+	m_GI->m_paintMode = TRUE;
+	// Adjust the grid's components to fit current setup
+	AdjustComponentSizes();
+
+	return hWnd != 0;
+}
+
+protected:
+	bool _CreateInternalObjects()
+	{
+		//m_ppenWvBorder = new CPen(PS_SOLID, 1, RGB(128, 128, 192));
+
+		m_fCancelNext_OnEditContinue = FALSE;
+
+		//m_pDropSource = new CXeOleDropSource;
+
+		m_contructorResults = UG_SUCCESS;
+
+		m_menu = std::make_unique<CXeMenu>(m_xeUI);
+		m_menu->SetUpdateMenuCallback(
+			[this](CXeMenu* pMenu, size_t top_level_index) { _UpdateMenuCallback(pMenu, top_level_index); });
+
+		/********************************************
+		set up the internal classes
+		*********************************************/
+		try {
+			//data source
+			m_dataSrcList = NULL;
+			m_dataSrcListLength = 0;
+			m_dataSrcListMaxLength = 0;
+
+			//m_fontList =			new CUGPtrList;
+			//m_bitmapList = new CUGPtrList;
+			m_cellTypeList = new CUGPtrList;
+			m_cellStylesList = new CUGPtrList;
+			m_validateList = new CUGPtrList;
+			m_displayFormatList = new CUGPtrList;
+			m_CUGGrid = new CUGGrid(m_xeUI);
+			m_CUGTopHdg = new CUGTopHdg(m_xeUI);
+			m_CUGSideHdg = new CUGSideHdg(m_xeUI);
+			m_CUGVScroll = new CUGVScroll(m_xeUI);
+			m_CUGHScroll = new CUGHScroll(m_xeUI);
+			//m_CUGCnrBtn = new CUGCnrBtn;
+			//m_CUGTab = new CUGTab;
+
+			//scroll hint window
+	//#ifdef UG_ENABLE_SCROLLHINTS
+	//		m_CUGHint = new CUGHint;
+	//#endif
+
+	//#ifdef UG_ENABLE_PRINTING
+	//		m_CUGPrint = new CUGPrint;
+	//#endif
+		}
+		catch (...) {
+			m_contructorResults = 1;
+			return false;
+		}
+
+		//tacking window
+		//m_trackingWnd = NULL;
+
+		//Set up the 1 sheet and get the GridInfo class pointer
+		//to that sheet
+		m_currentSheet = 0;
+		m_numberSheets = 0;
+		m_GIList = NULL;
+		m_GI = NULL;
+		SetNumberSheets(1);
+		m_GI = m_GIList[0];
+		m_GI->m_ctrlWnd = Hwnd();
+
+		m_CUGGrid->m_GI = m_GI;
+		m_CUGTopHdg->m_GI = m_GI;
+		m_CUGSideHdg->m_GI = m_GI;
+		//m_CUGCnrBtn->m_GI = m_GI;
+		m_CUGVScroll->m_GI = m_GI;
+		m_CUGHScroll->m_GI = m_GI;
+		//m_CUGTab->m_GI = m_GI;
+
+	//#ifdef UG_ENABLE_SCROLLHINTS
+	//	//m_CUGHint->m_ctrl		= this;
+	//	m_CUGHint->m_GI = m_GI;
+	//#endif
+
+		//#ifdef UG_ENABLE_PRINTING
+		//	m_CUGPrint->m_ctrl	= this;
+		//	m_CUGPrint->m_GI	= m_GI;
+		//#endif
+
+		//#ifdef UG_ENABLE_DRAGDROP
+		//m_dropTarget.m_ctrl = this;
+		//#endif
+		//m_defEditCtrl.m_ctrl	= this;
+		//m_defMaskedEditCtrl.m_ctrl	= this;
+		m_defEditCtrl.m_GI = m_GI;
+		//m_defMaskedEditCtrl.m_GI = m_GI;
+
+		m_GI->m_editInProgress = FALSE;
+
+		m_dropListType = std::make_unique<CUGDropListType>(m_xeUI);
+
+		//add the standard cell types
+		AddCellType(&m_normalCellType);
+		AddCellType(m_dropListType.get());
+		AddCellType(&m_checkBoxType);
+		AddCellType(&m_arrowType);
+		AddCellType(&m_progressType);
+
+		//add a NULL datasource to the beginning of the
+		//data source list, since index 0 is not used
+		AddDataSource(NULL);
+
+		m_enableUpdate = TRUE;
+
+		//m_findReplaceDialog = NULL;
+		//m_GI->m_findDialogRunning = FALSE;
+		//m_GI->m_findDialogStarted = FALSE;
+		//m_GI->m_findInAllCols = FALSE;
+
+		m_GI->m_tabSizing = FALSE;
+
+		// Set all function pointers in grid info class
+		m_GI->_fn_OnCellTypeNotify = [this](long ID, int col, long row, long msg, long long param) { return OnCellTypeNotify(ID, col, row, msg, param); };
+		m_GI->_fn_GetCellIndirect = [this](int col, long row, CUGCell* cell) { return GetCellIndirect(col, row, cell); };
+		m_GI->_fn_GetCellType = [this](int type) { return GetCellType(type); };
+		m_GI->_fn_GetCellTypeColRow = [this](int col, long row) { return GetCellType(col, row); };
+		m_GI->_fn_GetRowHeight = [this](long row) { return GetRowHeight(row); };
+		m_GI->_fn_GetNonUniformRowHeight = [this](long row) { return GetNonUniformRowHeight(row); };
+		m_GI->_fn_SetCell = [this](int col, long row, CUGCell* cell) { return SetCell(col, row, cell); };
+		m_GI->_fn_RedrawAll = [this]() { return RedrawAll(); };
+		m_GI->_fn_RedrawCell = [this](int col, long row) { return RedrawCell(col, row); };
+		m_GI->_fn_GetCellRect = [this](int col, long row, RECT* rect) { return GetCellRect(col, row, rect); };
+		m_GI->_fn_GetRangeRect = [this](int startCol, long startRow, int endCol, long endRow, RECT* rect) { return GetRangeRect(startCol, startRow, endCol, endRow, rect); };
+		m_GI->_fn_OnKillFocusNewWnd = [this](int section, HWND hNewWnd) { OnKillFocus(section, hNewWnd); };
+		m_GI->_fn_OnSetFocus = [this](int section) { OnSetFocus(section); };
+		m_GI->_fn_OnKillFocus = [this](int section) { OnKillFocus(section); };
+		m_GI->_fn_EditCtrlFinished = [this](LPCTSTR string, BOOL cancelFlag, BOOL continueFlag, int continueCol, long continueRow) { return EditCtrlFinished(string, cancelFlag, continueFlag, continueCol, continueRow); };
+		m_GI->_fn_GotoCell = [this](int col, long row) { return GotoCell(col, row); };
+		m_GI->_fn_GotoCol = [this](int col) { return GotoCol(col); };
+		m_GI->_fn_GotoRow = [this](long row) { return GotoRow(row); };
+		m_GI->_fn_OnEditVerify = [this](int col, long row, HWND edit, UINT* vcKey) { return OnEditVerify(col, row, edit, vcKey); };
+		m_GI->_fn_GetCellFromPointColRow = [this](int x, int y, int* col, long* row) { return GetCellFromPoint(x, y, col, row); };
+		m_GI->_fn_GetCellFromPoint = [this](int x, int y, int* ptcol, long* ptrow, RECT* rect) { return GetCellFromPoint(x, y, ptcol, ptrow, rect); };
+		m_GI->_fn_OnSortEvaluate = [this](CUGCell* cell1, CUGCell* cell2, int flags) { return OnSortEvaluate(cell1, cell2, flags); };
+		m_GI->_fn_GetNumberRows = [this]() { return GetNumberRows(); };
+		m_GI->_fn_AdjustComponentSizes = [this]() { AdjustComponentSizes(); };
+		m_GI->_fn_StartMenu = [this](int col, long row, CPoint point, int section) { return StartMenu(col, row, point, section); };
+		m_GI->_fn_OnLClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnLClicked(col, row, updn, rect, point, processed); };
+		m_GI->_fn_OnRClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnRClicked(col, row, updn, rect, point, processed); };
+		m_GI->_fn_OnDClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnDClicked(col, row, rect, point, processed); };
+		m_GI->_fn_OnMouseMove = [this](int col, long row, POINT* point, UINT nFlags, BOOL processed) { OnMouseMove(col, row, point, nFlags, processed); };
+		m_GI->_fn_OnTH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_LClicked(col, row, updn, rect, point, processed); };
+		m_GI->_fn_OnTH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnTH_RClicked(col, row, updn, rect, point, processed); };
+		m_GI->_fn_OnTH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnTH_DClicked(col, row, rect, point, processed); };
+		m_GI->_fn_OnSH_LClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_LClicked(col, row, updn, rect, point, processed); };
+		m_GI->_fn_OnSH_RClicked = [this](int col, long row, int updn, RECT* rect, POINT* point, BOOL processed) { OnSH_RClicked(col, row, updn, rect, point, processed); };
+		m_GI->_fn_OnSH_DClicked = [this](int col, long row, RECT* rect, POINT* point, BOOL processed) { OnSH_DClicked(col, row, rect, point, processed); };
+		m_GI->_fn_OnCB_LClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_LClicked(updn, rect, point, processed); };
+		m_GI->_fn_OnCB_RClicked = [this](int updn, RECT* rect, POINT* point, BOOL processed) { OnCB_RClicked(updn, rect, point, processed); };
+		m_GI->_fn_OnCB_DClicked = [this](RECT* rect, POINT* point, BOOL processed) { OnCB_DClicked(rect, point, processed); };
+		m_GI->_fn_OnKeyDown = [this](UINT* vcKey, BOOL processed) { OnKeyDown(vcKey, processed); };
+		m_GI->_fn_OnKeyUp = [this](UINT* vcKey, BOOL processed) { OnKeyUp(vcKey, processed); };
+		m_GI->_fn_OnCharDown = [this](UINT* vcKey, BOOL processed) { OnCharDown(vcKey, processed); };
+		m_GI->_fn_OnCanSizeCol = [this](int col) { return OnCanSizeCol(col); };
+		m_GI->_fn_OnColSizing = [this](int col, int* width) { OnColSizing(col, width); };
+		m_GI->_fn_OnColSized = [this](int col, int* width) { OnColSized(col, width); };
+		m_GI->_fn_OnCanSizeRow = [this](long row) { return OnCanSizeRow(row); };
+		m_GI->_fn_OnRowSizing = [this](long row, int* height) { OnRowSizing(row, height); };
+		m_GI->_fn_OnRowSized = [this](long row, int* height) { OnRowSized(row, height); };
+		m_GI->_fn_OnCanSizeTopHdg = [this]() { return OnCanSizeTopHdg(); };
+		m_GI->_fn_OnCanSizeSideHdg = [this]() { return OnCanSizeSideHdg(); };
+		m_GI->_fn_OnTopHdgSizing = [this](int* height) { return OnTopHdgSizing(height); };
+		m_GI->_fn_OnSideHdgSizing = [this](int* width) { return OnSideHdgSizing(width); };
+		m_GI->_fn_OnTopHdgSized = [this](int height) { return OnTopHdgSized(height); };
+		m_GI->_fn_OnSideHdgSized = [this](int width) { return OnSideHdgSized(width); };
+		m_GI->_fn_OnColRowSizeFinished = [this]() { OnColRowSizeFinished(); };
+		m_GI->_fn_SetTH_Height = [this](int height) { return SetTH_Height(height); };
+		m_GI->_fn_SetSH_Width = [this](int width) { return SetSH_Width(width); };
+		m_GI->_fn_OnHint = [this](int col, long row, int section, TOOLTIP_SETTINGS& ttSettings) { return OnHint(col, row, section, ttSettings); };
+		m_GI->_fn_MoveTopRow = [this](int flag) { return MoveTopRow(flag); };
+		m_GI->_fn_SetTopRow = [this](long row) { return SetTopRow(row); };
+		m_GI->_fn_MoveCurrentRow = [this](int flag) { return MoveCurrentRow(flag); };
+		m_GI->_fn_SetLeftCol = [this](int col) { return SetLeftCol(col); };
+		m_GI->_fn_MoveLeftCol = [this](int flag) { return MoveLeftCol(flag); };
+		m_GI->_fn_MoveCurrentCol = [this](int flag) { return MoveCurrentCol(flag); };
+		m_GI->_fn_OnViewMoved = [this](int nScrolDir, long oldPos, long newPos) { OnViewMoved(nScrolDir, oldPos, newPos); };
+		m_GI->_fn_GetJoinStartCell = [this](int* col, long* row, CUGCell* cell) { return GetJoinStartCell(col, row, cell); };
+		m_GI->_fn_GetJoinRange = [this](int* col, long* row, int* col2, long* row2) { return GetJoinRange(col, row, col2, row2); };
+		m_GI->_fn_SetColWidth = [this](int col, int width, bool notify) { return SetColWidth(col, width, notify); };
+		m_GI->_fn_VerifyCurrentRow = [this](long* newRow) { return VerifyCurrentRow(newRow); };
+		m_GI->_fn_BestFit = [this](int startCol, int endCol, int CalcRange, int flag) { return BestFit(startCol, endCol, CalcRange, flag); };
+		m_GI->_fn_SetTH_RowHeight = [this](int row, int height) { return SetTH_RowHeight(row, height); };
+		m_GI->_fn_SetSH_ColWidth = [this](int col, int width) { return SetSH_ColWidth(col, width); };
+		m_GI->_fn_MakeSuperTooltip = [this](NM_PPTOOLTIP_NEED_TT* pNeedTT, HWND hWnd, int section) { return MakeSuperTooltip(pNeedTT, hWnd, section); };
+		m_GI->_fn_HideTooltip = [this]() { HideTooltip(); };
+		m_GI->_fn_OnColSwapStart = [this](int col) { return OnColSwapStart(col); };
+		m_GI->_fn_OnCanColSwap = [this](int fromCol, int toCol) { return OnCanColSwap(fromCol, toCol); };
+		m_GI->_fn_OnColSwapped = [this](int fromCol, int toCol) { OnColSwapped(fromCol, toCol); };
+		m_GI->_fn_MoveColPosition = [this](int fromCol, int toCol, BOOL insertBefore) { return MoveColPosition(fromCol, toCol, insertBefore); };
+		m_GI->_fn_SetRowHeight = [this](long row, int height) { return SetRowHeight(row, height); };
+		m_GI->_fn_HScroll = [this](UINT nSBCode, UINT nPos) { HScroll(nSBCode, nPos); };
+		return true;
+	}
+
+	/***************************************************
+	CreateChildWindows
+		Puropse
+			This function creates all the child windows
+			and passes them a pointer to this class as well
+			as a pointer to the internal data structure
+			(child windows include the grid, headings and
+			scroll bars).
+	****************************************************/
+	BOOL CreateChildWindows()
+	{
+
+		RECT rect = { 0,0,0,0 };
+
+		//set up the child windows
+		//m_CUGGrid->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,1,NULL);
+		//m_CUGTopHdg->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,2,NULL);
+		//m_CUGSideHdg->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,3,NULL);
+		//m_CUGCnrBtn->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,4,NULL);
+		//m_CUGTab->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,5,NULL);
+
+		DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+		m_CUGGrid->CreateGrid(dwStyle, rect, Hwnd(), 1);
+		m_CUGTopHdg->CreateTopHdg(dwStyle, rect, Hwnd(), 2);
+		m_CUGSideHdg->CreateSideHdg(dwStyle, rect, Hwnd(), 3);
+		//m_CUGCnrBtn->CreateCrnBtn(WS_CHILD | WS_VISIBLE, rect, Hwnd(), 4);
+		//m_CUGTab->CreateTab(WS_CHILD | WS_VISIBLE, rect, Hwnd(), 5);
+
+		m_CUGVScroll->Create(SBS_VERT | dwStyle, rect, Hwnd(), 6, nullptr);
+		m_CUGHScroll->Create(SBS_HORZ | dwStyle, rect, Hwnd(), 7, nullptr);
+
+		//set up the hint window
+		//#ifdef UG_ENABLE_SCROLLHINTS
+		//m_CUGHint->Create(this);
+		//#endif
+
+		//setup the default edit control
+		if (m_defEditCtrl.CreateUGEdit(rect, Hwnd(), UG_EDITID, true) == false) {
+			//fail
+		}
+		//if(m_defEditCtrl.Create(WS_CHILD|WS_HSCROLL|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL,rect,CWnd::FromHandle(Hwnd()), UG_EDITID) == FALSE) {
+		//	//fail
+		//}
+		//if(m_defMaskedEditCtrl.Create(WS_CHILD|ES_AUTOHSCROLL,rect, CWnd::FromHandle(Hwnd()),UG_MEDITID) == FALSE){
+		//	//fail
+		//}
+
+		return TRUE;
+	}
+
+/***************************************************
+AdjustComponentSizes
+	Purpose
+		Sizes all of the child windows to match the
+		parent window size. A OnAdjustComponentSizes
+		notification is called so that the calculated
+		sizes can be modified
+	Params
+		none
+	Return
+		none
+****************************************************/
+void AdjustComponentSizes()
+{
+	int loop;
+	RECT rect;
+	int vScrollWidth = m_GI->m_vScrollWidth;
+	int hScrollHeight = m_GI->m_hScrollHeight;
+	int origTabWidth = m_GI->m_tabWidth;
+
+	GetClientRect(&rect);
+
+	// calculate the width and height of the grid area
+	int maxWidth = rect.right - m_GI->m_sideHdgWidth;
+	int maxHeight = rect.bottom - m_GI->m_topHdgHeight;
+	int width = 0, height = 0;
+	// calculate the width, and stop as soon as the width
+	// exceeds the grid window rect
+	for (loop = 0; loop < m_GI->m_numberCols; loop++)
+	{
+		// SK MOD - make last col fill available horizontal space.
+		if (loop == (m_GI->m_numberCols - 1))
+		{
+			int lastColWidth = maxWidth - width - vScrollWidth;
+			if (lastColWidth > 30)
+			{
+				m_GI->m_colInfo[loop].width = lastColWidth;
+			}
+		}
+
+		width += GetColWidth(loop);
+		if (width > maxWidth)
+			break;
+	}
+	// calculate the height, and stop as soon as the height
+	// exceeds the grid window rect
+	for (loop = 0; loop < m_GI->m_numberRows; loop++)
+	{
+		height += GetRowHeight(loop);
+		if (height > maxHeight)
+			break;
+	}
+	// if the horizontal scroll bar or the tab contols will be visible,
+	// than decrease total window height by the height of the scroll bar
+	if (m_GI->m_tabWidth > 0 || width > maxWidth)
+		maxHeight -= m_GI->m_hScrollHeight;
+	// if the vertical scroll bar will be visible, than decrease total
+	// window width by the width of the scroll bar
+	if (height > maxHeight)
+		maxWidth -= m_GI->m_vScrollWidth;
+	// determine if the horizontal scroll bar needs to be visible
+	if (width <= maxWidth && m_GI->m_tabWidth <= 0)
+		m_GI->m_hScrollHeight = 0;
+	// determine if the vertical scroll bar needs to be visible
+	if (height <= maxHeight)
+		m_GI->m_vScrollWidth = 0;
+	// if the h. scroll bar is not needed when working with tabs
+	// than hide it and maximize tab window
+	if (width <= maxWidth && m_GI->m_tabWidth > 0)
+		m_GI->m_tabWidth = rect.right + 6;
+	// also make sure that that tab width does not extend beyond the window
+	else if (m_GI->m_tabWidth > 0)
+		if (m_GI->m_tabWidth >= maxWidth - m_GI->m_vScrollWidth)
+			m_GI->m_tabWidth = (maxWidth - m_GI->m_vScrollWidth);
+
+	//setup the vScroll Rect
+	m_GI->m_vScrollRect.left = rect.right - m_GI->m_vScrollWidth;
+	m_GI->m_vScrollRect.top = 0;
+	m_GI->m_vScrollRect.right = rect.right;
+	m_GI->m_vScrollRect.bottom = rect.bottom - m_GI->m_hScrollHeight;
+
+	//setup the hScroll Rect
+	m_GI->m_hScrollRect.left = m_GI->m_tabWidth;
+	m_GI->m_hScrollRect.top = rect.bottom - m_GI->m_hScrollHeight;
+	m_GI->m_hScrollRect.right = rect.right - m_GI->m_vScrollWidth;
+	m_GI->m_hScrollRect.bottom = rect.bottom;
+
+	//setup the tabRect
+	m_GI->m_tabRect.left = 0;
+	m_GI->m_tabRect.top = rect.bottom - m_GI->m_hScrollHeight;
+	m_GI->m_tabRect.right = m_GI->m_tabWidth;
+	m_GI->m_tabRect.bottom = rect.bottom;
+
+	//setup the topHeadingRect
+	m_GI->m_topHdgRect.left = m_GI->m_sideHdgWidth;
+	m_GI->m_topHdgRect.top = 0;
+	m_GI->m_topHdgRect.right = rect.right - m_GI->m_vScrollWidth;
+	m_GI->m_topHdgRect.bottom = m_GI->m_topHdgHeight;
+
+	//setup the side headingRect
+	m_GI->m_sideHdgRect.left = 0;
+	m_GI->m_sideHdgRect.top = m_GI->m_topHdgHeight;
+	m_GI->m_sideHdgRect.right = m_GI->m_sideHdgWidth;
+	m_GI->m_sideHdgRect.bottom = rect.bottom - m_GI->m_hScrollHeight;
+
+	//setup the corner buttonRect
+	m_GI->m_cnrBtnRect.left = 0;
+	m_GI->m_cnrBtnRect.top = 0;
+	m_GI->m_cnrBtnRect.right = m_GI->m_sideHdgWidth;
+	m_GI->m_cnrBtnRect.bottom = m_GI->m_topHdgHeight;
+
+	//setup the GridRect
+	m_GI->m_gridRect.left = m_GI->m_sideHdgWidth;
+	m_GI->m_gridRect.top = m_GI->m_topHdgHeight;
+	m_GI->m_gridRect.right = m_GI->m_topHdgRect.right;
+	m_GI->m_gridRect.bottom = m_GI->m_sideHdgRect.bottom;
+	m_GI->m_gridWidth = m_GI->m_gridRect.right - m_GI->m_gridRect.left;
+	m_GI->m_gridHeight = m_GI->m_gridRect.bottom - m_GI->m_gridRect.top;
+
+	//call the nofity function
+	OnAdjustComponentSizes(&m_GI->m_gridRect, &m_GI->m_topHdgRect,
+		&m_GI->m_sideHdgRect, &m_GI->m_cnrBtnRect, &m_GI->m_vScrollRect,
+		&m_GI->m_hScrollRect, &m_GI->m_tabRect);
+
+	if (m_GI->m_paintMode == TRUE)
+	{
+		if (m_GI->m_tabSizing)
+		{
+			m_CUGHScroll->MoveWindow(&m_GI->m_hScrollRect);
+			//m_CUGTab->MoveWindow(&m_GI->m_tabRect);
+			//m_CUGTab->Update();
+			m_CUGHScroll->Update();
+			::ValidateRect(Hwnd(), NULL);
+		}
+		else
+		{
+			m_CUGGrid->MoveWindow(&m_GI->m_gridRect);
+			m_CUGTopHdg->MoveWindow(&m_GI->m_topHdgRect);
+			m_CUGSideHdg->MoveWindow(&m_GI->m_sideHdgRect);
+			//m_CUGCnrBtn->MoveWindow(&m_GI->m_cnrBtnRect);
+			m_CUGVScroll->MoveWindow(&m_GI->m_vScrollRect);
+			m_CUGHScroll->MoveWindow(&m_GI->m_hScrollRect);
+			//m_CUGTab->MoveWindow(&m_GI->m_tabRect);
+
+			CalcTopRow();
+			CalcLeftCol();
+			Update();
+		}
+	}
+	//make sure that the scroll dimensions are put back to their
+	//original values
+	m_GI->m_vScrollWidth = vScrollWidth;
+	m_GI->m_hScrollHeight = hScrollHeight;
+
+	m_GI->m_tabWidth = origTabWidth;
+	m_GI->m_lastTopRow = m_GI->m_topRow;
+	m_GI->m_lastLeftCol = m_GI->m_leftCol;
+}
+
+public:
 // data source - note pointer is always valid - see ctor.
 CXeGridDataSource* GetDataSource() { XeASSERT(m_pInitialDataSource); return m_pInitialDataSource; }
 //DSType GetDataSourceType() { return GetDataSource()->GetDataSourceType(); }
@@ -899,165 +1159,6 @@ int EditCtrlFinished(LPCTSTR string,BOOL cancelFlag,
 }
 
 /***************************************************
-AdjustComponentSizes
-	Purpose
-		Sizes all of the child windows to match the 
-		parent window size. A OnAdjustComponentSizes
-		notification is called so that the calculated
-		sizes can be modified
-	Params
-		none
-	Return
-		none
-****************************************************/
-void AdjustComponentSizes()
-{
-	int loop;
-	RECT rect;
-	int vScrollWidth = m_GI->m_vScrollWidth;
-	int hScrollHeight = m_GI->m_hScrollHeight;
-	int origTabWidth = m_GI->m_tabWidth;
-
-	GetClientRect(&rect);
-
-	// calculate the width and height of the grid area
-	int maxWidth = rect.right - m_GI->m_sideHdgWidth;
-	int maxHeight = rect.bottom - m_GI->m_topHdgHeight;
-	int width = 0, height = 0;
-	// calculate the width, and stop as soon as the width
-	// exceeds the grid window rect
-	for(loop = 0;loop < m_GI->m_numberCols;loop++)
-	{
-		// SK MOD - make last col fill available horizontal space.
-		if (loop == (m_GI->m_numberCols - 1))
-		{
-			int lastColWidth = maxWidth - width - vScrollWidth;
-			if (lastColWidth > 30)
-			{
-				m_GI->m_colInfo[loop].width = lastColWidth;
-			}
-		}
-
-		width += GetColWidth(loop);
-		if(width > maxWidth)
-			break;
-	}
-	// calculate the height, and stop as soon as the height
-	// exceeds the grid window rect
-	for(loop = 0;loop < m_GI->m_numberRows;loop++)
-	{
-		height += GetRowHeight(loop);
-		if(height > maxHeight)
-			break;
-	}
-	// if the horizontal scroll bar or the tab contols will be visible,
-	// than decrease total window height by the height of the scroll bar
-	if ( m_GI->m_tabWidth > 0 || width > maxWidth )
-		maxHeight -= m_GI->m_hScrollHeight;
-	// if the vertical scroll bar will be visible, than decrease total
-	// window width by the width of the scroll bar
-	if(height > maxHeight)
-		maxWidth -= m_GI->m_vScrollWidth;
-	// determine if the horizontal scroll bar needs to be visible
-	if(width <= maxWidth && m_GI->m_tabWidth <= 0)
-		m_GI->m_hScrollHeight = 0;
-	// determine if the vertical scroll bar needs to be visible
-	if(height <= maxHeight)
-		m_GI->m_vScrollWidth = 0;
-	// if the h. scroll bar is not needed when working with tabs
-	// than hide it and maximize tab window
-	if( width <= maxWidth && m_GI->m_tabWidth > 0 )
-		m_GI->m_tabWidth = rect.right + 6;
-	// also make sure that that tab width does not extend beyond the window
-	else if( m_GI->m_tabWidth > 0 )
-		if( m_GI->m_tabWidth >= maxWidth - m_GI->m_vScrollWidth )
-			m_GI->m_tabWidth = ( maxWidth - m_GI->m_vScrollWidth );
-
-	//setup the vScroll Rect
-	m_GI->m_vScrollRect.left	= rect.right - m_GI->m_vScrollWidth;
-	m_GI->m_vScrollRect.top		= 0;
-	m_GI->m_vScrollRect.right	= rect.right;
-	m_GI->m_vScrollRect.bottom  = rect.bottom - m_GI->m_hScrollHeight;
-
-	//setup the hScroll Rect
-	m_GI->m_hScrollRect.left	= m_GI->m_tabWidth;
-	m_GI->m_hScrollRect.top		= rect.bottom - m_GI->m_hScrollHeight;
-	m_GI->m_hScrollRect.right	= rect.right - m_GI->m_vScrollWidth;
-	m_GI->m_hScrollRect.bottom  = rect.bottom;
-
-	//setup the tabRect
-	m_GI->m_tabRect.left		= 0;
-	m_GI->m_tabRect.top			= rect.bottom - m_GI->m_hScrollHeight;
-	m_GI->m_tabRect.right		= m_GI->m_tabWidth;
-	m_GI->m_tabRect.bottom		= rect.bottom;
-
-	//setup the topHeadingRect
-	m_GI->m_topHdgRect.left		= m_GI->m_sideHdgWidth;
-	m_GI->m_topHdgRect.top		= 0;
-	m_GI->m_topHdgRect.right	= rect.right - m_GI->m_vScrollWidth;
-	m_GI->m_topHdgRect.bottom	= m_GI->m_topHdgHeight;
-
-	//setup the side headingRect
-	m_GI->m_sideHdgRect.left	= 0;
-	m_GI->m_sideHdgRect.top		= m_GI->m_topHdgHeight;
-	m_GI->m_sideHdgRect.right	= m_GI->m_sideHdgWidth;
-	m_GI->m_sideHdgRect.bottom	= rect.bottom -	m_GI->m_hScrollHeight;
-
-	//setup the corner buttonRect
-	m_GI->m_cnrBtnRect.left		= 0;
-	m_GI->m_cnrBtnRect.top		= 0;
-	m_GI->m_cnrBtnRect.right	= m_GI->m_sideHdgWidth;
-	m_GI->m_cnrBtnRect.bottom	= m_GI->m_topHdgHeight;
-
-	//setup the GridRect
-	m_GI->m_gridRect.left		= m_GI->m_sideHdgWidth;
-	m_GI->m_gridRect.top		= m_GI->m_topHdgHeight;
-	m_GI->m_gridRect.right		= m_GI->m_topHdgRect.right;
-	m_GI->m_gridRect.bottom		= m_GI->m_sideHdgRect.bottom;
-	m_GI->m_gridWidth = m_GI->m_gridRect.right - m_GI->m_gridRect.left;
-	m_GI->m_gridHeight = m_GI->m_gridRect.bottom - m_GI->m_gridRect.top;
-
-	//call the nofity function
-	OnAdjustComponentSizes(&m_GI->m_gridRect,&m_GI->m_topHdgRect,
-		&m_GI->m_sideHdgRect,&m_GI->m_cnrBtnRect,&m_GI->m_vScrollRect,
-		&m_GI->m_hScrollRect,&m_GI->m_tabRect);
-
-	if ( m_GI->m_paintMode == TRUE )
-	{
-		if(m_GI->m_tabSizing)
-		{
-			m_CUGHScroll->MoveWindow(&m_GI->m_hScrollRect);
-			//m_CUGTab->MoveWindow(&m_GI->m_tabRect);
-			//m_CUGTab->Update();
-			m_CUGHScroll->Update();
-			::ValidateRect(Hwnd(), NULL);
-		}
-		else
-		{
-			m_CUGGrid->MoveWindow(&m_GI->m_gridRect);
-			m_CUGTopHdg->MoveWindow(&m_GI->m_topHdgRect);
-			m_CUGSideHdg->MoveWindow(&m_GI->m_sideHdgRect);
-			//m_CUGCnrBtn->MoveWindow(&m_GI->m_cnrBtnRect);
-			m_CUGVScroll->MoveWindow(&m_GI->m_vScrollRect);
-			m_CUGHScroll->MoveWindow(&m_GI->m_hScrollRect);
-			//m_CUGTab->MoveWindow(&m_GI->m_tabRect);
-
-			CalcTopRow();
-			CalcLeftCol();
-			Update();
-		}
-	}
-	//make sure that the scroll dimensions are put back to their
-	//original values
-	m_GI->m_vScrollWidth = vScrollWidth;
-	m_GI->m_hScrollHeight = hScrollHeight;
-
-	m_GI->m_tabWidth = origTabWidth;
-	m_GI->m_lastTopRow = m_GI->m_topRow;
-	m_GI->m_lastLeftCol = m_GI->m_leftCol;	
-}
-
-/***************************************************
 OnCreate
 	Purpose
 		This function retrieves the control's parent's 
@@ -1095,55 +1196,6 @@ OnDestroy
 //
 //	//m_xtooltip->DestroyWindow();
 //}
-
-/***************************************************
-CreateChildWindows
-	Puropse
-		This function creates all the child windows
-		and passes them a pointer to this class as well
-		as a pointer to the internal data structure
-		(child windows include the grid, headings and
-		scroll bars).
-****************************************************/
-BOOL CreateChildWindows(){
-
-	RECT rect ={0,0,0,0};
-
-	//set up the child windows
-	//m_CUGGrid->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,1,NULL);
-	//m_CUGTopHdg->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,2,NULL);
-	//m_CUGSideHdg->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,3,NULL);
-	//m_CUGCnrBtn->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,4,NULL);
-	//m_CUGTab->Create(NULL,_T(""),WS_CHILD|WS_VISIBLE,rect,this,5,NULL);
-
-	DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-	m_CUGGrid->CreateGrid(dwStyle, rect, Hwnd(), 1);
-	m_CUGTopHdg->CreateTopHdg(dwStyle, rect, Hwnd(), 2);
-	m_CUGSideHdg->CreateSideHdg(dwStyle, rect, Hwnd(), 3);
-	//m_CUGCnrBtn->CreateCrnBtn(WS_CHILD | WS_VISIBLE, rect, Hwnd(), 4);
-	//m_CUGTab->CreateTab(WS_CHILD | WS_VISIBLE, rect, Hwnd(), 5);
-
-	m_CUGVScroll->Create(SBS_VERT | dwStyle,rect,Hwnd(),6, nullptr);
-	m_CUGHScroll->Create(SBS_HORZ | dwStyle,rect,Hwnd(),7, nullptr);
-
-	//set up the hint window
-	//#ifdef UG_ENABLE_SCROLLHINTS
-	//m_CUGHint->Create(this);
-	//#endif
-
-	//setup the default edit control
-	if(m_defEditCtrl.CreateUGEdit(rect, Hwnd(), UG_EDITID, true) == false) {
-		//fail
-	}
-	//if(m_defEditCtrl.Create(WS_CHILD|WS_HSCROLL|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL,rect,CWnd::FromHandle(Hwnd()), UG_EDITID) == FALSE) {
-	//	//fail
-	//}
-	//if(m_defMaskedEditCtrl.Create(WS_CHILD|ES_AUTOHSCROLL,rect, CWnd::FromHandle(Hwnd()),UG_MEDITID) == FALSE){
-	//	//fail
-	//}
-	
-	return TRUE;
-}
 
 /***************************************************
 OnPaint
@@ -1252,50 +1304,6 @@ virtual LRESULT _OnSetFocus(HWND hOldWnd) override
 	m_CUGGrid->Update();
 	return 0;
 }
-/***************************************************
-****************************************************/
-BOOL CreateGrid(DWORD dwStyle, DWORD dwExStyle, const CRect& rect, HWND hParentWnd, UINT nID)
-{
-	//BOOL rt = Create((LPCTSTR)NULL,(LPCTSTR)_T(""),(DWORD) dwStyle, (const RECT&) rect, 
-	//	CWnd::FromHandle(hParentWnd),(UINT) nID, (CCreateContext*)NULL);
-
-	std::wstring classname = L"CUGCtrl_WNDCLASS";
-	m_xeUI->RegisterWindowClass(classname, D2DCtrl_WndProc);
-	HINSTANCE hInstance = m_xeUI->GetInstanceHandle();
-	dwStyle = dwStyle | WS_CLIPCHILDREN | WS_TABSTOP;
-	HWND hWnd = CreateD2DWindow(dwExStyle, classname.c_str(), nullptr, dwStyle,
-			rect, hParentWnd, nID);
-	if(GetSafeHwnd())
-	{
-		//SetDefFont(m_xeUI->GetFont(EXE_FONT::eUI_Font) /*nIndex*/);
-
-		CUGCell cell;
-		GetHeadingDefault(&cell);
-		cell.SetFont(EXE_FONT::eUI_FontBold);
-		SetHeadingDefault(&cell);
-
-		if (CreateChildWindows())
-		{
-			m_GI->m_ctrlWnd = Hwnd();
-			m_GI->m_gridWnd = m_CUGGrid->GetSafeHwnd();
-			m_GI->m_sideHdgWnd = m_CUGSideHdg->GetSafeHwnd();
-
-			m_isComponentsCreated = true;
-			m_GI->m_editCtrl = m_defEditCtrl.m_hWnd;
-
-			OnSetup();
-			OnSheetSetup(0);
-		}
-
-	}
-
-	// Allow drawing after the grid is initialized
-	m_GI->m_paintMode = TRUE;
-	// Adjust the grid's components to fit current setup
-	AdjustComponentSizes();
-
-	return hWnd != 0;
- }
 /***************************************************
 AttachGrid
 	Purpose

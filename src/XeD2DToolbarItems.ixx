@@ -45,40 +45,40 @@ export constexpr uint8_t XETB_ST_BG_RED = 0x80;		// BG color of item is red (sig
 export constexpr uint8_t XETB_ST_BG_GREEN = 0x40;	// BG color of item is green (signal upgrade ready).
 export constexpr uint8_t XETB_ST_GRAY = 0x20;		// Gray text in label type item.
 
-//export CSize GetToolBarItemTextSize(CXeUIcolorsIF* pUIcolors, XETBItemType type, const wchar_t* pTxt)
-//{
-//	CSize sizeTxt;
-//	if (pTxt)
-//	{
-//		sizeTxt = pUIcolors->GetTextSizeW(EXE_FONT::eUI_Font, pTxt);
-//	}
-//	switch (type)
-//	{
-//	case XETBItemType::LABEL:
-//	case XETBItemType::LABEL_BORDER:
-//		sizeTxt.cx += 8;
-//		break;
-//	case XETBItemType::STD_BUTTON:
-//		sizeTxt.cx += 18;
-//		break;
-//	case XETBItemType::CHECKBOX:
-//		sizeTxt.cx += 24;
-//		break;
-//	case XETBItemType::MENU_ITEM:
-//		break;	// No extra margin needed.
-//	case XETBItemType::COMBOBOX:
-//		sizeTxt.cx += 25;	// add space for drop down button.
-//		break;
-//	case XETBItemType::PNG_ICON_BUTTON:
-//	case XETBItemType::PNG_NRW_BUTTON:
-//	case XETBItemType::PNG_BUTTON:
-//	case XETBItemType::DROP_LIST_BTN:
-//	case XETBItemType::SEPARATOR:
-//		XeASSERT(FALSE);	// text size has no meaning for this type of control.
-//		break;
-//	}
-//	return sizeTxt;
-//}
+export CSize GetToolBarItemTextSize(CXeUIcolorsIF* pUIcolors, XeDPI dpi, XETBItemType type, const wchar_t* pTxt)
+{
+	CSize sizeTxt;
+	if (pTxt)
+	{
+		sizeTxt = pUIcolors->GetTextSizeW(dpi, EXE_FONT::eUI_Font, pTxt);
+	}
+	switch (type)
+	{
+	case XETBItemType::LABEL:
+	case XETBItemType::LABEL_BORDER:
+		sizeTxt.cx += 8;
+		break;
+	case XETBItemType::STD_BUTTON:
+		sizeTxt.cx += 18;
+		break;
+	case XETBItemType::CHECKBOX:
+		sizeTxt.cx += 24;
+		break;
+	case XETBItemType::MENU_ITEM:
+		break;	// No extra margin needed.
+	case XETBItemType::COMBOBOX:
+		sizeTxt.cx += 25;	// add space for drop down button.
+		break;
+	case XETBItemType::PNG_ICON_BUTTON:
+	case XETBItemType::PNG_NRW_BUTTON:
+	case XETBItemType::PNG_BUTTON:
+	case XETBItemType::DROP_LIST_BTN:
+	case XETBItemType::SEPARATOR:
+		XeASSERT(FALSE);	// text size has no meaning for this type of control.
+		break;
+	}
+	return sizeTxt;
+}
 
 export struct XETBItem
 {

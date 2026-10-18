@@ -1495,6 +1495,21 @@ protected:
 
 #pragma region Misc
 protected:
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		XeDPI old_dpi = m_dpi;
+
+		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
+
+		_OnDPIchange(old_dpi);
+
+		return result;
+	}
+
+	// All controls need to handle DPI change. E.g. recalculate layout and redraw.
+	// Note - parent window will already have moved and resized 'this' control window.
+	virtual void _OnDPIchange(const XeDPI& old_dpi) = 0;
+
 	virtual LRESULT _OnMouseLeave(WPARAM wparam, LPARAM lparam) override
 	{
 		LRESULT result = CXeD2DWndBase::_OnMouseLeave(wparam, lparam);

@@ -179,6 +179,13 @@ public:
 			m_bgDialog = bgColor;
 		}
 	}
+
+protected:
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		m_textLayout.Reset();
+		_RedrawDirectly();
+	}
 #pragma endregion Misc
 
 #pragma region ColorButton

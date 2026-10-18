@@ -426,6 +426,13 @@ public:
 				rect, hParentWnd, nID, tooltip);
 		return hWnd != 0;
 	}
+
+protected:
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		_CalculateUI();
+		_RedrawDirectly();
+	}
 #pragma endregion Create
 
 #pragma region CXePopupCtrlBase_impl

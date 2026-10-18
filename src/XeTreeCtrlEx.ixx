@@ -562,6 +562,11 @@ protected:
 		_RedrawDirectly();
 		return 0;
 	}
+
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		_CalculatePaintDataAndRedraw();
+	}
 #pragma endregion Misc
 
 #pragma region Create_UI_resources

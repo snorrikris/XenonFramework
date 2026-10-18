@@ -118,6 +118,12 @@ protected:
 		XeASSERT(::IsWindow(Hwnd()));
 		XeASSERT(!m_style.WS().hasCBS_UnsupportedStyle());
 
+		_AdjustEditControl(cx, cy);
+		return lResult;
+	}
+
+	void _AdjustEditControl(int cx, int cy)
+	{
 		if (m_edit->GetSafeHwnd())
 		{
 			int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
@@ -128,7 +134,14 @@ protected:
 			cy = cy > 2 && hasBorder ? cy - 2 : cy;
 			m_edit->SetWindowPos(nullptr, x, y, cx, cy, SWP_NOCOPYBITS | SWP_NOZORDER);
 		}
-		return lResult;
+	}
+
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		CRect rcClient;
+		GetClientRect(rcClient);
+		_AdjustEditControl(rcClient.Width(), rcClient.Height());
+		_RedrawDirectly();
 	}
 
 	// WM_ENABLE message handler.

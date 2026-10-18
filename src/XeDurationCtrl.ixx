@@ -472,6 +472,13 @@ public:
 	}
 
 	void SetReadOnly() { m_isReadOnly = true; }
+
+protected:
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		_CalculateUI();
+		_RedrawDirectly();
+	}
 #pragma endregion Create
 
 #pragma region CXePopupCtrlBase_impl

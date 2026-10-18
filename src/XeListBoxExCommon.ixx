@@ -372,20 +372,7 @@ protected:
 		m_style.Update(XeDPI(::GetDpiForWindow(hWnd)));
 		XeASSERT(!m_style.WS().hasLBS_UnsupportedStyle());
 
-		if (m_isEnsureVisibleNeeded)
-		{
-			if (m_curIdx < m_items.size())
-			{
-				_EnsureIsVisible(m_curIdx);
-			}
-			m_isEnsureVisibleNeeded = false;
-		}
-		if (m_buttonsHlpr.m_hasButtons)
-		{
-			CRect rcClient = _GetClientRect();
-			m_buttonsHlpr.PlaceButtons(rcClient);
-		}
-		_AdjustScrollBars();
+		_CalculateUI();
 		return CXeD2DWndBase::_OnSize(hWnd, wParam, lParam);
 	}
 
@@ -405,6 +392,30 @@ protected:
 		}
 		_RedrawDirectly();
 		return 0;
+	}
+
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		_CalculateUI();
+		_RedrawDirectly();
+	}
+
+	void _CalculateUI()
+	{
+		if (m_isEnsureVisibleNeeded)
+		{
+			if (m_curIdx < m_items.size())
+			{
+				_EnsureIsVisible(m_curIdx);
+			}
+			m_isEnsureVisibleNeeded = false;
+		}
+		if (m_buttonsHlpr.m_hasButtons)
+		{
+			CRect rcClient = _GetClientRect();
+			m_buttonsHlpr.PlaceButtons(rcClient);
+		}
+		_AdjustScrollBars();
 	}
 #pragma endregion Create
 

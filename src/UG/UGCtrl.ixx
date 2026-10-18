@@ -659,6 +659,14 @@ virtual LRESULT _OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam) override
 	return CXeD2DWndBase::_OnSize(hWnd, wParam, lParam);
 }
 
+virtual void _OnDPIchange(const XeDPI& old_dpi) override
+{
+	EnableUpdate(FALSE);
+	AdjustComponentSizes();
+	EnableUpdate(TRUE);
+	_RedrawDirectly();
+}
+
 virtual LRESULT _OnGetDlgCode(WPARAM wParam, LPARAM lParam) override
 {
 	return DLGC_WANTALLKEYS | DLGC_WANTARROWS;

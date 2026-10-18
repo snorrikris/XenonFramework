@@ -113,6 +113,11 @@ protected:
 		return CXeD2DCtrlBase::_OnOtherMessage(hWnd, uMsg, wParam, lParam);
 	}
 
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		_RedrawDirectly();
+	}
+
 #pragma region Paint
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override

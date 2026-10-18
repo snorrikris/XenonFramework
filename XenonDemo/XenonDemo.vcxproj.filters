@@ -22,6 +22,9 @@
     <Filter Include="Source Files\VSRL">
       <UniqueIdentifier>{e17c2d30-251c-4775-91c4-918940c12624}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\XenonFramework\UIControls">
+      <UniqueIdentifier>{22fdcee6-2861-40f6-bd58-8b0f83b5ae61}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\logging.h">
@@ -74,34 +77,13 @@
     <ClCompile Include="..\src\XeBaseDlg.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\XeCalendarCtrl.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\XeChronoTimer.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeColorPicker.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeD2DAppBase.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\XeD2DButton.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\XeD2DRenderContext.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeD2DStatic.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeD2DToolbar.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeD2DToolbarIF.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeD2DToolbarItems.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeDefData.ixx">
@@ -111,9 +93,6 @@
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeDirect2DBase.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeDurationCtrl.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeFileDlgHelpers.ixx">
@@ -134,37 +113,13 @@
     <ClCompile Include="..\src\XeFileVwIF.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\XeListBoxEx.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeListBoxExCommon.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\XeMainFrameBase.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeMenu.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeMessageBoxDlg.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeMRUList.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeNaryTree.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XePopupCtrl.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XePopupCtrlBase.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeScintillaEditControl.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeScrollBar.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeSettingsDlg.ixx">
@@ -186,9 +141,6 @@
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeThemeIF.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeTreeCtrlEx.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="..\src\XeUIcolors.ixx">
@@ -251,12 +203,6 @@
     <ClCompile Include="..\src\XeUItypesPID.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\XeComboBoxEx.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeProgressCtrl.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\XeGridDataDefs.ixx">
       <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
@@ -292,9 +238,6 @@
     </ClCompile>
     <ClCompile Include="DemoTextVw.ixx">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\XeImageCtrl.ixx">
-      <Filter>Source Files\XenonFramework</Filter>
     </ClCompile>
     <ClCompile Include="FormDemo.ixx">
       <Filter>Source Files</Filter>
@@ -385,6 +328,66 @@
     </ClCompile>
     <ClCompile Include="..\src\XeUI_helpers.ixx">
       <Filter>Source Files\XenonFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeCalendarCtrl.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeColorPicker.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeComboBoxEx.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DButton.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DStatic.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DToolbar.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DToolbarIF.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeD2DToolbarItems.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeDurationCtrl.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeImageCtrl.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeListBoxEx.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeListBoxExCommon.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeMenu.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeNaryTree.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeProgressCtrl.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XePopupCtrlBase.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XePopupCtrl.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeTreeCtrlEx.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeScrollBar.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\XeScintillaEditControl.ixx">
+      <Filter>Source Files\XenonFramework\UIControls</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

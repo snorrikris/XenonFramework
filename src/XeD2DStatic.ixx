@@ -76,6 +76,12 @@ public:
 
 #pragma region CalculateUI
 protected:
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		m_textLayout.Reset();
+		_RedrawDirectly();
+	}
+
 	D2D1_RECT_F _CalculateTextRect(const D2D1_RECT_F& rcClient)
 	{
 		D2D1_RECT_F rc = _GetFocusRect(rcClient);

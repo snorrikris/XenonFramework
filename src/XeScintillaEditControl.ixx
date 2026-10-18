@@ -291,6 +291,12 @@ public:
 	}
 
 protected:
+	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	{
+		UpdateFont();
+		_RedrawDirectly();
+	}
+
 	// Filter WM_KEYDOWN or WM_SYSKEYDOWN or WM_KEYUP or WM_SYSKEYUP or WM_CHAR
 	// Called from within the message loop (in the main app or modal dialog message loop).
 	bool _OnKeyboardFilter(const MSG& msg)

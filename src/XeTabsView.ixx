@@ -1434,7 +1434,7 @@ protected:
 		GetWindowRect(rc);
 		int x = rc.left;
 		CSize sizeXtra = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, L"XXXXXX");
-		rc = listBox.CalcPopupWindowSize(x, rc.bottom, cxMaxName + sizeXtra.cx, 1, 20);
+		rc = listBox.CalcPopupWindowSize(m_dpi, x, rc.bottom, cxMaxName + sizeXtra.cx, 1, 20);
 		CXePopupCtrl popup(m_xeUI, &listBox, XeShowPopup::FadeIn80);
 		popup.ShowPopup(Hwnd(), rc, rcParentCtrl);
 		if (listBox.m_isSelEndOk)

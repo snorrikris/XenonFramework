@@ -82,6 +82,16 @@ public:
 		m_pWriteFactory = pWriteFactory;
 	}
 
+	std::vector<XeDPI> GetDPIlist() const
+	{
+		std::vector<XeDPI> dpis;
+		for (auto& [dpi, dpiMap] : m_mapDPI)
+		{
+			dpis.push_back(dpi);
+		}
+		return dpis;
+	}
+
 	void InitializeFontsForDPI(XeDPI dpi, const std::vector<XeFontDescription>& fonts)
 	{
 		XeASSERT(dpi.is_valid());
@@ -174,6 +184,7 @@ public:
 	void ReleaseFonts()
 	{
 		_release_fonts();
+		m_mapDPI.clear();
 	}
 
 	bool HasFont(XeDPI dpi, EXE_FONT key) const
@@ -228,12 +239,6 @@ public:
 			return pTM->m_tm;
 		}
 		return m_blankFM;
-	}
-
-	void Clear()
-	{
-		_release_fonts();
-		m_mapDPI.clear();
 	}
 
 	int GetValue(UIV val, XeDPI dpi) const

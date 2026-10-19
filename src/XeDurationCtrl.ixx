@@ -457,8 +457,6 @@ public:
 		m_xeUI->RegisterWindowClass(XEDURATIONWND_CLASSNAME, D2DCtrl_WndProc);
 
 		m_rctEditing.Set(FILETIMESPAN());
-
-		m_sizeCtrl = _CalculateUI();
 	}
 	//virtual ~CXeDurationCtrl() {}
 
@@ -468,10 +466,20 @@ public:
 		DWORD dwExStyle = 0;
 		HWND hWnd = CreateD2DCtrl(dwExStyle, XEDURATIONWND_CLASSNAME, nullptr, dwStyle,
 				rect, hParentWnd, nID, tooltip);
+		m_sizeCtrl = _CalculateUI();
 		return hWnd != 0;
 	}
 
 	void SetReadOnly() { m_isReadOnly = true; }
+
+	// CalculateControlSize calculates UI size. Can be called before window created.
+	CSize CalculateControlSize(XeDPI dpi)
+	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
+		m_sizeCtrl = _CalculateUI();
+		return m_sizeCtrl;
+	}
 
 protected:
 	virtual void _OnDPIchange(const XeDPI& old_dpi) override
@@ -489,11 +497,12 @@ public:
 
 	virtual CSize GetWindowPreferredSize() override
 	{
+		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
 		return GetControlSize();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(
-		CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
+			CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
 
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
 
@@ -1030,7 +1039,8 @@ public:
 	{
 		CXeDurationCtrl duration_ctrl(m_xeUI, mode);
 		duration_ctrl.SetDuration(dur);
-		CSize sCtrl = duration_ctrl.GetControlSize();
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		CSize sCtrl = duration_ctrl.CalculateControlSize(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rcCtrl(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &duration_ctrl, XeShowPopup::FadeIn80);

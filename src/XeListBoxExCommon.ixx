@@ -174,7 +174,7 @@ protected:
 	CPoint m_ptOfLbtnDown;
 
 	float m_cxMaxStringWidth = 0.0f;
-	float m_cyItem = 15.0f;
+	float m_cyItem = 0.0f;
 	float m_x_start = 2.0f, m_y_start = 0.0f;
 	float m_cxMenuRmargin = 10.0f;
 	bool m_hasIcons = false;
@@ -265,6 +265,7 @@ protected:
 		float cyText = (float)tm.GetHeight();
 		if (cyText == 0.0f)
 		{
+			XeASSERT(false);
 			cyText = 15.0f;
 		}
 		m_cxSysSbV = ::GetSystemMetrics(SM_CXVSCROLL);
@@ -402,6 +403,7 @@ protected:
 
 	void _CalculateUI()
 	{
+		_InitializeLBitemUIsize();
 		if (m_isEnsureVisibleNeeded)
 		{
 			if (m_curIdx < m_items.size())
@@ -525,9 +527,10 @@ public:
 
 	bool IsOkOrCustomButtonClicked() const { return m_isOk_or_custom_button_clicked; }
 
-	CRect CalcPopupWindowSize(int x, int y, int cxMinWidth, double dblMaxWidthMultiplier,
-		int numItemsToShow)
+	CRect CalcPopupWindowSize(XeDPI dpi, int x, int y, int cxMinWidth, double dblMaxWidthMultiplier,
+			int numItemsToShow)
 	{
+		m_dpi = dpi;
 		_InitializeLBitemUIsize();
 		int cyHeight = numItemsToShow * GetItemHeight() + m_buttonsHlpr.GetButtonsCY();
 		int cxVscroll = m_items.size() > numItemsToShow ? GetVscrollbarWidth() : 0;
@@ -572,8 +575,10 @@ public:
 		return CSize();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi, CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override
 	{
+		m_dpi = dpi;
+		_InitializeLBitemUIsize();
 		m_isCloseThisMenu = false;
 		int cyItem = GetItemHeight();
 		size_t num_items = m_items.size();
@@ -703,6 +708,10 @@ protected:
 
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcWnd) override
 	{
+		if (m_cyItem == 0.0f)
+		{
+			_InitializeLBitemUIsize();
+		}
 		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg));
 
 		CRect rcReal = _GetRealClientRect(); // Not incl. buttons at bottom nor scrollbars
@@ -1029,7 +1038,7 @@ protected:
 
 #pragma region Helpers
 public:
-	int GetItemHeight() const { return (int)(m_cyItem + 0.5f); }
+	int GetItemHeight() const { XeASSERT(m_cyItem > 0.0f); return (int)(m_cyItem + 0.5f); }
 	int GetMaxStringWidth() const { return (int)(m_cxMaxStringWidth + 0.5f); }
 	int GetHscrollbarHeight() const { return m_cxSysSbV; }
 	int GetVscrollbarWidth() const { return m_cySysSbH; }

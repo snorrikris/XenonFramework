@@ -89,7 +89,8 @@ public:
 
 		// Call CXePopupCtrlBase derived class to allow it to change the size (or position) of the final window size.
 		// In case of listbox type control this will adjust the height if item count is less than height/itemCY
-		m_pCtrl->AdjustPopupWindowFinalSize(m_rcScreenPos, m_rcParentCtrlScreenPos);
+		XeDPI dpi(::GetDpiForWindow(hParentWnd));
+		m_pCtrl->AdjustPopupWindowFinalSize(dpi, m_rcScreenPos, m_rcParentCtrlScreenPos);
 		m_rcScreenPosFirst = m_rcScreenPos;
 		_AdjustWindowPopupFinalPosition();
 

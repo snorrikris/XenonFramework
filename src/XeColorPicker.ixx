@@ -427,6 +427,14 @@ public:
 		return hWnd != 0;
 	}
 
+	// CalculateControlSize calculates UI size. Can be called before window created.
+	CSize CalculateControlSize(XeDPI dpi)
+	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
+		return _CalculateUI();
+	}
+
 protected:
 	virtual void _OnDPIchange(const XeDPI& old_dpi) override
 	{
@@ -443,10 +451,11 @@ public:
 
 	virtual CSize GetWindowPreferredSize() override
 	{
-		return CSize(_CalculateUI());
+		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
+		return _CalculateUI();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
 			CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
 
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
@@ -750,7 +759,7 @@ protected:
 		m_isDimensionsCalculated = true;
 	}
 
-	SIZE _CalculateUI()	// Return size needed for control.
+	CSize _CalculateUI()	// Return size needed for control.
 	{
 		_ResetRects();
 		bool isSimple = m_layout == ColorPickerMode::Simple;
@@ -762,7 +771,7 @@ protected:
 		// Color wheel and color squares rect.
 		ColorWheelRect = SetR(marginL, marginT, wheelCXY, wheelCXY);
 
-		SIZE sCtrl;
+		CSize sCtrl;
 		if (isSimple)
 		{
 			float yML = marginT + wheelCXY + (txtCY / 2);;
@@ -1550,7 +1559,8 @@ public:
 		color_picker.SELCOL.SetFromRGB(m_selectedColor, false);
 		color_picker.BEFORE = color_picker.SELCOL;
 		color_picker.m_notifyChangeWndSizeMsg = NF_POPUP_WND_SIZE_CHANGE;
-		CSize sCtrl = color_picker.GetControlSize();
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		CSize sCtrl = color_picker.CalculateControlSize(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rPicker(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &color_picker, XeShowPopup::FadeIn80);

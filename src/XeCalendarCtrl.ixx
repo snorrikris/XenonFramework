@@ -408,13 +408,8 @@ public:
 	{
 		m_xeUI->RegisterWindowClass(XECALENDARWND_CLASSNAME, D2DCtrl_WndProc);
 
-		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eTabListTitleFont);	// Create big text UI font.
-		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eMediumBig);
-
 		m_fromDT = FILETIMEX::LocalNow(), m_toDT = mode == CalCtrlMode::FullRange ? FILETIMEX::LocalNow() : FILETIMEX();
 		m_actDT = ActiveDT::From;
-
-		m_sizeCtrl = _CalculateUI();
 	}
 	//virtual ~CXeCalendarCtrl() {}
 
@@ -424,7 +419,20 @@ public:
 		DWORD dwExStyle = 0;
 		HWND hWnd = CreateD2DCtrl(dwExStyle, XECALENDARWND_CLASSNAME, nullptr, dwStyle,
 				rect, hParentWnd, nID, tooltip);
+		m_sizeCtrl = _CalculateUI();
+		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eTabListTitleFont);	// Create big text UI font.
+		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eMediumBig);
+
 		return hWnd != 0;
+	}
+
+	// CalculateControlSize calculates UI size. Can be called before window created.
+	CSize CalculateControlSize(XeDPI dpi)
+	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
+		m_sizeCtrl = _CalculateUI();
+		return m_sizeCtrl;
 	}
 
 protected:
@@ -443,11 +451,12 @@ public:
 
 	virtual CSize GetWindowPreferredSize() override
 	{
+		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
 		return GetControlSize();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(
-		CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
+			CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
 
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
 
@@ -1700,7 +1709,8 @@ public:
 	{
 		CXeCalendarCtrl calendar_ctrl(m_xeUI, mode);
 		calendar_ctrl.SetDateTimes(dates.m_ftFrom, dates.m_ftTo);
-		CSize sCtrl = calendar_ctrl.GetControlSize();
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		CSize sCtrl = calendar_ctrl.CalculateControlSize(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rcCtrl(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &calendar_ctrl, XeShowPopup::FadeIn80);

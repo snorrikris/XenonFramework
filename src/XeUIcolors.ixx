@@ -115,7 +115,7 @@ public:
 
 	void Destroy()
 	{
-		_DeleteFonts();
+		m_d2d_fonts.ReleaseFonts();
 
 		_UninitializeDirect2D();
 	}
@@ -346,7 +346,7 @@ protected:
 	{
 		if (!m_d2d_fonts.VerifyFontExists(dpi, EXE_FONT::eUI_Font))
 		{
-			_CreateFonts(dpi, false);
+			_CreateFonts(dpi);
 		}
 	}
 
@@ -460,11 +460,6 @@ protected:
 	}
 
 protected:
-	void _DeleteFonts()
-	{
-		m_d2d_fonts.ReleaseFonts();
-	}
-
 	bool _LogIfErrorAndAssert(HRESULT hr, const std::string& fn)
 	{
 		XeASSERT(hr == S_OK);
@@ -475,12 +470,9 @@ protected:
 		return SUCCEEDED(hr);
 	}
 
-	bool _CreateFonts(XeDPI dpi, bool isRecreateFonts)
+	bool _CreateFonts(XeDPI dpi)
 	{
-		if (isRecreateFonts)
-		{
-			_DeleteFonts();
-		}
+		XeASSERT(!m_d2d_fonts.VerifyFontExists(dpi, EXE_FONT::eUI_Font));	// Delete DPI dont before calling here.
 
 		if (!s_xeUIsettings.Exists(L"GeneralSettings"))
 		{
@@ -1115,7 +1107,12 @@ protected:
 	{
 		if (IsFontSettingsChanged(chg_settings))
 		{
-			_CreateFonts(dpi, true);
+			std::vector<XeDPI> dpis = m_d2d_fonts.GetDPIlist();
+			m_d2d_fonts.ReleaseFonts();
+			for (XeDPI dpi : dpis)
+			{
+				_CreateFonts(dpi);
+			}
 		}
 		else if (chg_settings.IsChanged(L"Colors", L"Color"))
 		{
@@ -1204,7 +1201,7 @@ protected:
 	void _UninitializeDirect2D()
 	{
 		m_d2d_pid_map_img.clear();
-		m_d2d_fonts.Clear();
+		m_d2d_fonts.ReleaseFonts();
 		m_d2d_IWICFactory.Reset();
 		m_d2d_writeFactory.Reset();
 		m_d2d_fa.Reset();

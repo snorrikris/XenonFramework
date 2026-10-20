@@ -432,8 +432,6 @@ protected:
 
 	bool m_isReadOnly = false;
 
-	CSize m_sizeCtrl;
-
 	PartEdit m_rctEditing;
 
 	RCT m_rctHover = RCT::None;
@@ -466,7 +464,7 @@ public:
 		DWORD dwExStyle = 0;
 		HWND hWnd = CreateD2DCtrl(dwExStyle, XEDURATIONWND_CLASSNAME, nullptr, dwStyle,
 				rect, hParentWnd, nID, tooltip);
-		m_sizeCtrl = _CalculateUI();
+		_CalculateUI();
 		return hWnd != 0;
 	}
 
@@ -477,8 +475,7 @@ public:
 	{
 		m_dpi = dpi;
 		XeASSERT(m_dpi.is_valid());
-		m_sizeCtrl = _CalculateUI();
-		return m_sizeCtrl;
+		return _CalculateUI();
 	}
 
 protected:
@@ -498,7 +495,7 @@ public:
 	virtual CSize GetWindowPreferredSize() override
 	{
 		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
-		return GetControlSize();
+		return _CalculateUI();
 	}
 
 	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
@@ -555,8 +552,6 @@ public:
 
 #pragma region helpers
 public:
-	CSize GetControlSize() { return m_sizeCtrl; }
-
 	FILETIMESPAN GetDuration() const { return m_rctEditing.GetDuration(); }
 
 	void SetDuration(const FILETIMESPAN& dur)

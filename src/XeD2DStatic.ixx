@@ -218,7 +218,7 @@ protected:
 			DWRITE_PARAGRAPH_ALIGNMENT valign = /*m_style.IsBS_TOP() ? DWRITE_PARAGRAPH_ALIGNMENT_NEAR
 				: m_style.IsBS_BOTTOM() ? DWRITE_PARAGRAPH_ALIGNMENT_FAR :*/ DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
 			m_textLayout->SetParagraphAlignment(valign);
-			m_textLayout->SetWordWrapping(/*m_style.IsBS_MULTILINE() ? DWRITE_WORD_WRAPPING_WRAP :*/ DWRITE_WORD_WRAPPING_NO_WRAP);
+			m_textLayout->SetWordWrapping(m_style.WS().IsSS_LEFTNOWORDWRAP() ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WRAP);
 		}
 	}
 

@@ -153,18 +153,18 @@ BOOL _GetFileDlgCheckBoxState(IFileDialog* pDlg, DWORD dwCB_ID)
 /// <param name="isAllowMultiSelect">true if user can select more than one file, false if only single select.</param>
 /// <param name="file_types">List of file types, e.g.: {{L"Log files","*.log"},{L"All files",L"*.*"}}, or empty.</param>
 /// <returns>List of files selected.</returns>
-export std::vector<std::wstring> ShowOpenFileDlg(const std::wstring& lastUsedDir, bool isAllowMultiSelect,
+export std::vector<std::wstring> ShowOpenFileDlg(HWND hParent, const std::wstring& lastUsedDir, bool isAllowMultiSelect,
 		const std::vector<std::pair<std::wstring, std::wstring>>& file_types, std::wstring* pTitle = nullptr)
 {
+	XeASSERT(hParent);
 	std::vector<std::wstring> files;
 	Microsoft::WRL::ComPtr<IFileOpenDialog> fod = 0;
-	//HRESULT hr = fod.CoCreateInstance(__uuidof(FileOpenDialog));
 	HRESULT hr = ::CoCreateInstance(
-		CLSID_FileOpenDialog,
-		nullptr,
-		CLSCTX_ALL,
-		__uuidof(IFileOpenDialog),
-		reinterpret_cast<void**>(fod.GetAddressOf()));
+			CLSID_FileOpenDialog,
+			nullptr,
+			CLSCTX_ALL,
+			__uuidof(IFileOpenDialog),
+			reinterpret_cast<void**>(fod.GetAddressOf()));
 
 	if (SUCCEEDED(hr))
 	{
@@ -186,7 +186,7 @@ export std::vector<std::wstring> ShowOpenFileDlg(const std::wstring& lastUsedDir
 		}
 
 		// Show the Open File dialog box.
-		hr = fod->Show(NULL);	// Returns S_OK if user selected something.
+		hr = fod->Show(hParent);	// Returns S_OK if user selected something.
 
 		// Get the file names from the dialog box.
 		if (SUCCEEDED(hr))
@@ -206,10 +206,11 @@ export std::vector<std::wstring> ShowOpenFileDlg(const std::wstring& lastUsedDir
 /// <param name="pCheckBoxBool">Pointer to BOOL if checkbox wanted in dialog.</param>
 /// <param name="pCheckBoxLabel">Label of the checkbox.</param>
 /// <returns>The selected filename.</returns>
-export std::wstring ShowSaveAsDlg(const std::wstring& suggested_filename, const std::wstring& folder,
+export std::wstring ShowSaveAsDlg(HWND hParent, const std::wstring& suggested_filename, const std::wstring& folder,
 		const std::vector<std::pair<std::wstring, std::wstring>>& file_types, std::wstring* pTitle = nullptr,
 		BOOL *pCheckBoxBool = nullptr, const std::wstring* pCheckBoxLabel = nullptr)
 {
+	XeASSERT(hParent);
 	std::wstring save_file;
 	Microsoft::WRL::ComPtr<IFileSaveDialog> fsd = 0;
 	//HRESULT hr = fsd.CoCreateInstance(__uuidof(FileSaveDialog));
@@ -242,7 +243,7 @@ export std::wstring ShowSaveAsDlg(const std::wstring& suggested_filename, const 
 		_AddFileDlgCheckBox(fsd.Get(), dwCB_ID, *pCheckBoxLabel, *pCheckBoxBool);
 
 		// Show the SaveAs dialog box.
-		hr = fsd->Show(NULL);	// Returns S_OK if user selected something.
+		hr = fsd->Show(hParent);	// Returns S_OK if user selected something.
 
 		if (SUCCEEDED(hr))		// Get the file name from the dialog box.
 		{
@@ -254,8 +255,9 @@ export std::wstring ShowSaveAsDlg(const std::wstring& suggested_filename, const 
 	return save_file;
 }
 
-export std::wstring ShowFolderPickerDlg(const std::wstring& folder, std::wstring* pTitle = nullptr)
+export std::wstring ShowFolderPickerDlg(HWND hParent, const std::wstring& folder, std::wstring* pTitle = nullptr)
 {
+	XeASSERT(hParent);
 	std::wstring selected_folder;
 	Microsoft::WRL::ComPtr<IFileOpenDialog> fpd = 0;
 	//HRESULT hr = fpd.CoCreateInstance(__uuidof(FileOpenDialog));
@@ -280,7 +282,7 @@ export std::wstring ShowFolderPickerDlg(const std::wstring& folder, std::wstring
 		}
 
 		// Show the File Open dialog in folder picker mode.
-		hr = fpd->Show(NULL);	// Returns S_OK if user selected something.
+		hr = fpd->Show(hParent);	// Returns S_OK if user selected something.
 
 		if (SUCCEEDED(hr))		// Get the folder name from the dialog box.
 		{

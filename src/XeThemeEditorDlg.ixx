@@ -610,14 +610,7 @@ protected:
 	void OnBnClickedSaveColorIds()
 	{
 		std::wstring lastUsedFolder = s_xeLastUsedUIsettings.GetString_or_Val(L"LastUsedColorIDsFolder", L"");
-		//CFolderPickerDialog folderDlg(lastUsedFolder.c_str(), 0, CWnd::FromHandle(Hwnd()), 0);
-		//folderDlg.m_ofn.lpstrTitle = _T("Select folder containing ColorIDs.json and ColorIDs.h files");
-		//if (folderDlg.DoModal() != IDOK)
-		//{
-		//	return;
-		//}
-		//std::wstring folder = folderDlg.GetPathName().GetString();
-		std::wstring folder = ShowFolderPickerDlg(lastUsedFolder);
+		std::wstring folder = ShowFolderPickerDlg(Hwnd(), lastUsedFolder);
 		if (!folder.size())
 		{
 			return;

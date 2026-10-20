@@ -370,8 +370,6 @@ protected:
 
 	CalCtrlMode m_mode = CalCtrlMode::FullRange;
 
-	CSize m_sizeCtrl;
-
 	SEL m_selecting = SEL::DateTime;
 	XeCalPartEdit m_rctEditing;
 
@@ -419,7 +417,7 @@ public:
 		DWORD dwExStyle = 0;
 		HWND hWnd = CreateD2DCtrl(dwExStyle, XECALENDARWND_CLASSNAME, nullptr, dwStyle,
 				rect, hParentWnd, nID, tooltip);
-		m_sizeCtrl = _CalculateUI();
+		_CalculateUI();
 		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eTabListTitleFont);	// Create big text UI font.
 		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eMediumBig);
 
@@ -431,8 +429,7 @@ public:
 	{
 		m_dpi = dpi;
 		XeASSERT(m_dpi.is_valid());
-		m_sizeCtrl = _CalculateUI();
-		return m_sizeCtrl;
+		return _CalculateUI();
 	}
 
 protected:
@@ -452,7 +449,7 @@ public:
 	virtual CSize GetWindowPreferredSize() override
 	{
 		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
-		return GetControlSize();
+		return _CalculateUI();
 	}
 
 	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
@@ -509,8 +506,6 @@ public:
 
 #pragma region helpers
 public:
-	CSize GetControlSize() { return m_sizeCtrl; }
-
 	void SetDateTimes(const FILETIMEX& fromDT, const FILETIMEX& toDT)
 	{
 		m_fromDT = fromDT, m_toDT = toDT;

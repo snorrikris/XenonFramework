@@ -509,9 +509,6 @@ public:
 #pragma endregion CXePopupCtrlBase_impl
 
 #pragma region helpers
-public:
-	CSize GetControlSize() { return _CalculateUI(); }
-
 protected:
 	RCT _PtInRect(const float& x, const float& y)
 	{

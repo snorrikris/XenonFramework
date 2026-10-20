@@ -794,7 +794,7 @@ protected:
 	void _CreateDurationControl(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		auto pc = std::make_unique<CXeDurationCtrl>(m_xeUI, DurCtrlMode::DurationSM2);
-		CRect rcWanted = _AdjustControlSize(rc, pc->GetControlSize());
+		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateControlSize(m_dpi));
 		pc->Create(style, rcWanted, Hwnd(), uID, nullptr);
 		m_durationcontrols.push_back(std::move(pc));
 	}
@@ -802,7 +802,7 @@ protected:
 	void _CreateCalendarControl(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		auto pc = std::make_unique<CXeCalendarCtrl>(m_xeUI, CalCtrlMode::SimpleDateTimeSM2);
-		CRect rcWanted = _AdjustControlSize(rc, pc->GetControlSize());
+		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateControlSize(m_dpi));
 		pc->Create(style, rcWanted, Hwnd(), uID, nullptr);
 		m_calendarcontrols.push_back(std::move(pc));
 	}

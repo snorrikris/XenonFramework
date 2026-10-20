@@ -338,6 +338,10 @@ protected:
 		if (style.hasCaption())
 		{
 			int cyNeeded = m_xeUI->GetValue(UIV::cyWindowCaption, dpi);
+			if (!style.hasThickBorder())
+			{
+				cyCaption = (int)((double)cyCaption * 1.1 + 0.5);
+			}
 			if (m_sizeToolbar.cy)
 			{
 				cyNeeded = std::max((int)m_sizeToolbar.cy + m_cxyBorder, cyNeeded);

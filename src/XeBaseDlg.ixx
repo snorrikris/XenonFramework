@@ -565,6 +565,10 @@ protected:
 		// Add caption and barders to size of window.
 		XeWindowStyleValue xe_style(style, 0);
 		int cyCaption = xe_style.hasCaption() ? m_xeUI->GetValue(UIV::cyWindowCaption, dpi) : 0;
+		if (!xe_style.hasThickBorder())
+		{
+			cyCaption = (int)((double)cyCaption * 1.1 + 0.5);
+		}
 		int cxyBorder = m_xeUI->GetValue(xe_style.hasThickBorder() ? UIV::cxyThickBorder : UIV::cxyThinBorder, dpi);
 
 		dlg_cy += (cyCaption + (2 * cxyBorder));

@@ -144,6 +144,7 @@ protected:
 	void DrawCellsIntern(CXeD2DRenderContext* pRctx)
 	{
 		ID2D1RenderTarget* pRT = pRctx->m_pCurrentRT;
+		pRT->Clear(m_xeUI->GetColorF(CID::GrdHdrFillBg));
 		CRect rect(0, 0, 0, 0), cellRect;
 		CUGCell cell;
 		CUGCellTypeIF* cellType;

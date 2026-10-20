@@ -779,20 +779,7 @@ protected:
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rc) override
 	{
-		// Fill empty area above and below the edit control window.
-		CRect rcClient = _GetClientRect();
-		const CRect& rcEC = m_mode.m_rcEditControl;
-		CRect rcTop = rcClient, rcBtm = rcClient;
-		rcTop.bottom = rcEC.top;
-		if (rcTop.Height())
-		{
-			pRT->FillRectangle(RectFfromRect(rcTop), GetBrush(CID::GrdCellDefBg));
-		}
-		rcBtm.top = rcEC.bottom;
-		if (rcBtm.Height())
-		{
-			pRT->FillRectangle(RectFfromRect(rcBtm), GetBrush(CID::GrdCellDefBg));
-		}
+		pRT->Clear(m_xeUI->GetColorF(CID::GrdCellDefBg));
 
 		if (m_mode.HasBothScrollBars())
 		{

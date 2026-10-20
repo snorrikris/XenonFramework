@@ -217,6 +217,7 @@ protected:
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rc) override
 	{
+		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg));
 		D2D1_RECT_F rcClient = rc;
 		if (m_control_has_border)
 		{

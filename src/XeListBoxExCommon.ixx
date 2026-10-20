@@ -442,6 +442,7 @@ public:
 		if (topIdx != 0xFFFFFFFF && topIdx >= list.size()) { topIdx = 0xFFFFFFFF; }
 		if (nSelIdx != -1 && nSelIdx >= (int)list.size()) { nSelIdx = -1; }
 		m_curIdx = nSelIdx >= 0 ? (size_t)nSelIdx : 0xFFFFFFFF;
+		m_mouseOverItemIdx = 0xFFFFFFFF;
 		m_topIdx = topIdx == 0xFFFFFFFF ? 0 : topIdx;
 		m_items.clear();
 		m_items = list;

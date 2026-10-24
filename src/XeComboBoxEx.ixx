@@ -56,8 +56,8 @@ public:
 
 		m_edit = std::make_unique<CXeScintillaEditControl>(m_xeUI);
 		m_listbox = std::make_unique<CXeListBoxExCommon>(m_xeUI);
-		m_listbox->Initialize(LBType::Combo,
-			[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
+		m_listbox->InitializeListbox(LBType::Combo,
+				[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
 	}
 	//virtual ~CXeComboBoxEx() {}
 
@@ -81,7 +81,7 @@ public:
 		{
 			CRect rcEdit(rect);
 			rcEdit.OffsetRect(-rcEdit.left, -rcEdit.top);	// Make top, left = 0,0
-			rcEdit.right -= m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
+			rcEdit.right -= m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 			if (m_control_has_border)
 			{
 				rcEdit.DeflateRect(1, 1);
@@ -126,7 +126,7 @@ protected:
 	{
 		if (m_edit->GetSafeHwnd())
 		{
-			int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
+			int cxButton = m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 			bool hasBorder = m_control_has_border;
 			int x = hasBorder ? 1 : 0, y = x;
 			cx = cx > cxButton ? cx - cxButton : 0;
@@ -136,7 +136,7 @@ protected:
 		}
 	}
 
-	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
 	{
 		CRect rcClient;
 		GetClientRect(rcClient);
@@ -230,7 +230,7 @@ protected:
 		bool isWindowEnabled = IsWindowEnabled();
 
 		D2D1_RECT_F rcBtn(rcClient);
-		float cxButton = (float)m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
+		float cxButton = (float)m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 		rcBtn.left = rcBtn.right - cxButton;
 		CID cidBtnFg = isWindowEnabled ? CID::CtrlTxt : CID::CtrlTxtDis;
 		_DrawComboBoxButton(pRT, rcBtn, cidBtnFg, CID::CtrlBg);
@@ -358,7 +358,7 @@ protected:
 		GetClientRect(&rcButton);
 		if (!m_isStatic)	// Click anywhere in a static control to initiate the popup.
 		{
-			rcButton.left = rcButton.right - m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
+			rcButton.left = rcButton.right - m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 		}
 		if (rcButton.PtInRect(point))
 		{
@@ -983,7 +983,7 @@ protected:
 		CRect rcClient;
 		GetClientRect(&rcClient);
 		CRect rcEdit(rcClient);
-		int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton, m_dpi);
+		int cxButton = m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 		rcEdit.right -= cxButton;
 		CRect rcButton(rcClient);
 		rcButton.left = rcButton.right - cxButton;

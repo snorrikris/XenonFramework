@@ -83,8 +83,6 @@ export class CXeD2DRenderContext
 {
 #pragma region Class_data
 protected:
-	CXeUIcolorsIF* m_xeUI = nullptr;
-
 	Microsoft::WRL::ComPtr<ID2D1DCRenderTarget> m_renderTargetClientDC;
 
 	XeRRectMap m_rr;
@@ -95,6 +93,8 @@ private:
 public:
 	// Current render target we are using for painting (can be used by external classes to paint - e.g. D2DToolbar)
 	ID2D1RenderTarget* m_pCurrentRT = nullptr;
+
+	CXeUIcolorsIF* m_xeUI = nullptr;
 
 	XeDPI m_dpi{ 0 };
 
@@ -569,7 +569,7 @@ public:
 
 	void _DrawSubMenuArrow(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcBtn, CID fgColor)
 	{
-		float cyTri = (float)m_xeUI->GetValue(UIV::cySubMenuArrow, m_dpi);
+		float cyTri = (float)m_xeUI->GetUIValue(UIV::cySubMenuArrow, m_dpi);
 		float cxTri = cyTri / 2.0f;
 		float cyTriMargin = (HeightOf(rcBtn) - cyTri) / 2.0f;
 		float x1 = rcBtn.left, x2 = x1 + (cyTri / 2.0f);
@@ -588,7 +588,7 @@ public:
 			pRT->FillRectangle(rcBtn, GetBrush(bgColor));
 		}
 
-		float cxTri = (float)m_xeUI->GetValue(UIV::cxComboBoxButtonArrow, m_dpi);
+		float cxTri = (float)m_xeUI->GetUIValue(UIV::cxComboBoxButtonArrow, m_dpi);
 		float cyTri = cxTri / 2.0f, cxTriMargin = (WidthOf(rcBtn) - cxTri) / 2.0f;
 		float cyTriMargin = (HeightOf(rcBtn) - cyTri) / 2.0f;
 		float x1 = rcBtn.right - (cxTriMargin + cxTri), x2 = rcBtn.right - cxTriMargin;

@@ -184,8 +184,8 @@ protected:
 	{
 		XeASSERT(m_xeUI);
 		m_cmn = std::make_unique<CXeListBoxExCommon>(m_xeUI);
-		m_cmn->Initialize(LBType::Menu,
-			[this](WORD nfCode, int item_idx) { _OnLBnotify(nfCode, item_idx); });
+		m_cmn->InitializeListbox(LBType::Menu,
+				[this](WORD nfCode, int item_idx) { _OnLBnotify(nfCode, item_idx); });
 		SetPopupPointer(m_cmn.get());
 	}
 #pragma endregion Create

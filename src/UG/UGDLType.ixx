@@ -627,8 +627,8 @@ protected:
 
 		// create the list control
 		std::unique_ptr<CXeListBoxExCommon> listBox = std::make_unique<CXeListBoxExCommon>(m_xeUI);
-		listBox->Initialize(LBType::DropDown,
-			[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
+		listBox->InitializeListbox(LBType::DropDown,
+				[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
 		m_listBox = listBox.get();
 
 		// add the items to the list
@@ -636,7 +636,7 @@ protected:
 
 		if (list.size() && list[0].m_item_data.m_isCheckbox)
 		{
-			listBox->SetCheckBoxesMode(true, false, false);
+			listBox->SetCheckBoxesMode(dpi, true, false, false);
 		}
 
 		CRect rcListbox(rect);

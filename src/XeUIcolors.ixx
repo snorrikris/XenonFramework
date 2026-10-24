@@ -1121,9 +1121,9 @@ protected:
 		}
 	}
 
-	virtual int GetValue(UIV val, XeDPI dpi) const override
+	virtual int GetUIValue(UIV val, XeDPI dpi) const override
 	{
-		return m_d2d_fonts.GetValue(val, dpi);
+		return m_d2d_fonts.GetUIValue(val, dpi);
 	}
 
 	virtual HICON GetAppIconHandle() override

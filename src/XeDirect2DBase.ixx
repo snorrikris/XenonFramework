@@ -69,6 +69,8 @@ public:
 protected:
 	bool m_uiResourcesCreatedWnd = false, m_uiResourcesCreatedDC = false;
 
+	bool m_isWndMovingToDifferentDPImonitor = false;
+
 	bool m_isHovering = false, m_isTracking = false;
 
 	// Icon in the caption - when sys menu.
@@ -232,6 +234,9 @@ public:
 		case WM_QUERYENDSESSION:
 			return _OnQueryEndSession(wParam, lParam);
 
+		case WM_GETDPISCALEDSIZE:
+			return _OnGetDpiScaledSize(hWnd, wParam, lParam);
+
 		case WM_DPICHANGED:
 			return _OnDpiChanged(hWnd, wParam, lParam);
 
@@ -373,6 +378,21 @@ protected:
 	virtual LRESULT _OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	/// <summary>
+	/// WM_GETDPISCALEDSIZE is sent to a popup window and is the first message
+	/// received when 'this' window has been moved to a different DPI monitor.
+	/// <para>Note - WM_EXITSIZEMOVE is the last message sent in the DPI change procedure.</para>
+	/// </summary>
+	/// <param name="hwnd">'this' window handle.</param>
+	/// <param name="wParam">DPI value</param>
+	/// <param name="lParam">in/out pointer to a SIZE struct</param>
+	/// <returns>TRUE - a new size has been computed. FALSE - use default linear DPI scaling.</returns>
+	virtual LRESULT _OnGetDpiScaledSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
+	{
+		m_isWndMovingToDifferentDPImonitor = true;
+		return ::DefWindowProc(hwnd, WM_GETDPISCALEDSIZE, wParam, lParam);
 	}
 
 	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -656,6 +676,7 @@ protected:
 
 	virtual LRESULT _OnExitSizeMove()
 	{
+		m_isWndMovingToDifferentDPImonitor = false;
 		m_style.Update(m_dpi);
 		return ::DefWindowProc(m_hWnd, WM_EXITSIZEMOVE, 0, 0);
 	}
@@ -1501,14 +1522,14 @@ protected:
 
 		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
 
-		_OnDPIchange(old_dpi);
+		_OnDPIchangeForControl(old_dpi);
 
 		return result;
 	}
 
 	// All controls need to handle DPI change. E.g. recalculate layout and redraw.
 	// Note - parent window will already have moved and resized 'this' control window.
-	virtual void _OnDPIchange(const XeDPI& old_dpi) = 0;
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) = 0;
 
 	virtual LRESULT _OnMouseLeave(WPARAM wparam, LPARAM lparam) override
 	{

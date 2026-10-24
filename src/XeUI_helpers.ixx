@@ -241,7 +241,7 @@ public:
 		return m_blankFM;
 	}
 
-	int GetValue(UIV val, XeDPI dpi) const
+	int GetUIValue(UIV val, XeDPI dpi) const
 	{
 		XeASSERT(m_mapDPI.contains(dpi));
 		if (!m_mapDPI.contains(dpi))
@@ -280,6 +280,8 @@ public:
 			return 20;
 		case UIV::cxyScrollbar:
 			return std::max(::GetSystemMetrics(SM_CXVSCROLL), ::GetSystemMetrics(SM_CYHSCROLL));		//pixels
+		case UIV::cxCellMargin:
+			return (int)(4.0 * dpiMap.m_cxScaleFactor + 0.5);
 		}
 		XeASSERT(FALSE);
 		return 0;

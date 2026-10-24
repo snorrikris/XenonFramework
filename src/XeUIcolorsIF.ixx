@@ -79,7 +79,8 @@ export enum class UIV
 	cxyThickBorder,
 	cxyThinBorder,
 	cyWindowCaption,
-	cxyScrollbar
+	cxyScrollbar,
+	cxCellMargin
 };
 
 export enum class XERESTYPE
@@ -262,7 +263,7 @@ public:
 
 	virtual void OnChangedSettings(const ChangedSettings& chg_settings, XeDPI dpi) = 0;
 
-	virtual int GetValue(UIV val, XeDPI dpi) const = 0;
+	virtual int GetUIValue(UIV val, XeDPI dpi) const = 0;
 
 	virtual HICON GetAppIconHandle() = 0;
 

@@ -113,7 +113,7 @@ protected:
 		return CXeD2DCtrlBase::_OnOtherMessage(hWnd, uMsg, wParam, lParam);
 	}
 
-	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
 	{
 		_RedrawDirectly();
 	}

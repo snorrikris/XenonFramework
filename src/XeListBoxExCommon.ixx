@@ -223,7 +223,7 @@ public:
 #pragma region Create
 	CXeListBoxExCommon(CXeUIcolorsIF* pUIcolors) : CXeD2DCtrlBase(pUIcolors)
 	{
-		Initialize(LBType::Normal);
+		InitializeListbox(LBType::Normal);
 	}
 	virtual ~CXeListBoxExCommon() {}
 
@@ -246,7 +246,7 @@ public:
 		}
 	}
 
-	void Initialize(LBType type, NotifyComboboxCallbackFunc notifyComboBoxCallback = nullptr)
+	void InitializeListbox(LBType type, NotifyComboboxCallbackFunc notifyComboBoxCallback = nullptr)
 	{
 		m_type = type;
 		m_notifyComboBoxCallback = notifyComboBoxCallback;
@@ -395,7 +395,7 @@ protected:
 		return 0;
 	}
 
-	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
 	{
 		_CalculateUI();
 		_RedrawDirectly();
@@ -506,9 +506,11 @@ public:
 	// - selecting an item does not make it the current item.
 	// - clicking on an item does not trigger select end ok.
 	//   (if the listbox is in a popup window the window is not dismissed).
-	void SetCheckBoxesMode(bool isCheckBoxesMode, bool hasOkCancelButtons,
+	void SetCheckBoxesMode(XeDPI dpi, bool isCheckBoxesMode, bool hasOkCancelButtons,
 			bool isSetCurItemEnabled, const wchar_t* pTxtCustomButton = nullptr)
 	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
 		m_isSetCurItemEnabled = isSetCurItemEnabled;
 		m_isCheckBoxesMode = isCheckBoxesMode;
 		if (hasOkCancelButtons)
@@ -855,7 +857,7 @@ protected:
 			if (item.m_item_data.m_isSubMenu)
 			{
 				CID clrId_FG = !m_isEnabled || item.m_item_data.m_isItemDisabled ? CID::CtrlTxtDis : CID::CtrlTxt;
-				float cxTri = (float)m_xeUI->GetValue(UIV::cxComboBoxButtonArrow, m_dpi);
+				float cxTri = (float)m_xeUI->GetUIValue(UIV::cxComboBoxButtonArrow, m_dpi);
 				D2D1_RECT_F rcArw(rcTxtF);
 				rcArw.left = rcArw.right - m_cxMenuRmargin - cxTri;
 				_DrawSubMenuArrow(pRT, rcArw, clrId_FG);

@@ -322,11 +322,11 @@ protected:
 		}
 		else if (style.hasThickBorder())
 		{
-			m_cxyBorder = m_xeUI->GetValue(UIV::cxyThickBorder, dpi);
+			m_cxyBorder = m_xeUI->GetUIValue(UIV::cxyThickBorder, dpi);
 		}
 		else if (style.hasBorder())
 		{
-			m_cxyBorder = m_xeUI->GetValue(UIV::cxyThinBorder, dpi);
+			m_cxyBorder = m_xeUI->GetUIValue(UIV::cxyThinBorder, dpi);
 		}
 	}
 
@@ -337,7 +337,7 @@ protected:
 		int cyCaption = 0;
 		if (style.hasCaption())
 		{
-			int cyNeeded = m_xeUI->GetValue(UIV::cyWindowCaption, dpi);
+			int cyNeeded = m_xeUI->GetUIValue(UIV::cyWindowCaption, dpi);
 			if (!style.hasThickBorder())
 			{
 				cyCaption = (int)((double)cyCaption * 1.1 + 0.5);

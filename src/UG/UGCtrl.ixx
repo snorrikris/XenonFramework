@@ -919,12 +919,24 @@ virtual LRESULT _OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam) override
 	return CXeD2DWndBase::_OnSize(hWnd, wParam, lParam);
 }
 
-virtual void _OnDPIchange(const XeDPI& old_dpi) override
+virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
 {
+	XeDPI_Calculator dpi_calc(old_dpi, m_dpi);
+
+	// Scale col widths to ne DPI.
+	for (int i = 0; i < m_GI->m_numberCols; ++i)
+	{
+		m_GI->m_colInfo[i].width = dpi_calc.CalculateScalar(m_GI->m_colInfo[i].width);
+	}
 	EnableUpdate(FALSE);
 	AdjustComponentSizes();
 	EnableUpdate(TRUE);
 	_RedrawDirectly();
+	m_CUGGrid->Redraw();
+	m_CUGTopHdg->Redraw();
+	m_CUGSideHdg->Redraw();
+	m_CUGVScroll->Redraw();
+	m_CUGHScroll->Redraw();
 }
 
 virtual LRESULT _OnGetDlgCode(WPARAM wParam, LPARAM lParam) override
@@ -7715,7 +7727,7 @@ void GetGridSizeFromGrid()
 void SetGridSizeToGrid()
 {
 	//******* Set the total height of the top heading 
-	int nTHrowHeight = m_xeUI->GetValue(UIV::s_cyGridTH_RowHeight, m_dpi);
+	int nTHrowHeight = m_xeUI->GetUIValue(UIV::s_cyGridTH_RowHeight, m_dpi);
 	int nNumTHrows = 1;
 	if (GetDataSource()->HasGridHeader())
 		nNumTHrows++;

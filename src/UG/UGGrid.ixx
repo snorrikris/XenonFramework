@@ -83,6 +83,7 @@ protected:
 	// mouse cursor.
 	BOOL m_bHandledMouseDown;
 
+#pragma region Creation
 public:
 	/***************************************************
 		Standard construction/desrtuction
@@ -121,24 +122,6 @@ protected:
 		return CXeD2DWndBase::_OnOtherMessage(hWnd, uMsg, wParam, lParam);
 	}
 
-	//LRESULT OnMouseLeave(WPARAM wparam, LPARAM lparam)
-	virtual LRESULT _OnMouseLeave(WPARAM wparam, LPARAM lparam) override
-	{
-		//POINT point;
-		//GetCursorPos(&point);
-		//CWnd *pWnd = WindowFromPoint(point);
-		//HWND hWnd = pWnd->GetSafeHwnd();
-		//if (hWnd != m_xtooltip->GetSafeHwnd())	// Don't hide tooltip if cursor is over it.
-		//{
-		//	m_xtooltip->HideTooltip();
-		//}
-		if (!m_xeUI->IsMouseOverTooltip(Hwnd()))
-		{
-			_HideTooltip();
-		}
-		return CXeD2DWndBase::_OnMouseLeave(wparam, lparam);
-	}
-
 	virtual LRESULT _OnNotify_NeedTooltip(NM_PPTOOLTIP_NEED_TT* pNeedTT) override
 	{
 		XeASSERT(pNeedTT);
@@ -148,7 +131,9 @@ protected:
 		}
 		return 0;
 	}
+#pragma endregion Creation
 
+#pragma region painting
 	/***************************************************
 	OnPaint
 		This routine is responsible for gathering the
@@ -639,7 +624,9 @@ public:
 		_RedrawDirectly();
 		return;
 	}
+#pragma endregion painting
 
+#pragma region GridMovement
 	/***************************************************
 	Moved
 		This routine recalcs the internal variables
@@ -856,9 +843,9 @@ public:
 			////close the device context
 			////ReleaseDC(screenDC);
 	}
+#pragma endregion GridMovement
 
-	void HideTooltip() { _HideTooltip(); }
-
+#pragma region Keyboard
 protected:
 	/***************************************************
 	OnKeyDown
@@ -1016,6 +1003,64 @@ protected:
 		return 0;
 	}
 
+	/***************************************************
+	OnKeyUp
+		The framework calls this member function when a nonsystem key is released,
+		the grid passes this event to the cell type and CUGCtrl class for further
+		processing.
+	Params:
+		nChar		- please see MSDN for more information on the parameters.
+		nRepCnt
+		nFlags
+	Returns:
+		<none>
+	*****************************************************/
+	//void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
+	virtual LRESULT _OnKeyUp(WPARAM wParam, LPARAM lParam) override
+	{
+		//UNREFERENCED_PARAMETER(nRepCnt);
+		//UNREFERENCED_PARAMETER(nFlags);
+		UINT nChar = (UINT)wParam;
+		m_keyRepeatCount = 0;
+
+		//send a notify message to the cell type class
+		BOOL processed = m_GI->GetCellTypeColRow(m_GI->CurrentCol(), m_GI->CurrentRow())->
+			OnKeyUp(m_GI->CurrentCol(), m_GI->CurrentRow(), &nChar);
+
+		//send a keyup notify message
+		m_GI->OnKeyUp(&nChar, processed);
+		return 0;
+	}
+
+	/***************************************************
+	OnChar
+		passed the handling of this event to the OnCharDown in both the cell's
+		celltype and the CUGCtrl.
+	Params:
+		nChar		- please see MSDN for more information on the parameters.
+		nRepCnt
+		nFlags
+	Returns:
+		<none>
+	*****************************************************/
+	//void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
+	virtual LRESULT _OnChar(WPARAM wParam, LPARAM lParam) override
+	{
+		UINT nChar = (UINT)wParam;
+		//UNREFERENCED_PARAMETER(nRepCnt);
+		//UNREFERENCED_PARAMETER(nFlags);
+		BOOL processed = FALSE;
+
+		//send a notification to the cell type	
+		processed = m_GI->GetCellTypeColRow(m_GI->CurrentCol(), m_GI->CurrentRow())->
+			OnCharDown(m_GI->CurrentCol(), m_GI->CurrentRow(), &nChar);
+
+		m_GI->OnCharDown(&nChar, processed);
+		return 0;
+	}
+#pragma endregion Keyboard
+
+#pragma region MouseProcessing
 	/***************************************************
 	OnLButtonDown
 		Finds the cell that was clicked in, sends a notification
@@ -1418,47 +1463,88 @@ protected:
 	}
 
 	/***************************************************
-	OnChar
-		passed the handling of this event to the OnCharDown in both the cell's
-		celltype and the CUGCtrl.
+	OnMouseWheel
+		The framework calls this member function as a user rotates the mouse
+		wheel and encounters the wheel's next notch.
 	Params:
-		nChar		- please see MSDN for more information on the parameters.
-		nRepCnt
-		nFlags
+		nFlags		- please see MSDN for more information on the parameters.
+		zDelta
+		pt
 	Returns:
-		<none>
+		Nonzero if mouse wheel scrolling is enabled; otherwise 0.
 	*****************************************************/
-	//void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
-	virtual LRESULT _OnChar(WPARAM wParam, LPARAM lParam) override
+#ifdef WM_MOUSEWHEEL
+	//BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
+	virtual LRESULT _OnMouseWheel(WORD fwKeys, short zDelta, CPoint pt) override
 	{
-		UINT nChar = (UINT)wParam;
-		//UNREFERENCED_PARAMETER(nRepCnt);
-		//UNREFERENCED_PARAMETER(nFlags);
-		BOOL processed = FALSE;
+		if (!m_GI->EditInProgress())
+		{
+			int distance = zDelta / 120;
+			m_GI->SetMoveType(4);
+			if (m_GI->SetTopRow(m_GI->TopRow() - (distance * 3)) == UG_SUCCESS)
+			{
+				m_GI->HideTooltip();
+			}
+			//m_GI->m_sideHdgWnd->Invalidate();
+			_RedrawDirectly();
+		}
 
-		//send a notification to the cell type	
-		processed = m_GI->GetCellTypeColRow(m_GI->CurrentCol(), m_GI->CurrentRow())->
-			OnCharDown(m_GI->CurrentCol(), m_GI->CurrentRow(), &nChar);
+		//return CWnd::OnMouseWheel(nFlags, zDelta, pt);
+		return 0;
+	}
+#endif
 
-		m_GI->OnCharDown(&nChar, processed);
+	//void OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
+	virtual LRESULT _OnMouseHWheel(WORD fwKeys, short zDelta, CPoint pt) override
+	{
+		if (m_GI->ShowHScroll())	// Is H scrollbar visible?
+		{
+			_HideTooltip();
+			UINT uSBcode = zDelta < 0 ? SB_LINELEFT : SB_LINERIGHT;
+			//m_GI->m_CUGHScroll->HScroll(uSBcode, 0);
+			m_GI->HScroll(uSBcode, 0);
+		}
 		return 0;
 	}
 
-	/***************************************************
-	PreCreateWindow
-		The Utlimate Grid overwrites this function to further customize the
-		window that is created.
-	Params:
-		cs			- please see MSDN for more information on the parameters.
-	Returns:
-		Nonzero if the window creation should continue; 0 to indicate creation failure.
-	*****************************************************/
-	//BOOL PreCreateWindow(CREATESTRUCT& cs)
-	//{
-	//	cs.style = cs.style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-	//	return CWnd::PreCreateWindow(cs);
-	//}
+	//LRESULT OnMouseLeave(WPARAM wparam, LPARAM lparam)
+	virtual LRESULT _OnMouseLeave(WPARAM wparam, LPARAM lparam) override
+	{
+		//POINT point;
+		//GetCursorPos(&point);
+		//CWnd *pWnd = WindowFromPoint(point);
+		//HWND hWnd = pWnd->GetSafeHwnd();
+		//if (hWnd != m_xtooltip->GetSafeHwnd())	// Don't hide tooltip if cursor is over it.
+		//{
+		//	m_xtooltip->HideTooltip();
+		//}
+		if (!m_xeUI->IsMouseOverTooltip(Hwnd()))
+		{
+			_HideTooltip();
+		}
+		return CXeD2DWndBase::_OnMouseLeave(wparam, lparam);
+	}
 
+	/***************************************************
+	OnMouseActivate
+		The framework calls this member function when the cursor is in an inactive
+		window and the user presses a mouse button.
+	Params:
+		pDesktopWnd	- please see MSDN for more information on the parameters.
+		nHitTest
+		message
+	Returns:
+		Specifies to activate the CWnd and to discard the mouse event.
+	*****************************************************/
+	//int OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message) 
+	virtual LRESULT _OnMouseActivate(WPARAM wParam, LPARAM lParam) override
+	{
+		//CWnd::OnMouseActivate( pDesktopWnd, nHitTest, message );
+		return MA_ACTIVATE;
+	}
+#pragma endregion MouseProcessing
+
+#pragma region Focus
 	/***************************************************
 	OnSetFocus
 		The grid uses this event handler to setup internal variables and passes
@@ -1518,122 +1604,9 @@ protected:
 		RedrawCell(m_GI->CurrentCol(), m_GI->CurrentRow());
 		return 0;
 	}
+#pragma endregion Focus
 
-	/***************************************************
-	OnMouseActivate
-		The framework calls this member function when the cursor is in an inactive
-		window and the user presses a mouse button.
-	Params:
-		pDesktopWnd	- please see MSDN for more information on the parameters.
-		nHitTest
-		message
-	Returns:
-		Specifies to activate the CWnd and to discard the mouse event.
-	*****************************************************/
-	//int OnMouseActivate(CWnd* pDesktopWnd, UINT nHitTest, UINT message) 
-	virtual LRESULT _OnMouseActivate(WPARAM wParam, LPARAM lParam) override
-	{
-		//CWnd::OnMouseActivate( pDesktopWnd, nHitTest, message );
-		return MA_ACTIVATE;
-	}
-
-	/***************************************************
-	SetDoubleBufferMode
-		turns on and off the double buffer functionality.  When the double buffer
-		mode is on then the grid will first is drawn to an off-screen DC before
-		the results are copied over to the screen.
-	Params:
-		mode		- double buffer mode (TRUE or FALSE)
-	Returns:
-		UG_SUCCESS	- on success
-		UG_ERROR	- if creation of off-screen buffer was unsuccessful
-	*****************************************************/
-	//int SetDoubleBufferMode(int mode)
-	//{
-	//	if(m_bitmap != NULL)
-	//	{
-	//		delete m_bitmap;
-	//		m_bitmap = NULL;
-	//	}
-	//
-	//	m_doubleBufferMode = mode;
-	//
-	//	if(mode == TRUE)
-	//	{
-	//		m_bitmap = new CBitmap;
-	//
-	//		CDC * pDC = GetDC();
-	//		RECT rect;
-	//	
-	//		GetClientRect(&rect);
-	//		if(rect.right ==0)
-	//			rect.right =1;
-	//		if(rect.bottom ==0)
-	//			rect.bottom =1;
-	//
-	//		if(m_bitmap->CreateCompatibleBitmap(pDC,rect.right,rect.bottom) == 0)
-	//		{
-	//			delete m_bitmap;
-	//			m_bitmap = NULL;
-	//			m_doubleBufferMode = FALSE;
-	//			return UG_ERROR;
-	//		}
-	//
-	//		//clear the bitmap
-	//		CBitmap * oldbitmap = pDC->SelectObject(m_bitmap);
-	//		if(oldbitmap)
-	//			pDC->SelectObject(oldbitmap);
-	//
-	//		ReleaseDC(pDC);
-	//	}
-	//	
-	//	return UG_SUCCESS;
-	//}
-
-	/***************************************************
-	OnMouseWheel
-		The framework calls this member function as a user rotates the mouse
-		wheel and encounters the wheel's next notch.
-	Params:
-		nFlags		- please see MSDN for more information on the parameters.
-		zDelta
-		pt
-	Returns:
-		Nonzero if mouse wheel scrolling is enabled; otherwise 0.
-	*****************************************************/
-	#ifdef WM_MOUSEWHEEL
-	//BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) 
-	virtual LRESULT _OnMouseWheel(WORD fwKeys, short zDelta, CPoint pt) override
-	{
-		if (!m_GI->EditInProgress())
-		{
-			int distance = zDelta / 120;
-			m_GI->SetMoveType(4);
-			if (m_GI->SetTopRow(m_GI->TopRow() - (distance * 3)) == UG_SUCCESS)
-			{
-				m_GI->HideTooltip();
-			}
-			//m_GI->m_sideHdgWnd->Invalidate();
-			_RedrawDirectly();
-		}
-
-		//return CWnd::OnMouseWheel(nFlags, zDelta, pt);
-		return 0;
-	}
-	#endif
-
-	//void OnMouseHWheel(UINT nFlags, short zDelta, CPoint pt)
-	virtual LRESULT _OnMouseHWheel(WORD fwKeys, short zDelta, CPoint pt) override
-	{
-		if (m_GI->ShowHScroll())	// Is H scrollbar visible?
-		{
-			_HideTooltip();
-			UINT uSBcode = zDelta < 0 ? SB_LINELEFT : SB_LINERIGHT;
-			//m_GI->m_CUGHScroll->HScroll(uSBcode, 0);
-			m_GI->HScroll(uSBcode, 0);
-		}
-		return 0;
-	}
+	void HideTooltip() { _HideTooltip(); }
 
 	/***************************************************
 	OnSetCursor
@@ -1655,35 +1628,6 @@ protected:
 
 		SetCursor(m_GI->GetDefaultCursor()/*m_GI->m_arrowCursor*/);
 		return TRUE;
-	}
-
-	/***************************************************
-	OnKeyUp
-		The framework calls this member function when a nonsystem key is released,
-		the grid passes this event to the cell type and CUGCtrl class for further
-		processing.
-	Params:
-		nChar		- please see MSDN for more information on the parameters.
-		nRepCnt
-		nFlags
-	Returns:
-		<none>
-	*****************************************************/
-	//void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) 
-	virtual LRESULT _OnKeyUp(WPARAM wParam, LPARAM lParam) override
-	{
-		//UNREFERENCED_PARAMETER(nRepCnt);
-		//UNREFERENCED_PARAMETER(nFlags);
-		UINT nChar = (UINT)wParam;
-		m_keyRepeatCount = 0;
-
-		//send a notify message to the cell type class
-		BOOL processed = m_GI->GetCellTypeColRow(m_GI->CurrentCol(), m_GI->CurrentRow())->
-			OnKeyUp(m_GI->CurrentCol(), m_GI->CurrentRow(), &nChar);
-
-		//send a keyup notify message
-		m_GI->OnKeyUp(&nChar, processed);
-		return 0;
 	}
 
 	/***************************************************

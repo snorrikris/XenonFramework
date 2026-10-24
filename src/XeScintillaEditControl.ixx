@@ -291,7 +291,7 @@ public:
 	}
 
 protected:
-	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
 	{
 		UpdateFont();
 		_RedrawDirectly();

@@ -76,7 +76,7 @@ public:
 
 #pragma region CalculateUI
 protected:
-	virtual void _OnDPIchange(const XeDPI& old_dpi) override
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
 	{
 		m_textLayout.Reset();
 		_RedrawDirectly();

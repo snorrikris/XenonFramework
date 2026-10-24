@@ -507,10 +507,8 @@ public:
 	CXeTB_DropListPopup(CXeUIcolorsIF* pUIcolors) : CXePopupCtrl(pUIcolors, XeShowPopup::FadeIn80)
 	{
 		m_cmn = std::make_unique<CXeListBoxExCommon>(m_xeUI);
-		m_cmn->Initialize(LBType::DropDown,
-			[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
-		//m_cmn.Initialize(pUIcolors, LBType::DropDown,
-		//	[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
+		m_cmn->InitializeListbox(LBType::DropDown,
+				[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
 		SetPopupPointer(m_cmn.get());
 	}
 
@@ -586,7 +584,7 @@ export struct XETBItem_DropButton : public XETBItem
 
 	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
-		int cxItem = m_isVisible ? 20 + 4 + m_xeUI->GetValue(UIV::cxComboBoxButton, dpi) : 0;
+		int cxItem = m_isVisible ? 20 + 4 + m_xeUI->GetUIValue(UIV::cxComboBoxButton, dpi) : 0;
 		int cyItem = 20 + 4;
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);
 	}

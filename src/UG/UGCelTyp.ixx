@@ -1013,10 +1013,11 @@ public:
 			h_align = DWRITE_TEXT_ALIGNMENT_TRAILING;
 			//left = rect->right - size.cx - m_GI->m_margin;
 		}
-		//else
-		//{
-		//	left = rect->left + m_GI->m_margin + offset;
-		//}	
+		else
+		{
+			rect->left += pRctx->m_xeUI->GetUIValue(UIV::cxCellMargin, pRctx->m_dpi);
+			//left = rect->left + m_GI->m_margin + offset;
+		}	
 
 		// vertical text alignment
 		DWRITE_PARAGRAPH_ALIGNMENT v_align = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;

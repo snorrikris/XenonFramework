@@ -1397,7 +1397,7 @@ protected:
 		std::vector<CXeFileVwIF*> allViews = GetAllViews();
 
 		CXeListBoxExCommon listBox(m_xeUI);
-		listBox.Initialize(LBType::DropDown,
+		listBox.InitializeListbox(LBType::DropDown,
 				[this](WORD nfCode, int item_idx) { _OnLBnotify(nfCode, item_idx); });
 		std::vector<ListBoxExItem> list;
 		int idx = 0, cur_idx = -1;
@@ -1425,7 +1425,7 @@ protected:
 			++idx;
 		}
 		listBox.SetItemsList(list);
-		listBox.SetCheckBoxesMode(true, false, true, L"Close selected");
+		listBox.SetCheckBoxesMode(m_dpi, true, false, true, L"Close selected");
 		listBox.OnSetCurSelMsg(cur_idx, 0);
 
 		CRect rcParentCtrl = m_listTabs->m_rcLeftTabListDropDownBtn;

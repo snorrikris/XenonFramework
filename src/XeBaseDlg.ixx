@@ -564,12 +564,12 @@ protected:
 
 		// Add caption and barders to size of window.
 		XeWindowStyleValue xe_style(style, 0);
-		int cyCaption = xe_style.hasCaption() ? m_xeUI->GetValue(UIV::cyWindowCaption, dpi) : 0;
+		int cyCaption = xe_style.hasCaption() ? m_xeUI->GetUIValue(UIV::cyWindowCaption, dpi) : 0;
 		if (!xe_style.hasThickBorder())
 		{
 			cyCaption = (int)((double)cyCaption * 1.1 + 0.5);
 		}
-		int cxyBorder = m_xeUI->GetValue(xe_style.hasThickBorder() ? UIV::cxyThickBorder : UIV::cxyThinBorder, dpi);
+		int cxyBorder = m_xeUI->GetUIValue(xe_style.hasThickBorder() ? UIV::cxyThickBorder : UIV::cxyThinBorder, dpi);
 
 		dlg_cy += (cyCaption + (2 * cxyBorder));
 		dlg_cx += (2 * cxyBorder);
@@ -1543,7 +1543,7 @@ protected:
 		int cx = GET_X_LPARAM(lParam);
 		int cy = GET_Y_LPARAM(lParam);
 
-		if (nType == SIZE_RESTORED)
+		if (nType == SIZE_RESTORED && !m_isWndMovingToDifferentDPImonitor)
 		{
 			m_glueControls.MoveGlueControlsOnSize(cx, cy);
 		}
@@ -1552,6 +1552,7 @@ protected:
 
 	virtual LRESULT _OnExitSizeMove() override
 	{
+		m_isWndMovingToDifferentDPImonitor = false;
 		if (m_isSizing)
 		{
 			SaveUserPreferredDlgSize();

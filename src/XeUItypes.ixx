@@ -459,4 +459,23 @@ public:
 		int cy = (int)((double)rcBefore.Height() * m_convFactor + 0.5);
 		return CRect(CPoint(x, y), CSize(cx, cy));
 	}
+
+	CPoint CalculatePoint(const CPoint& ptBefore)
+	{
+		int x = (int)((double)ptBefore.x * m_convFactor + 0.5);
+		int y = (int)((double)ptBefore.y * m_convFactor + 0.5);
+		return CPoint(x, y);
+	}
+
+	CSize CalculateSize(const CSize& szBefore)
+	{
+		int cx = (int)((double)szBefore.cx * m_convFactor + 0.5);
+		int cy = (int)((double)szBefore.cy * m_convFactor + 0.5);
+		return CSize(cx, cy);
+	}
+
+	int CalculateScalar(int before)
+	{
+		return (int)((double)before * m_convFactor + 0.5);
+	}
 };

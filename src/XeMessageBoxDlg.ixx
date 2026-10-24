@@ -140,7 +140,7 @@ protected:
 				if ((cx_grow && cx_grow < cx_grow_txt) || (cy_grow && cy_grow < cy_grow_txt))
 				{
 					// Text box will be smaller than needed for text - add space for scrollbars.
-					int cxySB = m_xeUI->GetValue(UIV::cxyScrollbar, m_dpi);
+					int cxySB = m_xeUI->GetUIValue(UIV::cxyScrollbar, m_dpi);
 					cx_grow += cxySB;
 					cy_grow += cxySB;
 				}

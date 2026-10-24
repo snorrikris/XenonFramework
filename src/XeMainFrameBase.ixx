@@ -165,6 +165,11 @@ public:
 
 		//m_pVwMgr->Create(Hwnd(), VW_ID_TABS_0, VW_ID_TABS_1, VW_ID_VIEW_0, VW_ID_VIEW_1);
 
+
+		DPI_AWARENESS_CONTEXT dpiAwCtx = ::GetWindowDpiAwarenessContext(Hwnd());
+		DPI_AWARENESS dpiAw = ::GetAwarenessFromDpiAwarenessContext(dpiAwCtx);
+		XeASSERT(dpiAw == DPI_AWARENESS::DPI_AWARENESS_PER_MONITOR_AWARE);
+
 		_OnCreateClient();	// Derived class creates its view window
 		m_isClientWndCreated = true;
 

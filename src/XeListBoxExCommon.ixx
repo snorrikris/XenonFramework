@@ -175,7 +175,6 @@ protected:
 
 	float m_cxMaxStringWidth = 0.0f;
 	float m_cyItem = 0.0f;
-	float m_x_start = 2.0f, m_y_start = 0.0f;
 	float m_cxMenuRmargin = 10.0f;
 	bool m_hasIcons = false;
 	float m_cxIcon = 0;
@@ -535,10 +534,13 @@ public:
 	{
 		m_dpi = dpi;
 		_InitializeLBitemUIsize();
-		int cyHeight = numItemsToShow * GetItemHeight() + m_buttonsHlpr.GetButtonsCY();
+		int cxyMargin = m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
+		int cyHeight = numItemsToShow * GetItemHeight() + m_buttonsHlpr.GetButtonsCY()
+				+ (2 * cxyMargin);
 		int cxVscroll = m_items.size() > numItemsToShow ? GetVscrollbarWidth() : 0;
 		int cxCheckBox = m_isCheckBoxesMode ? GetCheckBoxCX() : 0;
-		int cxNeeded = cxCheckBox + GetMaxStringWidth() + cxVscroll;
+		int cxNeeded = cxCheckBox + GetMaxStringWidth() + cxVscroll
+				+ (2 * cxyMargin);
 		if (m_buttonsHlpr.GetMinCXforButtons() > cxMinWidth)
 		{
 			cxMinWidth = m_buttonsHlpr.GetMinCXforButtons();
@@ -718,7 +720,7 @@ protected:
 		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg));
 
 		CRect rcReal = _GetRealClientRect(); // Not incl. buttons at bottom nor scrollbars
-		int xOffset = _GetHscrollInfo().nPos;
+		int xHscrollOffset = _GetHscrollInfo().nPos;
 		D2D1_RECT_F rcPaintF = RectFfromRect(rcReal);
 
 		D2D1_RECT_F rcClipSB(rcWnd);
@@ -739,6 +741,10 @@ protected:
 		bool isAltKeyDown = (::GetAsyncKeyState(VK_MENU) & 0x8000) ? true : false;
 		bool isUseTabStops = m_style.WS().hasLBS_USETABSTOPS();
 
+		float xMargin = m_type == LBType::Menu ? 0.0f : (float)m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
+		float yMargin = xMargin;
+		float xHalfMargin = xMargin / 2;
+
 		std::vector<float> tab_stops;
 		for (uint32_t& ts : m_tab_stops)
 		{
@@ -749,8 +755,9 @@ protected:
 		{
 			const ListBoxExItem& item = m_items.at(i);
 			D2D1_RECT_F rcTxtF(rcPaintF);
-			rcTxtF.left -= (float)xOffset;
-			rcTxtF.top = m_y_start + (m_cyItem * (float)(i - m_topIdx));
+			rcTxtF.left += xMargin;
+			rcTxtF.left -= (float)xHscrollOffset;
+			rcTxtF.top = yMargin + (m_cyItem * (float)(i - m_topIdx));
 			rcTxtF.bottom = rcTxtF.top + m_cyItem;
 			bool isCurSelItem = i == m_curIdx;
 			bool isMouseOverItem = isComboBoxDropDown && i == m_mouseOverItemIdx;
@@ -760,7 +767,7 @@ protected:
 				D2D1_RECT_F rcPat(rcTxtF);
 				if (m_type == LBType::Menu)
 				{
-					rcPat.left += m_cbDim.GetCheckBoxCX() + m_x_start + (m_hasIcons ? m_cxIcon : 0.0f);
+					rcPat.left += m_cbDim.GetCheckBoxCX() + xHalfMargin + (m_hasIcons ? m_cxIcon : 0.0f);
 					rcPat.right -= m_cxMenuRmargin;
 					float y_mrg = (HeightOf(rcPat) - (float)tm.GetHeight()) / 2.0f;
 					rcPat.top += y_mrg;
@@ -871,7 +878,7 @@ protected:
 			{
 				rgbFg = m_xeUI->GetColor(CID::CtrlTxtDis);
 			}
-			rcTxtF.left += m_x_start;
+			rcTxtF.left += xHalfMargin;
 			auto [lhs, rhs] = _SplitOnTab(item.m_string);
 			int idxUnderscore = -1;	// When menu and Alt key down - show item 'hot' key underscored.
 			if (m_type == LBType::Menu)
@@ -1226,7 +1233,8 @@ protected:
 
 	CRect _GetItemRect(size_t idx) const
 	{
-		int y = (int)(m_y_start + (m_cyItem * (idx - m_topIdx)));
+		float yMargin = m_type == LBType::Menu ? 0.0f : (float)m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
+		int y = (int)(yMargin + (m_cyItem * (idx - m_topIdx)));
 		return CRect(0, y, _GetClientRightEdge(), y + (int)(m_cyItem+ 0.5f));
 	}
 
@@ -1246,10 +1254,12 @@ protected:
 	// 0xFFFFFFFF is returned if no item found.
 	size_t _GetItemIndexAtPosition(int x, int y) const
 	{
+		int yMargin = m_type == LBType::Menu ? 0 : m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
 		CRect rcRealClient = _GetRealClientRect();
 		bool isXinRect = (x >= rcRealClient.left && x < rcRealClient.right);
 		bool isYinRect = (y >= rcRealClient.top && y < rcRealClient.bottom);
-		size_t idx = isXinRect && isYinRect && m_cyItem > 0.0f ? m_topIdx + (y / (int)(m_cyItem + 0.5f)) : 0xFFFFFFFF;
+		size_t idx = isXinRect && isYinRect && y >= yMargin && m_cyItem > 0.0f
+				? m_topIdx + ((y - yMargin) / (int)(m_cyItem + 0.5f)) : 0xFFFFFFFF;
 		return idx;
 	}
 

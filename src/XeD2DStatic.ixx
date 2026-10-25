@@ -136,7 +136,14 @@ public:
 		XeASSERT(pRT);
 		std::wstring txt = GetWindowTextStdW(Hwnd());
 		bool hasText = txt.size() > 0;
-		bool hasImage = m_imagePID != PID::None || m_resourceId != 0 || m_hIcon != 0;
+		PID imagePID = m_imagePID;
+		bool hasImage = imagePID != PID::None || m_resourceId != 0 || m_hIcon != 0;
+
+		// Replace App ICON with PID::AppIcon
+		if (hasImage && m_hIcon == 0 && m_resourceId == 128 /* IDR_MAINFRAME */)
+		{
+			imagePID = PID::AppIcon48;
+		}
 		bool isShowImageAndText = hasImage && !m_style.WS().HasSS_ImageStyle();
 		bool isShowImageOnly = hasImage && m_style.WS().HasSS_ImageStyle();
 
@@ -149,7 +156,18 @@ public:
 
 		if (hasImage)
 		{
-			if ((m_resourceId != 0 || m_hIcon != 0) && m_style.WS().HasSS_IconStyle())
+			if (imagePID != PID::None)
+			{
+				// Draw image.
+				bool isImgOnLeftSide = isShowImageOnly ? false : hasText;
+				D2D1_RECT_F rcImg = pRctx->_DrawPID_Image(pRT, imagePID, rcText, isImgOnLeftSide, isEnabled, false);
+				if (!isShowImageOnly && hasText)
+				{
+					// Calculate text box.
+					rcText.left = rcImg.right + m_xTextMargin;
+				}
+			}
+			else if ((m_resourceId != 0 || m_hIcon != 0) && m_style.WS().HasSS_IconStyle())
 			{
 				if (!m_iconBitmap)
 				{
@@ -173,17 +191,6 @@ public:
 						rcIcon.right = rcIcon.left + cyIcon;
 					}
 					_DrawIcon(pRT, rcIcon, m_iconBitmap.Get());
-				}
-			}
-			else if (m_imagePID != PID::None)
-			{
-				// Draw image.
-				bool isImgOnLeftSide = isShowImageOnly ? false : hasText;
-				D2D1_RECT_F rcImg = pRctx->_DrawButtonImage(pRT, m_imagePID, rcText, isImgOnLeftSide, isEnabled, false);
-				if (!isShowImageOnly && hasText)
-				{
-					// Calculate text box.
-					rcText.left = rcImg.right + m_xTextMargin;
 				}
 			}
 		}

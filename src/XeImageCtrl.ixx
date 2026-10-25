@@ -325,11 +325,11 @@ protected:
 		{
 			m_isImageShown = false;
 		}
-		_DrawButtonImage(pRT, PID::eIMGUI_RESET_PNG, RectFfromRect(m_rcReset), true, true, m_eMouseOverBtn == eImgBtnReset);
-		_DrawButtonImage(pRT, PID::eIMGUI_ZOOM_IN_PNG, RectFfromRect(m_rcZoomIn), true, true, m_eMouseOverBtn == eImgBtnZoomIn);
-		_DrawButtonImage(pRT, PID::eIMGUI_ZOOM_OUT_PNG, RectFfromRect(m_rcZoomOut), true, true, m_eMouseOverBtn == eImgBtnZoomOut);
-		_DrawButtonImage(pRT, PID::eIMGUI_ROTATE_LEFT_PNG, RectFfromRect(m_rcRotateLeft), true, true, m_eMouseOverBtn == eImgBtnRotateLeft);
-		_DrawButtonImage(pRT, PID::eIMGUI_ROTATE_RIGHT_PNG, RectFfromRect(m_rcRotateRight), true, true, m_eMouseOverBtn == eImgBtnRotateRight);
+		_DrawPID_Image(pRT, PID::eIMGUI_RESET_PNG, RectFfromRect(m_rcReset), true, true, m_eMouseOverBtn == eImgBtnReset);
+		_DrawPID_Image(pRT, PID::eIMGUI_ZOOM_IN_PNG, RectFfromRect(m_rcZoomIn), true, true, m_eMouseOverBtn == eImgBtnZoomIn);
+		_DrawPID_Image(pRT, PID::eIMGUI_ZOOM_OUT_PNG, RectFfromRect(m_rcZoomOut), true, true, m_eMouseOverBtn == eImgBtnZoomOut);
+		_DrawPID_Image(pRT, PID::eIMGUI_ROTATE_LEFT_PNG, RectFfromRect(m_rcRotateLeft), true, true, m_eMouseOverBtn == eImgBtnRotateLeft);
+		_DrawPID_Image(pRT, PID::eIMGUI_ROTATE_RIGHT_PNG, RectFfromRect(m_rcRotateRight), true, true, m_eMouseOverBtn == eImgBtnRotateRight);
 	}
 
 	void _DrawImg(ID2D1RenderTarget* pRT)

@@ -5,6 +5,8 @@ module;
 #include <dwrite.h>
 #include <d2d1effects.h>
 #include <d2d1_1.h>
+#include <wincodec.h>
+
 
 export module Xe.D2DRenderContext;
 
@@ -380,7 +382,7 @@ public:
 		}
 		if (hasIcon)
 		{
-			_DrawButtonImage(pRT, pid, RectFfromRect(rcIcn), true, true, false);
+			_DrawPID_Image(pRT, pid, RectFfromRect(rcIcn), true, true, false);
 		}
 
 		_CreateAndDrawTextLayout(pRT, filename, rcTxt, rgbTxt, eFont);
@@ -693,7 +695,7 @@ public:
 	// isEnabled		(false) Draw image in "disabled" style (monochrome)
 	// isHovering		Draw image "hot" style.
 	// return image rect.
-	D2D1_RECT_F _DrawButtonImage(ID2D1RenderTarget* pRT, PID imagePID, const D2D1_RECT_F& rcBox,
+	D2D1_RECT_F _DrawPID_Image(ID2D1RenderTarget* pRT, PID imagePID, const D2D1_RECT_F& rcBox,
 		bool isImgOnLeftSide, bool isEnabled, bool isHovering)
 	{
 		IWICFormatConverter* pImg = m_xeUI->D2D_GetImage(imagePID);
@@ -758,11 +760,57 @@ public:
 		return rcImg;
 	}
 
+	HRESULT CreateWICBitmapFromHICON(IWICImagingFactory* pFactory, HICON hIcon, IWICBitmap** ppIBitmap) const
+	{
+		ICONINFO iconInfo;
+		if (!::GetIconInfo(hIcon, &iconInfo)) { return E_FAIL; }
+
+		BITMAP bmp;
+		::GetObjectW(iconInfo.hbmColor, sizeof(BITMAP), &bmp);
+
+		// Set up buffer to hold the pixel data
+		BITMAPINFO bmi = { 0 };
+		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		bmi.bmiHeader.biWidth = bmp.bmWidth;
+		bmi.bmiHeader.biHeight = -bmp.bmHeight; // Top-down
+		bmi.bmiHeader.biPlanes = 1;
+		bmi.bmiHeader.biBitCount = 32;
+		bmi.bmiHeader.biCompression = BI_RGB;
+
+		HDC hdc = ::GetDC(NULL);
+		void* pBits = nullptr;
+		HBITMAP hBmp32 = ::CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pBits, NULL, 0);
+
+		// Copy the original icon pixels out cleanly
+		::GetDIBits(hdc, iconInfo.hbmColor, 0, bmp.bmHeight, pBits, &bmi, DIB_RGB_COLORS);
+
+		// Create the clean WIC bitmap from the raw memory block
+		UINT stride = bmp.bmWidth * 4;
+		UINT bufferSize = stride * bmp.bmHeight;
+		HRESULT hr = pFactory->CreateBitmapFromMemory(
+				bmp.bmWidth,
+				bmp.bmHeight,
+				GUID_WICPixelFormat32bppBGRA,
+				stride,
+				bufferSize,
+				(BYTE*)pBits,
+				ppIBitmap);
+
+		// Clean up GDI handles
+		::DeleteObject(hBmp32);
+		::ReleaseDC(NULL, hdc);
+		::DeleteObject(iconInfo.hbmColor);
+		::DeleteObject(iconInfo.hbmMask);
+
+		return hr;
+	}
+
 	Microsoft::WRL::ComPtr<IWICBitmap> _CreateFromHicon(HICON hIcon) const
 	{
 		Microsoft::WRL::ComPtr<IWICBitmap> d2d_icon_bitmap;
 		IWICImagingFactory* pWICFactory = m_xeUI->D2D_GetWICFactory();
 		HRESULT hr = pWICFactory->CreateBitmapFromHICON(hIcon, d2d_icon_bitmap.GetAddressOf());
+		//HRESULT hr = CreateWICBitmapFromHICON(pWICFactory, hIcon, d2d_icon_bitmap.GetAddressOf());
 		XeASSERT(hr == S_OK);
 		return d2d_icon_bitmap;
 	}

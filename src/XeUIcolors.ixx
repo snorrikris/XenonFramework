@@ -892,47 +892,17 @@ protected:
 		}
 	}
 
-	//void _InitGridPaintObj()
-	//{
-	//	m_gridPaintObj.m_pCellBorderPen = GetPen(CID::GrdExcelBrd);
-	//	m_gridPaintObj.m_pDefBg = GetBrush(CID::GrdCellDefBg);
-	//	m_gridPaintObj.m_pSelCellBg = GetBrush(CID::GrdHdrCurCell);
-	//	m_gridPaintObj.m_rgbDefTxt = GetColor(CID::GrdCellDefTxt);
-	//	m_gridPaintObj.m_pDefTxtPen = GetPen(CID::GrdCellDefTxt);
-	//	m_gridPaintObj.m_pDefTxtBrush = GetBrush(CID::GrdCellDefTxt);
-	//	m_gridPaintObj.m_pDToffsetBg = GetBrush(CID::DateOffsetBg);
-	//	m_gridPaintObj.m_pMoreDataBg = GetBrush(CID::LogEvBg);
-	//	m_gridPaintObj.m_pNoDataBg = GetBrush(CID::MrgLogNoDataBg);
-	//	m_gridPaintObj.m_pHilite1FilterBg = GetBrush(CID::HiliteFilterBg);
-	//	m_gridPaintObj.m_pHilite2FilterBg = GetBrush(CID::Hilite2FilterBg);
-	//	m_gridPaintObj.m_pHilite3FilterBg = GetBrush(CID::Hilite3FilterBg);
-	//	m_gridPaintObj.m_pTimeGapBrush = GetBrush(CID::WarnBg);
-	//	m_gridPaintObj.m_pTimeJumpBrush = GetBrush(CID::ErrorBg);
-	//	m_gridPaintObj.m_pAboveFilteredBrush = GetBrush(CID::LogFilterHdrBg);
-	//	m_gridPaintObj.m_pBlankBg = GetBrush(CID::GrdBlankBG);
-
-	//	m_gridPaintObj.m_pPngMultilineExpBtn = GetPngImage(PID::MultilineExpBtn);
-	//	m_gridPaintObj.m_pPngMultilineClpsBtn = GetPngImage(PID::MultilineClpsBtn);
-	//	m_gridPaintObj.m_pPngSimpleBookmark = GetPngImage(PID::BookmarkTogglePng);
-	//	m_gridPaintObj.m_pPngCommentBookmark = GetPngImage(PID::BookmarkToggleWithCommentPng);
-	//	m_gridPaintObj.m_pSH_DefBg = GetBrush(CID::GrdHdrDefBg);
-	//	m_gridPaintObj.m_pSH_CurRowBg = GetBrush(CID::GrdHdrCurCell);
-	//	m_gridPaintObj.m_pSH_CurRowInActPaneBg = GetBrush(CID::GrdHdrCurCellInActPane);
-	//	m_gridPaintObj.m_rgbSH_DefTxt = GetColor(CID::GrdSHDefTxt);
-	//	m_gridPaintObj.m_rgbSH_CurRowTxt = GetColor(CID::GrdSHCurTxt);
-	//	m_gridPaintObj.m_pThreeDLightPen = GetPen(CID::GrdHdrBrd);
-	//	m_gridPaintObj.m_pThreeDDarkPen = GetPen(CID::GrdHdrBrd);
-	//}
-
 	std::wstring _GetPIDresourceName(PID pid)
 	{
 		switch (pid)
 		{
+		case PID::AppIcon48:					 return L"IDB_APP_ICON_PNG48";
+		case PID::AppIcon32:					 return L"IDB_APP_ICON_PNG32";
+		case PID::AppIcon16:					 return L"IDB_APP_ICON_PNG16";
 		case PID::LogFilterPng:                  return L"LOG_FILTER_PNG";
 		case PID::TimelineCenter:                return L"TL_CENTER_THEME1";
 		case PID::TimelineZoomIn:                return L"TL_ZOOMIN_THEME1";
 		case PID::TimelineZoomOut:               return L"TL_ZOOMOUT_THEME1";
-		case PID::unused5:                       return L"LOG_FILTER_PNG";
 		case PID::eRequested:                    return L"IDB_eRequested";
 		case PID::eQueued:                       return L"IDB_eQueued";
 		case PID::eOpening:                      return L"IDB_eOpening";
@@ -957,7 +927,6 @@ protected:
 		case PID::MergePng:                      return L"TB_PNG_MERGE";
 		case PID::MultilineExpBtn:               return L"MULTILINE_EXP_BTN";
 		case PID::MultilineClpsBtn:              return L"MULTILINE_CLPS_BTN";
-		case PID::unused30:                      return L"LOG_FILTER_PNG";
 		case PID::BookmarkCurrentPng:            return L"BOOKMARK_CURRENT_THEME1";
 		case PID::BookmarkCurrentWithCommentPng: return L"BOOKMARK_CURRENT_WITH_COMMENT_THEME1";
 		case PID::TimeJumpWarningPng:            return L"TIME_JUMP_WARNING_THEME1";

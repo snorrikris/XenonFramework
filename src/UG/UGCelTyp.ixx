@@ -987,7 +987,7 @@ public:
 				rc1.left += 3;
 				//CSize size = pPng->DrawPng(graphics, rc1);
 
-				D2D1_RECT_F rcImg = pRctx->_DrawButtonImage(pRT, cell->GetPngImg(), RectFfromRect(rc1),
+				D2D1_RECT_F rcImg = pRctx->_DrawPID_Image(pRT, cell->GetPngImg(), RectFfromRect(rc1),
 					true, true, false);
 
 				//rect->left += size.cx + 3;

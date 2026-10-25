@@ -1268,34 +1268,27 @@ protected:
 			//-- Draw Icon and buttons into memory DC - note icon has no 'hot' or 'down' image.
 			if (m_style.WS().hasIcon())
 			{
-				if (!m_d2d_icon_bitmap)
-				{
-					m_d2d_icon_bitmap = _CreateFromHicon(m_xeUI->GetAppIconHandle());
-				}
-				if (m_d2d_icon_bitmap)
-				{
-					float cyIcon = HeightOf(rcIcon);
-					float cyIcnOfs = (HeightOf(rcTitle) - cyIcon) / 2;
-					rcIcon.top = rcTitle.top + cyIcnOfs;
-					rcIcon.bottom = rcIcon.top + cyIcon;
-					_DrawIcon(pRT, rcIcon, m_d2d_icon_bitmap.Get());
-				}
+				float cyIcon = HeightOf(rcIcon);
+				float cyIcnOfs = (HeightOf(rcTitle) - cyIcon) / 2;
+				rcIcon.top = rcTitle.top + cyIcnOfs;
+				rcIcon.bottom = rcIcon.top + cyIcon;
+				_DrawPID_Image(pRT, PID::AppIcon32, rcIcon, false, true, false);
 			}
 
 			if (m_style.WS().hasMinimizeBtn())
 			{
 				PID uID_MinZe = m_style.GetMinimizeBtnImg();
-				_DrawButtonImage(pRT, uID_MinZe, rcMinZe, false, true, false);
+				_DrawPID_Image(pRT, uID_MinZe, rcMinZe, false, true, false);
 			}
 
 			if (m_style.WS().hasMaximizeBtn())
 			{
 				PID uID_MaxZe = m_style.GetMaximizeBtnImg();
-				_DrawButtonImage(pRT, uID_MaxZe, rcMaxZe, false, true, false);
+				_DrawPID_Image(pRT, uID_MaxZe, rcMaxZe, false, true, false);
 			}
 
 			PID uID_Close = m_style.GetCloseBtnImg();
-			_DrawButtonImage(pRT, uID_Close, rcClose, false, true, false);
+			_DrawPID_Image(pRT, uID_Close, rcClose, false, true, false);
 		}
 
 		//-- Paint left, right and bottom borders if needed.

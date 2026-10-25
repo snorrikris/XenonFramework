@@ -841,7 +841,7 @@ protected:
 				}
 				bool isDrawEnabled = !item.m_item_data.m_isItemDisabled;
 				bool isOnLeft = true;
-				D2D1_RECT_F rcImg = _DrawButtonImage(pRT, item.m_item_data.GetIconPID(), rc1,
+				D2D1_RECT_F rcImg = _DrawPID_Image(pRT, item.m_item_data.GetIconPID(), rc1,
 						isOnLeft, isDrawEnabled, false);
 				if (m_type != LBType::Menu)
 				{

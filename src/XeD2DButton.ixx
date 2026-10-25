@@ -394,7 +394,7 @@ public:
 			// Draw image.
 			bool isImgOnLeftSide = isShowImageOnly ? false : hasText /*&& m_style.HasImageStyle()*/;
 			D2D1_RECT_F rcImgBox = m_d2dstyle.IsMaxImgSize() ? rcClient : rcText;
-			D2D1_RECT_F rcImg = pRctx->_DrawButtonImage(pRT, m_imagePID, rcImgBox, isImgOnLeftSide, isEnabled, isHovering);
+			D2D1_RECT_F rcImg = pRctx->_DrawPID_Image(pRT, m_imagePID, rcImgBox, isImgOnLeftSide, isEnabled, isHovering);
 			if (!isShowImageOnly && hasText)
 			{
 				// Calculate text box.

@@ -346,7 +346,7 @@ BOOL CreateGrid(DWORD dwStyle, DWORD dwExStyle, const CRect& rect, HWND hParentW
 			m_GI->m_sideHdgWnd = m_CUGSideHdg->GetSafeHwnd();
 
 			m_isComponentsCreated = true;
-			m_GI->m_editCtrl = m_defEditCtrl.m_hWnd;
+			m_GI->m_editCtrl = m_defEditCtrl.GetEditControlWindowHandle();
 
 			OnSetup();
 			OnSheetSetup(0);
@@ -597,7 +597,7 @@ protected:
 		//#endif
 
 		//setup the default edit control
-		if (m_defEditCtrl.CreateUGEdit(rect, Hwnd(), UG_EDITID, true) == false) {
+		if (m_defEditCtrl.CreateUGEdit(rect, Hwnd(), UG_EDITID) == false) {
 			//fail
 		}
 		//if(m_defEditCtrl.Create(WS_CHILD|WS_HSCROLL|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL,rect,CWnd::FromHandle(Hwnd()), UG_EDITID) == FALSE) {
@@ -6236,7 +6236,7 @@ int SetNumberSheets(int numSheets)
 		temp[loop]->m_xeUI					= m_xeUI;
 		//temp[loop]->m_CUGMem->m_ctrl		= this;
 		temp[loop]->m_CUGMem->m_GI			= temp[loop];
-		temp[loop]->m_editCtrl				= m_defEditCtrl.m_hWnd;
+		temp[loop]->m_editCtrl				= m_defEditCtrl.GetEditControlWindowHandle();
 		//temp[loop]->m_maskedEditCtrl		= &m_defMaskedEditCtrl;
 		// switch all of the grid's components to the new sheet
 		m_GI = temp[loop];

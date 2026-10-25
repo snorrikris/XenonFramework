@@ -52,6 +52,7 @@ import Xe.Helpers;
 import Xe.StringTools;
 import Xe.UGGridInfoIF;
 import Xe.UGCelTyp;
+import Xe.ScintillaEditControl;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -59,149 +60,45 @@ import Xe.UGCelTyp;
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Name of property that is stored in the "window" handle by Windows.
-// We store the original window proc pointer - when we "subclass" the control.
-constexpr wchar_t XEPROP_ORIGWNDPROC[] = L"XePropOrigWndProc";
-LRESULT CALLBACK EditCtrlSubclass_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-//class CUGGridInfo;
-
 export class CUGEdit
 {
 public:
 	CUGGridInfoIF* m_GI = nullptr;
-	HWND m_hWnd = 0;
 
 protected:
 	// based on user action destination cell needs to be set 
-	int m_continueCol;
-	long m_continueRow;
-	BOOL m_cancel;
-	BOOL m_continueFlag;
+	int m_continueCol = 0;
+	long m_continueRow = 0;
+	BOOL m_cancel = FALSE;
+	BOOL m_continueFlag = FALSE;
 
 	// member variable that keeps track of the last pressed key
-	UINT m_lastKey;
+	UINT m_lastKey = 0;
 
 	clock_t m_lastDblClickTicks = 0;
 
-	bool m_isUseScintilla = false;
+	std::unique_ptr<CXeScintillaEditControl> m_scintilla;
 
 public:
-	CUGEdit() : m_continueCol(0), m_continueRow(0), m_continueFlag(0), m_cancel(0), m_lastKey(0) {}
+	CUGEdit() {}
 	~CUGEdit() {}
 
-	bool CreateUGEdit(const CRect& rect, HWND hParentWnd, UINT uID, bool isUseScintilla)
+	bool CreateUGEdit(const CRect& rect, HWND hParentWnd, UINT uID/*, bool isUseScintilla*/)
 	{
 		XeASSERT(m_GI);
 
-		m_isUseScintilla = isUseScintilla;
-
-		HINSTANCE hInstance = m_GI->GetXeUI()->GetInstanceHandle();
-
-		if (m_isUseScintilla)
-		{
-			DWORD dwStyle = WS_CHILD | ES_AUTOHSCROLL/*WS_HSCROLL | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL*/;
-			m_hWnd = ::CreateWindowExW(0, L"Scintilla", nullptr, dwStyle,
-				rect.left, rect.top, rect.Width(), rect.Height(),
-				hParentWnd, (HMENU)(uint64_t)uID, hInstance, this);
-
-			// Note - uncomment following line to enable DirectWrite. (select not painted correctly, more flickering)
-			//::SendMessage(m_hWnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE, 0);
-
-			::SendMessage(m_hWnd, SCI_SETMARGINS, 0, 0);
-
-			_UpdateScintillaColors();
-			_UpdateScintillaFont();
-		}
-		else
-		{
-			DWORD dwStyle = WS_CHILD | ES_AUTOHSCROLL/*WS_HSCROLL | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL*/;
-			m_hWnd = ::CreateWindowExW(0, L"Edit", nullptr, dwStyle,
-				rect.left, rect.top, rect.Width(), rect.Height(),
-				hParentWnd, (HMENU)(uint64_t)uID, hInstance, this);
-		}
-
-		::SetWindowLongPtr(m_hWnd, GWLP_USERDATA, (LPARAM)this);
-
-		WNDPROC origWndProc = (WNDPROC)::SetWindowLongPtrW(m_hWnd, GWLP_WNDPROC, (DWORD_PTR)EditCtrlSubclass_WndProc);
-
-		::SetPropW(m_hWnd, XEPROP_ORIGWNDPROC, origWndProc);
-
-		return m_hWnd != 0;
+		m_scintilla = std::make_unique<CXeScintillaEditControl>(m_GI->GetXeUI());
+		m_scintilla->Create(WS_CHILD | ES_AUTOHSCROLL, hParentWnd, rect, uID, L"");
+		m_scintilla->SetProcessScintillWndMessageCallback(
+				[this](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+				{ return _OnMessage(hwnd, msg, wParam, lParam); });
+		return m_scintilla->GetSafeHwnd() != 0;
 	}
 
-#pragma region SetScintillaText
-protected:
-	LRESULT _OnSetText(WPARAM wParam, LPARAM lParam)
+	HWND GetEditControlWindowHandle() const
 	{
-		const wchar_t* pWStr = (const wchar_t*)lParam;
-		size_t len = wcslen(pWStr);
-		std::wstring txtW(pWStr, len);
-		std::string txtUTF8 = xet::toUTF8(txtW);
-		_SetText(txtUTF8.c_str(), txtUTF8.size(), false);
-		_UpdateScintillaColors();
-		_UpdateScintillaFont();
-		::RedrawWindow(m_hWnd, nullptr, nullptr, RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_NOCHILDREN | RDW_UPDATENOW);
-		return (TRUE);
+		return m_scintilla->GetSafeHwnd();
 	}
-
-	void _SetText(const void* pText, size_t text_len, bool isReadOnly)
-	{
-		::SendMessage(m_hWnd, SCI_CLEARALL, 0, 0);
-		::SendMessage(m_hWnd, EM_EMPTYUNDOBUFFER, 0, 0);
-		::SendMessage(m_hWnd, SCI_SETSAVEPOINT, 0, 0);
-
-		::SendMessage(m_hWnd, SCI_CANCEL, 0, 0);
-		::SendMessage(m_hWnd, SCI_SETUNDOCOLLECTION, 0, 0);
-
-		::SendMessage(m_hWnd, SCI_ADDTEXT, text_len, reinterpret_cast<LPARAM>(pText));
-		::SendMessage(m_hWnd, SCI_SETHSCROLLBAR, 1, 0);
-		::SendMessage(m_hWnd, SCI_SETVSCROLLBAR, 1, 0);
-		::SendMessage(m_hWnd, SCI_SETSCROLLWIDTHTRACKING, 1, 0);
-		::SendMessage(m_hWnd, SCI_SETSCROLLWIDTH, 5, 0);
-
-		::SendMessage(m_hWnd, SCI_SETUNDOCOLLECTION, 1, 0);
-		::SendMessage(m_hWnd, EM_EMPTYUNDOBUFFER, 0, 0);
-		::SendMessage(m_hWnd, SCI_SETSAVEPOINT, 0, 0);
-		if (isReadOnly)
-		{
-			::SendMessage(m_hWnd, SCI_SETREADONLY, 1, 0);
-		}
-		::SendMessage(m_hWnd, SCI_GOTOPOS, 0, 0);
-	}
-#pragma endregion SetScintillaText
-
-#pragma region SetScintillaFontAndColors
-protected:
-	void _UpdateScintillaColors()
-	{
-		const COLORREF bg = m_GI->GetXeUI()->GetColor(CID::GrdCellDefBg);
-		const COLORREF fg = m_GI->GetXeUI()->GetColor(CID::GrdCellDefTxt);
-		const COLORREF sel_bg = m_GI->GetXeUI()->GetColor(CID::GrdSelTxtBg);
-		const COLORREF sel_fg = m_GI->GetXeUI()->GetColor(CID::GrdSelTxtFg);
-		::SendMessage(m_hWnd, SCI_STYLESETFORE, STYLE_DEFAULT, fg);
-		::SendMessage(m_hWnd, SCI_STYLESETBACK, STYLE_DEFAULT, bg);
-		::SendMessage(m_hWnd, SCI_SETCARETFORE, fg, 0);
-		::SendMessage(m_hWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_TEXT, sel_fg);
-		::SendMessage(m_hWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_BACK, sel_bg);
-		::SendMessage(m_hWnd, SCI_STYLECLEARALL, 0, 0);	// Copies global style to all others
-	}
-
-	void _UpdateScintillaFont()
-	{
-		XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
-		const XeFontMetrics& tm = m_GI->GetXeUI()->GetFontMetric(dpi, EXE_FONT::eUI_Font);
-		_SetScintillaFont(tm.m_fontName.c_str(), tm.m_fontPointSize);
-	}
-
-	void _SetScintillaFont(const wchar_t* pFontName, int size)
-	{
-		std::string fontname = xet::to_astr(pFontName);
-		::SendMessage(m_hWnd, SCI_STYLESETFONT, STYLE_DEFAULT, reinterpret_cast<LPARAM>(fontname.c_str()));
-		::SendMessage(m_hWnd, SCI_STYLESETSIZE, STYLE_DEFAULT, size);
-		::SendMessage(m_hWnd, SCI_STYLECLEARALL, 0, 0);	// Copies global style to all others
-	}
-#pragma endregion SetScintillaFontAndColors
 
 public:
 	std::tuple<bool, LRESULT> _OnMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -209,16 +106,8 @@ public:
 		XeASSERT(m_GI);
 		switch (message)
 		{
-		case WM_SETTEXT:
-			if (m_isUseScintilla)
-			{
-				_OnSetText(wParam, lParam);
-				return std::make_tuple(false, 0);	// Don't allow the edit control to process the message.
-			}
-			break;
-
 		case WM_SETFOCUS:
-			::SendMessageW(m_hWnd, EM_SETSEL, 0, -1);
+			::SendMessageW(hWnd, EM_SETSEL, 0, -1);
 
 			m_lastKey = 0;
 			m_cancel = FALSE;
@@ -255,14 +144,14 @@ public:
 				}
 			}
 
-			std::wstring str = GetWindowTextStdW(m_hWnd);
+			std::wstring str = GetWindowTextStdW(hWnd);
 
 			if (m_GI->EditCtrlFinished(str.c_str(), m_cancel, m_continueFlag, m_continueCol, m_continueRow) == FALSE)
 			{
 				m_GI->GotoCell(m_GI->EditCol(), m_GI->EditRow());
-				::SetCapture(m_hWnd);
+				::SetCapture(hWnd);
 				::ReleaseCapture();
-				::SetFocus(m_hWnd);
+				::SetFocus(hWnd);
 			}
 		} break;
 
@@ -336,14 +225,17 @@ public:
 				long row = m_GI->GetCurrentRow();
 
 				// First the datasource has a look ...
-				if (m_GI->DefDataSource()->OnEditVerify(col, row, m_hWnd, &nChar) == FALSE
-					|| m_GI->OnEditVerify(col, row, m_hWnd, &nChar) == FALSE)
+				if (m_GI->DefDataSource()->OnEditVerify(col, row, hWnd, &nChar) == FALSE
+						|| m_GI->OnEditVerify(col, row, hWnd, &nChar) == FALSE)
 				{
 					return std::make_tuple(false, 0);	// Don't allow the edit control to process the message.
 				}
 			} break;
+			case VK_PRIOR:
+			case VK_NEXT:
+				return std::make_tuple(false, 0);	// Don't allow the edit control to process the message.
 			}	// endof: switch (wParam)
-			break;
+			break; // endof: case WM_KEYDOWN
 
 		case WM_CHAR: {
 			UINT nChar = (UINT)wParam;
@@ -354,8 +246,8 @@ public:
 				// Allow OnEditVerify a look at the char... First the datasource has a look ... then the ctrl class
 				int col = m_GI->GetCurrentCol();
 				long row = m_GI->GetCurrentRow();
-				if (m_GI->DefDataSource()->OnEditVerify(col, row, m_hWnd, &nChar) == FALSE
-					|| m_GI->OnEditVerify(col, row, m_hWnd, &nChar) == FALSE)
+				if (m_GI->DefDataSource()->OnEditVerify(col, row, hWnd, &nChar) == FALSE
+						|| m_GI->OnEditVerify(col, row, hWnd, &nChar) == FALSE)
 				{
 					return std::make_tuple(false, 0);	// Don't allow the edit control to process the message.
 				}
@@ -372,7 +264,7 @@ public:
 			clock_t ticksSinceLastDblClick = nowTicks - m_lastDblClickTicks;
 			if (ticksSinceLastDblClick < dblClickTicks) // Is Triple click detected?
 			{
-				::SendMessageW(m_hWnd, EM_SETSEL, 0, -1);
+				::SendMessageW(hWnd, EM_SETSEL, 0, -1);
 				m_lastDblClickTicks = 0;
 			}
 		} break;
@@ -381,29 +273,3 @@ public:
 	}
 };
 
-LRESULT CALLBACK EditCtrlSubclass_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	WNDPROC origWndProc = (WNDPROC)::GetPropW(hwnd, XEPROP_ORIGWNDPROC);
-
-	CUGEdit* pThis = (CUGEdit*)::GetWindowLongPtr(hwnd, GWLP_USERDATA);
-	XeASSERT(origWndProc != nullptr && pThis != nullptr);
-
-	if (!(origWndProc && pThis))
-	{
-		return ::DefWindowProc(hwnd, msg, wParam, lParam);
-	}
-	if (msg == WM_NCDESTROY)
-	{
-		// Restore original window proc pointer and delete the special property.
-		::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<INT_PTR>(origWndProc));
-		::RemovePropW(hwnd, XEPROP_ORIGWNDPROC);
-	}
-
-	auto [isProcessByEditCtrl, lResult] = pThis->_OnMessage(hwnd, msg, wParam, lParam);
-
-	if (isProcessByEditCtrl)
-	{
-		lResult = ::CallWindowProcW(origWndProc, hwnd, msg, wParam, lParam);
-	}
-	return lResult;
-}

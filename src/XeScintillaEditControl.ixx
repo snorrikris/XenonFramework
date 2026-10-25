@@ -250,8 +250,9 @@ public:
 			// Disable the Scintilla context menu.
 			::SendMessage(m_hSciEdWnd, SCI_USEPOPUP, SC_POPUP_NEVER, 0);
 
-			// Note - uncomment following line to enable DirectWrite. (select not painted correctly, more flickering)
+			// Note - enable DirectWrite. (select not painted correctly, more flickering)
 			::SendMessage(m_hSciEdWnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE, 0);
+			::SendMessage(m_hSciEdWnd, SCI_SETBUFFEREDDRAW, TRUE, 0);
 
 			::SendMessage(m_hSciEdWnd, SCI_SETMARGINS, 0, 0);
 
@@ -627,14 +628,16 @@ public:
 public:
 	void UpdateColors()
 	{
+		// Note - to future self - setting selection FG results in no visible selected text.
+		// (Scintilla paints only the BG, the text is not visible).
 		const COLORREF bg = m_xeUI->GetColor(CID::GrdCellDefBg);
 		const COLORREF fg = m_xeUI->GetColor(CID::GrdCellDefTxt);
 		const COLORREF sel_bg = m_xeUI->GetColor(CID::GrdSelTxtBg);
-		const COLORREF sel_fg = m_xeUI->GetColor(CID::GrdSelTxtFg);
+		//const COLORREF sel_fg = m_xeUI->GetColor(CID::GrdSelTxtFg);
 		::SendMessage(m_hSciEdWnd, SCI_STYLESETFORE, STYLE_DEFAULT, fg);
 		::SendMessage(m_hSciEdWnd, SCI_STYLESETBACK, STYLE_DEFAULT, bg);
 		::SendMessage(m_hSciEdWnd, SCI_SETCARETFORE, fg, 0);
-		::SendMessage(m_hSciEdWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_TEXT, sel_fg);
+		//::SendMessage(m_hSciEdWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_TEXT, sel_fg);
 		::SendMessage(m_hSciEdWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_BACK, sel_bg);
 		::SendMessage(m_hSciEdWnd, SCI_STYLECLEARALL, 0, 0);	// Copies global style to all others
 	}

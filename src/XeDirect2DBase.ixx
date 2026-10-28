@@ -1149,10 +1149,18 @@ public:
 
 	WINDOWPLACEMENT GetCurrentWindowPlacement()
 	{
-		WINDOWPLACEMENT	wp;
-		::ZeroMemory(&wp, sizeof(wp));
-		wp.length = sizeof wp;
+		WINDOWPLACEMENT	wp{ 0 };
+		wp.length = sizeof(wp);
 		::GetWindowPlacement(m_hWnd, &wp);
+		if (m_dpi != XeDPI(96))
+		{
+			// Need to scale window rect for "normal" DPI (96).
+			// - because SetWindowPlacement does not work correctly for non 96 DPI monitors.
+			XeDPI_Calculator dpi_calc(m_dpi, XeDPI(96));
+			CRect rcNP(wp.rcNormalPosition);
+			wp.rcNormalPosition.right = wp.rcNormalPosition.left + dpi_calc.CalculateScalar(rcNP.Width());
+			wp.rcNormalPosition.bottom = wp.rcNormalPosition.top + dpi_calc.CalculateScalar(rcNP.Height());
+		}
 		return wp;
 	}
 #pragma endregion MFC_Functions_Replacements

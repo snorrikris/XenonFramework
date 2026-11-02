@@ -24,6 +24,12 @@ public:
 	{
 	}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 	virtual bool LoadFile(const std::wstring& pathname) = 0;
 
 	virtual dsid_t GetDataSourceId() const override { return m_dsId; }

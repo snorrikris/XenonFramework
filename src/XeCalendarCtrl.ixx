@@ -425,7 +425,7 @@ public:
 	}
 
 	// CalculateControlSize calculates UI size. Can be called before window created.
-	CSize CalculateControlSize(XeDPI dpi)
+	virtual CSize CalculateUI(XeDPI dpi) override
 	{
 		m_dpi = dpi;
 		XeASSERT(m_dpi.is_valid());
@@ -1705,7 +1705,7 @@ public:
 		CXeCalendarCtrl calendar_ctrl(m_xeUI, mode);
 		calendar_ctrl.SetDateTimes(dates.m_ftFrom, dates.m_ftTo);
 		XeDPI dpi(::GetDpiForWindow(hParent));
-		CSize sCtrl = calendar_ctrl.CalculateControlSize(dpi);
+		CSize sCtrl = calendar_ctrl.CalculateUI(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rcCtrl(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &calendar_ctrl, XeShowPopup::FadeIn80);

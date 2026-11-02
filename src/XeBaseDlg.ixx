@@ -299,6 +299,17 @@ protected:
 
 #pragma region Create
 public:
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		std::vector<CXeD2DCtrlBase*> all_controls = _GetAllControls();
+		for (CXeD2DCtrlBase* pCtrl : all_controls)
+		{
+			pCtrl->CalculateUI(dpi);
+		}
+		return { 0, 0 };
+	}
+
 	// Callback - needed when dialog is mode-less (non modal dialogs)
 	// Dialog creator needs to supply this callback pointer.
 	// Called after 'this' window destroyed - creator should delete 'this'.
@@ -798,7 +809,7 @@ protected:
 	void _CreateDurationControl(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		auto pc = std::make_unique<CXeDurationCtrl>(m_xeUI, DurCtrlMode::DurationSM2);
-		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateControlSize(m_dpi));
+		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateUI(m_dpi));
 		pc->Create(style, rcWanted, Hwnd(), uID, nullptr);
 		m_durationcontrols.push_back(std::move(pc));
 	}
@@ -806,7 +817,7 @@ protected:
 	void _CreateCalendarControl(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		auto pc = std::make_unique<CXeCalendarCtrl>(m_xeUI, CalCtrlMode::SimpleDateTimeSM2);
-		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateControlSize(m_dpi));
+		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateUI(m_dpi));
 		pc->Create(style, rcWanted, Hwnd(), uID, nullptr);
 		m_calendarcontrols.push_back(std::move(pc));
 	}
@@ -1481,6 +1492,8 @@ protected:
 
 		LRESULT result = CXeD2DWndBase::_OnDpiChanged(hwnd, wParam, lParam);
 
+		CalculateUI(m_dpi);
+
 		_ScaleControlsOnDPIchange(old_dpi);
 
 		return result;
@@ -1492,6 +1505,8 @@ protected:
 		XeDPI old_dpi = m_dpi;
 
 		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
+
+		CalculateUI(m_dpi);
 
 		_ScaleControlsOnDPIchange(old_dpi);
 

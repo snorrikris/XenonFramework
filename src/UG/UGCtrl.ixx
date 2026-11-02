@@ -362,6 +362,12 @@ BOOL CreateGrid(DWORD dwStyle, DWORD dwExStyle, const CRect& rect, HWND hParentW
 	return hWnd != 0;
 }
 
+virtual CSize CalculateUI(XeDPI dpi) override
+{
+	m_dpi = dpi;
+	return { 0, 0 };
+}
+
 protected:
 	bool _CreateInternalObjects()
 	{

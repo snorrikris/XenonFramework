@@ -521,6 +521,12 @@ public:
 			m_selectedContextMenuItem = selectedContextMenuItem;
 		}
 	}
+
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
 #pragma endregion Create
 
 #pragma region Misc

@@ -471,7 +471,7 @@ public:
 	void SetReadOnly() { m_isReadOnly = true; }
 
 	// CalculateControlSize calculates UI size. Can be called before window created.
-	CSize CalculateControlSize(XeDPI dpi)
+	virtual CSize CalculateUI(XeDPI dpi) override
 	{
 		m_dpi = dpi;
 		XeASSERT(m_dpi.is_valid());
@@ -1035,7 +1035,7 @@ public:
 		CXeDurationCtrl duration_ctrl(m_xeUI, mode);
 		duration_ctrl.SetDuration(dur);
 		XeDPI dpi(::GetDpiForWindow(hParent));
-		CSize sCtrl = duration_ctrl.CalculateControlSize(dpi);
+		CSize sCtrl = duration_ctrl.CalculateUI(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rcCtrl(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &duration_ctrl, XeShowPopup::FadeIn80);

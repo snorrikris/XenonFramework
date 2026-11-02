@@ -428,7 +428,7 @@ public:
 	}
 
 	// CalculateControlSize calculates UI size. Can be called before window created.
-	CSize CalculateControlSize(XeDPI dpi)
+	virtual CSize CalculateUI(XeDPI dpi) override
 	{
 		m_dpi = dpi;
 		XeASSERT(m_dpi.is_valid());
@@ -1557,7 +1557,7 @@ public:
 		color_picker.BEFORE = color_picker.SELCOL;
 		color_picker.m_notifyChangeWndSizeMsg = NF_POPUP_WND_SIZE_CHANGE;
 		XeDPI dpi(::GetDpiForWindow(hParent));
-		CSize sCtrl = color_picker.CalculateControlSize(dpi);
+		CSize sCtrl = color_picker.CalculateUI(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rPicker(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &color_picker, XeShowPopup::FadeIn80);

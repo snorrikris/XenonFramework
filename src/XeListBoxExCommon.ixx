@@ -400,6 +400,12 @@ protected:
 		_RedrawDirectly();
 	}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 	void _CalculateUI()
 	{
 		_InitializeLBitemUIsize();

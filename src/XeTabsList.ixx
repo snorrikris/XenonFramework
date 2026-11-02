@@ -711,15 +711,14 @@ protected:
 
 #pragma region CalculateUI
 public:
-	void CalculateUI(int cxVw)
+	void CalculateTabsVwUI(int cxVw)
 	{
 		m_cxVw = cxVw;
-		m_cyTabRow = _GetTabViewRowHeight();
 		_RecalculateTabsViewUI();
 	}
 
 	// Return true if height changed.
-	bool RecalculateUI()
+	bool RecalculateTabsVwUI()
 	{
 		int cyBefore = m_cyTabView;
 		_RecalculateTabsViewUI();
@@ -789,12 +788,6 @@ protected:
 	static CSize _GetTabViewXscrollButtonSize() { return CSize(15, 20); }
 	static CSize _GetTabViewCloseAndPinButtonSize() { return CSize(15, 15); }
 
-	int _GetTabViewRowHeight() const
-	{
-		XeDPI dpi(::GetDpiForWindow(m_hParent));
-		return std::max((int)20, m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font).GetHeight()) + c_cyTEXT_Y_MARGIN;
-	}
-
 	void _RecalculateTabsViewUI()
 	{
 		/* *** Fitting model ***
@@ -804,10 +797,8 @@ protected:
 		* pinned tabs. In this case all unpinned tabs occupy the bottom row.
 		*/
 
-		if (m_cyTabRow == 0)
-		{
-			m_cyTabRow = _GetTabViewRowHeight();
-		}
+		XeDPI dpi(::GetDpiForWindow(m_hParent));
+		m_cyTabRow = std::max((int)20, m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font).GetHeight()) + c_cyTEXT_Y_MARGIN;
 
 		m_isOneRowUI = true;	// Assume that one row for UI is enough.
 		int x_firstTabAfterLB = _SetTabListUIbuttonRects(0 /*row*/);
@@ -819,7 +810,6 @@ protected:
 		int cxForOneRow = listBtn.cx;
 		int cxUnpinnedTabsTotal = 0;
 		int numPinnedTabs = 0, numUnpinnedTabs = 0;
-		XeDPI dpi(::GetDpiForWindow(m_hParent));
 		for (CVwInfo& tabInfo : m_list)
 		{
 			XeASSERT(tabInfo.m_pView);

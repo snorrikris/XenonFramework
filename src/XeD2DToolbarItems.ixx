@@ -193,7 +193,7 @@ export struct XETBItem_Menu : public XETBItem
 		if (m_isVisible)
 		{
 			CSize sizeTxt = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, m_sText.c_str());
-			cxItem = sizeTxt.cx + 6;
+			cxItem = sizeTxt.cx + dpi.size_to_pixels(6);
 			cyItem = sizeTxt.cy;
 		}
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);
@@ -394,6 +394,10 @@ export struct XETBItem_Button : public XETBItem
 			cxItem = m_itemType == XETBItemType::PNG_NRW_BUTTON ? 20 : 20 + 4;
 			cyItem = m_itemType == XETBItemType::PNG_NRW_BUTTON ? 24 : 20 + 4;
 		}
+		if (m_button_object->GetSafeHwnd())
+		{
+			m_button_object->CalculateUI(dpi);
+		}
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);
 	}
 
@@ -496,7 +500,7 @@ export struct XETBItem_Button : public XETBItem
 	}
 };
 
-export class CXeTB_DropListPopup : public CXePopupCtrl //, public CWnd
+export class CXeTB_DropListPopup : public CXePopupCtrl
 {
 public:
 	std::unique_ptr<CXeListBoxExCommon> m_cmn;
@@ -586,6 +590,10 @@ export struct XETBItem_DropButton : public XETBItem
 	{
 		int cxItem = m_isVisible ? 20 + 4 + m_xeUI->GetUIValue(UIV::cxComboBoxButton, dpi) : 0;
 		int cyItem = 20 + 4;
+		if (m_button_object->GetSafeHwnd())
+		{
+			m_button_object->CalculateUI(dpi);
+		}
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);
 	}
 
@@ -673,6 +681,10 @@ export struct XETBItem_ComboBox : public XETBItem
 	virtual int CalculateItemRect(int x, int cyTopMargin, int cyTB, XeDPI dpi) override
 	{
 		int cxItem = m_isVisible ? m_combobox_size.cx : 0, cyItem = cyTB;
+		if (m_combobox_object->GetSafeHwnd())
+		{
+			m_combobox_object->CalculateUI(dpi);
+		}
 		return _CalculateItemRectVcenter(x, cyTopMargin, cyTB, cxItem, cyItem);
 	}
 

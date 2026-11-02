@@ -108,6 +108,13 @@ public:
 		m_listTabs->OnTabViewCreated(m_hParentOfViews, m_uViewDlgCtrlId);
 		m_fInitialUpdateDone = TRUE;
 	}
+
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		// Note - _OnDpiChangedAfterParent will be called for all views (that will call CalculateUI for all children).
+		return { 0, 0 };
+	}
 #pragma endregion Creation
 
 #pragma region Misc
@@ -177,7 +184,7 @@ public:
 				|| m_xeUI->IsFontSettingsChanged(chg_settings))
 		{
 			m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"GeneralSettings"].Get(L"UseTextColorForFileInTabTitle").getBool();
-			m_listTabs->CalculateUI(m_listTabs->GetTabViewWidth());	// Recalculate tab row height.
+			m_listTabs->CalculateTabsVwUI(m_listTabs->GetTabViewWidth());	// Recalculate tab row height.
 			_RecalculateUIandRepositionWindowsIfNeeded();
 		}
 		if (chg_settings.IsChanged(L"Colors", L"Color"))
@@ -194,7 +201,7 @@ protected:
 		//int cy = GET_Y_LPARAM(lParam);
 		if (m_fInitialUpdateDone)	// Initialized?
 		{
-			m_listTabs->CalculateUI(cx);
+			m_listTabs->CalculateTabsVwUI(cx);
 			m_listTabs->MakeCurrentTabVisible(_GetCurrentView());
 			_RedrawDirectly();
 		}
@@ -204,7 +211,6 @@ protected:
 	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam) override
 	{
 		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
-		m_listTabs->CalculateUI(m_listTabs->GetTabViewWidth());	// Recalculate tab row height.
 		_RecalculateUIandRepositionWindowsIfNeeded();
 		return result;
 	}
@@ -687,7 +693,7 @@ protected:
 		_ShowView(pCurView, true);
 		m_pMainFrm->RecalculateWindowsRects();
 		CRect rcTabVw = m_pMainFrm->GetViewWindowRect(m_uTabVwDlgCtrlId);
-		m_listTabs->CalculateUI(rcTabVw.Width());
+		m_listTabs->CalculateTabsVwUI(rcTabVw.Width());
 		m_listTabs->MakeCurrentTabVisible(_GetCurrentView());
 		m_pMainFrm->RecalculateWindowsRects();
 		_SetThisTabViewPosition();
@@ -707,7 +713,7 @@ protected:
 	{
 		if (::GetDlgCtrlID(Hwnd()) == m_uTabVwDlgCtrlId)	// Is 'this' view visible?
 		{
-			bool isTabHeightChanged = m_listTabs->RecalculateUI();
+			bool isTabHeightChanged = m_listTabs->RecalculateTabsVwUI();
 			CXeFileVwIF* pCurView = _GetCurrentView();
 			if (pCurView)
 			{

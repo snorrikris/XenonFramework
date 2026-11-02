@@ -75,6 +75,13 @@ public:
 #pragma endregion Create
 
 #pragma region CalculateUI
+public:
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 protected:
 	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
 	{

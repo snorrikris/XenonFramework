@@ -114,6 +114,23 @@ public:
 		}
 	}
 
+	/// <summary>
+	/// Calculate the window UI (if any) based on supplied DPI value.
+	/// All window types must implement this
+	/// - the minimal implementation should store the dpi into m_dpi and return {0,0}.
+	/// <para>
+	/// Note - CalculateUI is called when DPI value is changing (window moved to an other monitor with different DPI than current one).
+	/// </para>
+	/// <para>
+	/// Note - CalculateUI can be called before the window is created
+	/// - when the parent needs to know how big a window to create.
+	/// </para>
+	/// </summary>
+	/// <param name="dpi">The dots per inch value of the monitor where the window is/will be shown.
+	/// 96 is a "normal" DPI monitor.</param>
+	/// <returns>Return the size of the calculated UI - or {0,0} if unknown or don't care.</returns>
+	virtual CSize CalculateUI(XeDPI dpi) = 0;
+
 	HWND CreateD2DWindow(DWORD dwExStyle, const std::wstring& class_name, const wchar_t* pTitle, DWORD dwStyle,
 			const CRect& rcWnd, HWND hParentWnd, UINT uID, bool isEnableTooltip = false)
 	{

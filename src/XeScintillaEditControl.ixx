@@ -279,6 +279,12 @@ public:
 		return hWnd != 0;
 	}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 protected:
 	virtual LRESULT _OnDestroy() override
 	{

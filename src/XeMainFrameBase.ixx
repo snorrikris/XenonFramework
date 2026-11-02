@@ -203,6 +203,20 @@ public:
 		return hWnd != 0;
 	}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		if (m_pToolBar.get())
+		{
+			m_pToolBar->CalculateUI(dpi);
+		}
+		for (auto& pTabView : m_tabViews)
+		{
+			pTabView->CalculateUI(dpi);
+		}
+		return { 0, 0 };
+	}
+
 protected:
 	// Derived class should override this and process command line parameters.
 	virtual void _ProcessCommandLine(const CXeCommandLineInfo& cmdInfo)
@@ -232,6 +246,8 @@ protected:
 	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam) override
 	{
 		LRESULT result = CXeD2DWndBase::_OnDpiChanged(hwnd, wParam, lParam);
+		m_pToolBar->RecalculateItems(m_dpi);
+		m_style.SetToolbarSize(m_pToolBar->GetToolBarSize(), m_dpi);
 		RepositionWindows();
 		return result;
 	}
@@ -322,7 +338,7 @@ protected:
 		// Create toolbar for custom frame NC area.
 		m_pToolBar->Create(hwnd, CRect(), 201, m_uIDR_MAINFRAME, true);
 		_OnCreateToolbar();
-		m_pToolBar->RecalculateItems();
+		m_pToolBar->RecalculateItems(m_dpi);
 
 		return CXeD2DWndBase::_OnNcCreate(hwnd, wParam, lParam);
 	}
@@ -335,7 +351,7 @@ protected:
 
 	virtual LRESULT _OnNcCalcSize(WPARAM wParam, LPARAM lParam) override
 	{
-		m_pToolBar->RecalculateItems();
+		m_pToolBar->RecalculateItems(m_dpi);
 		m_style.SetToolbarSize(m_pToolBar->GetToolBarSize(), m_dpi);
 		return CXeD2DWndBase::_OnNcCalcSize(wParam, lParam);
 	}

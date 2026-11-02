@@ -56,8 +56,8 @@ public:
 
 		m_edit = std::make_unique<CXeScintillaEditControl>(m_xeUI);
 		m_listbox = std::make_unique<CXeListBoxExCommon>(m_xeUI);
-		m_listbox->Initialize(LBType::Combo,
-			[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
+		m_listbox->InitializeListbox(LBType::Combo,
+				[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
 	}
 	//virtual ~CXeComboBoxEx() {}
 
@@ -81,7 +81,7 @@ public:
 		{
 			CRect rcEdit(rect);
 			rcEdit.OffsetRect(-rcEdit.left, -rcEdit.top);	// Make top, left = 0,0
-			rcEdit.right -= m_xeUI->GetValue(UIV::cxComboBoxButton);
+			rcEdit.right -= m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 			if (m_control_has_border)
 			{
 				rcEdit.DeflateRect(1, 1);
@@ -107,6 +107,25 @@ public:
 		m_findUIcmdFunc = findUIcmdFunc;
 	}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		m_edit->CalculateUI(dpi);
+		const XeFontMetrics& fm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
+		int cxyBorder = m_control_has_border ? 2 : 0;
+		int cyMinimum = fm.GetHeight() + cxyBorder;
+		int cxButton = m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
+		int cxMinimum = fm.m_aveCharWidth * 2 + cxButton + cxyBorder;
+		if (Hwnd() != 0 && m_edit->GetSafeHwnd())
+		{
+			CRect rcEditWnd;
+			m_edit->GetWindowRect(&rcEditWnd);
+			CSize edit_size = _CalculateEditCtrlSize(rcEditWnd.Width(), rcEditWnd.Height()).Size();
+			return { edit_size.cx + cxButton + cxyBorder, edit_size.cy + cxyBorder };
+		}
+		return { cxMinimum, cyMinimum };	// Minimum viable size.
+	}
+
 protected:
 	// WM_SIZE message handler.
 	virtual LRESULT _OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam) override
@@ -118,17 +137,39 @@ protected:
 		XeASSERT(::IsWindow(Hwnd()));
 		XeASSERT(!m_style.WS().hasCBS_UnsupportedStyle());
 
+		_AdjustEditControl(cx, cy);
+		return lResult;
+	}
+
+	void _AdjustEditControl(int cx, int cy)
+	{
 		if (m_edit->GetSafeHwnd())
 		{
-			int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton);
-			bool hasBorder = m_control_has_border;
-			int x = hasBorder ? 1 : 0, y = x;
-			cx = cx > cxButton ? cx - cxButton : 0;
-			cx = cx > 2 && hasBorder ? cx - 2 : cx;
-			cy = cy > 2 && hasBorder ? cy - 2 : cy;
-			m_edit->SetWindowPos(nullptr, x, y, cx, cy, SWP_NOCOPYBITS | SWP_NOZORDER);
+			CRect rcEdit = _CalculateEditCtrlSize(cx, cy);
+			m_edit->SetWindowPos(nullptr, rcEdit, SWP_NOCOPYBITS | SWP_NOZORDER);
 		}
-		return lResult;
+	}
+
+	CRect _CalculateEditCtrlSize(int cx, int cy) const
+	{
+		int cxButton = m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
+		bool hasBorder = m_control_has_border;
+		int x = hasBorder ? 1 : 0, y = x;
+		cx = cx > cxButton ? cx - cxButton : 0;
+		cx = cx > 2 && hasBorder ? cx - 2 : cx;
+		cy = cy > 2 && hasBorder ? cy - 2 : cy;
+		// Note - Scintilla window must be at least the height of the font, otherwise the text will disappear.
+		int cyMinimum = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font).GetHeight();
+		if (cy < cyMinimum) { cy = cyMinimum; }
+		return CRect(x, y, x + cx, y + cy);
+	}
+
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		CRect rcClient;
+		GetClientRect(rcClient);
+		_AdjustEditControl(rcClient.Width(), rcClient.Height());
+		_RedrawDirectly();
 	}
 
 	// WM_ENABLE message handler.
@@ -204,6 +245,7 @@ protected:
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rc) override
 	{
+		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg));
 		D2D1_RECT_F rcClient = rc;
 		if (m_control_has_border)
 		{
@@ -216,7 +258,7 @@ protected:
 		bool isWindowEnabled = IsWindowEnabled();
 
 		D2D1_RECT_F rcBtn(rcClient);
-		float cxButton = (float)m_xeUI->GetValue(UIV::cxComboBoxButton);
+		float cxButton = (float)m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 		rcBtn.left = rcBtn.right - cxButton;
 		CID cidBtnFg = isWindowEnabled ? CID::CtrlTxt : CID::CtrlTxtDis;
 		_DrawComboBoxButton(pRT, rcBtn, cidBtnFg, CID::CtrlBg);
@@ -344,7 +386,7 @@ protected:
 		GetClientRect(&rcButton);
 		if (!m_isStatic)	// Click anywhere in a static control to initiate the popup.
 		{
-			rcButton.left = rcButton.right - m_xeUI->GetValue(UIV::cxComboBoxButton);
+			rcButton.left = rcButton.right - m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 		}
 		if (rcButton.PtInRect(point))
 		{
@@ -539,6 +581,7 @@ protected:
 public:
 	void SetItemsList(const std::vector<ListBoxExItem>& list)
 	{
+		XeASSERT(::IsWindow(Hwnd()));
 		m_listbox->SetItemsList(list);
 	}
 
@@ -968,7 +1011,7 @@ protected:
 		CRect rcClient;
 		GetClientRect(&rcClient);
 		CRect rcEdit(rcClient);
-		int cxButton = m_xeUI->GetValue(UIV::cxComboBoxButton);
+		int cxButton = m_xeUI->GetUIValue(UIV::cxComboBoxButton, m_dpi);
 		rcEdit.right -= cxButton;
 		CRect rcButton(rcClient);
 		rcButton.left = rcButton.right - cxButton;

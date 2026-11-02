@@ -432,8 +432,6 @@ protected:
 
 	bool m_isReadOnly = false;
 
-	CSize m_sizeCtrl;
-
 	PartEdit m_rctEditing;
 
 	RCT m_rctHover = RCT::None;
@@ -457,8 +455,6 @@ public:
 		m_xeUI->RegisterWindowClass(XEDURATIONWND_CLASSNAME, D2DCtrl_WndProc);
 
 		m_rctEditing.Set(FILETIMESPAN());
-
-		m_sizeCtrl = _CalculateUI();
 	}
 	//virtual ~CXeDurationCtrl() {}
 
@@ -468,10 +464,26 @@ public:
 		DWORD dwExStyle = 0;
 		HWND hWnd = CreateD2DCtrl(dwExStyle, XEDURATIONWND_CLASSNAME, nullptr, dwStyle,
 				rect, hParentWnd, nID, tooltip);
+		_CalculateUI();
 		return hWnd != 0;
 	}
 
 	void SetReadOnly() { m_isReadOnly = true; }
+
+	// CalculateControlSize calculates UI size. Can be called before window created.
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
+		return _CalculateUI();
+	}
+
+protected:
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		_CalculateUI();
+		_RedrawDirectly();
+	}
 #pragma endregion Create
 
 #pragma region CXePopupCtrlBase_impl
@@ -482,19 +494,19 @@ public:
 
 	virtual CSize GetWindowPreferredSize() override
 	{
-		return GetControlSize();
+		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
+		return _CalculateUI();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(
-		CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
+			CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
 
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
 
 	// Called by XePopupParent when processing the NC_CREATE message.
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) override
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) override
 	{
-		SetHwnd(hWnd);
-		m_style.Set(hWnd, dwStyle, dwExStyle, m_xeUI);
+		InitializeThis(hWnd, pCS);
 		m_control_has_border = true;
 	}
 
@@ -540,8 +552,6 @@ public:
 
 #pragma region helpers
 public:
-	CSize GetControlSize() { return m_sizeCtrl; }
-
 	FILETIMESPAN GetDuration() const { return m_rctEditing.GetDuration(); }
 
 	void SetDuration(const FILETIMESPAN& dur)
@@ -612,23 +622,23 @@ protected:
 		D2D1_SIZE_F szF{};
 		EXE_FONT mode_font = m_mode.GetFontForMode();
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"W"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"W"), m_dpi, EXE_FONT::eUI_Font, szF);
 		float mul = 0.5f;
 		float marginL = szF.width * mul, spaceV = marginL * 0.5f, wndCX = 0;
 		float marginT = marginL;
 		float x = marginL, y = marginT;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"Cancel"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"Cancel"), m_dpi, EXE_FONT::eUI_Font, szF);
 		float okBtnCX = szF.width * 1.4f;
 		float okBtnCY = szF.height * 1.2f;
 
 		// Calculate timeBox time boxes
-		m_xeUI->D2D_GetTextSize(std::wstring(L"-000"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"-000"), m_dpi, mode_font, szF);
 		float daysCX = szF.width * 1.2f;
-		m_xeUI->D2D_GetTextSize(std::wstring(L"00"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"00"), m_dpi, mode_font, szF);
 		float hhCX = szF.width * 1.2f;
 		float hhCY = szF.height;
-		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), m_dpi, mode_font, szF);
 		float msCX = szF.width * 1.2f;
 		float cx_dot = hhCY * 0.3f;
 		float cy_inc = hhCY * 0.3f, cx_inc = hhCX * 0.8f;
@@ -1024,7 +1034,8 @@ public:
 	{
 		CXeDurationCtrl duration_ctrl(m_xeUI, mode);
 		duration_ctrl.SetDuration(dur);
-		CSize sCtrl = duration_ctrl.GetControlSize();
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		CSize sCtrl = duration_ctrl.CalculateUI(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rcCtrl(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &duration_ctrl, XeShowPopup::FadeIn80);

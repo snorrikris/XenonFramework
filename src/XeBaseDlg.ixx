@@ -299,6 +299,17 @@ protected:
 
 #pragma region Create
 public:
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		std::vector<CXeD2DCtrlBase*> all_controls = _GetAllControls();
+		for (CXeD2DCtrlBase* pCtrl : all_controls)
+		{
+			pCtrl->CalculateUI(dpi);
+		}
+		return { 0, 0 };
+	}
+
 	// Callback - needed when dialog is mode-less (non modal dialogs)
 	// Dialog creator needs to supply this callback pointer.
 	// Called after 'this' window destroyed - creator should delete 'this'.
@@ -551,7 +562,8 @@ protected:
 		XeASSERT(dlg_template.m_hdr.windowClass.size() == 0);	// Only default dialog class supported (that we then ignore).
 
 		// We use 'our' UI font to convert from dialog units to pixels.
-		const XeFontMetrics& otm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		XeDPI dpi(::GetDpiForWindow(m_hDlgParentWnd));
+		const XeFontMetrics& otm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 
 		// Dialog client area size.
 		int dlg_cx = otm.DialogUnitsXtoPixels(dlg_template.m_hdr.s1.cx);
@@ -563,8 +575,12 @@ protected:
 
 		// Add caption and barders to size of window.
 		XeWindowStyleValue xe_style(style, 0);
-		int cyCaption = xe_style.hasCaption() ? m_xeUI->GetValue(UIV::cyWindowCaption) : 0;
-		int cxyBorder = m_xeUI->GetValue(xe_style.hasThickBorder() ? UIV::cxyThickBorder : UIV::cxyThinBorder);
+		int cyCaption = xe_style.hasCaption() ? m_xeUI->GetUIValue(UIV::cyWindowCaption, dpi) : 0;
+		if (!xe_style.hasThickBorder())
+		{
+			cyCaption = (int)((double)cyCaption * 1.1 + 0.5);
+		}
+		int cxyBorder = m_xeUI->GetUIValue(xe_style.hasThickBorder() ? UIV::cxyThickBorder : UIV::cxyThinBorder, dpi);
 
 		dlg_cy += (cyCaption + (2 * cxyBorder));
 		dlg_cx += (2 * cxyBorder);
@@ -743,7 +759,7 @@ protected:
 	void _CreateCombobox(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		// rc is including listbox height - we need height of (scaled) ComboBox here.
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		CRect rcCB(rc);
 		rcCB.bottom = rcCB.top + tm.GetLineHeight();
 		auto cb = std::make_unique<CXeComboBoxEx>(m_xeUI);
@@ -793,7 +809,7 @@ protected:
 	void _CreateDurationControl(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		auto pc = std::make_unique<CXeDurationCtrl>(m_xeUI, DurCtrlMode::DurationSM2);
-		CRect rcWanted = _AdjustControlSize(rc, pc->GetControlSize());
+		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateUI(m_dpi));
 		pc->Create(style, rcWanted, Hwnd(), uID, nullptr);
 		m_durationcontrols.push_back(std::move(pc));
 	}
@@ -801,7 +817,7 @@ protected:
 	void _CreateCalendarControl(UINT uID, DWORD style, DWORD exStyle, const CRect& rc)
 	{
 		auto pc = std::make_unique<CXeCalendarCtrl>(m_xeUI, CalCtrlMode::SimpleDateTimeSM2);
-		CRect rcWanted = _AdjustControlSize(rc, pc->GetControlSize());
+		CRect rcWanted = _AdjustControlSize(rc, pc->CalculateUI(m_dpi));
 		pc->Create(style, rcWanted, Hwnd(), uID, nullptr);
 		m_calendarcontrols.push_back(std::move(pc));
 	}
@@ -1469,6 +1485,56 @@ protected:
 		}
 		return CXeD2DWndBase::_OnOtherMessage(hWnd, uMsg, wParam, lParam);
 	}
+
+	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		XeDPI old_dpi = m_dpi;
+
+		LRESULT result = CXeD2DWndBase::_OnDpiChanged(hwnd, wParam, lParam);
+
+		CalculateUI(m_dpi);
+
+		_ScaleControlsOnDPIchange(old_dpi);
+
+		return result;
+	}
+
+	// Note - _OnDpiChangedAfterParent is called when the dialog is not POPUP style, e.g. when form view.
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		XeDPI old_dpi = m_dpi;
+
+		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
+
+		CalculateUI(m_dpi);
+
+		_ScaleControlsOnDPIchange(old_dpi);
+
+		return result;
+	}
+
+	void _ScaleControlsOnDPIchange(const XeDPI& old_dpi)
+	{
+		XeDPI_Calculator dpi_calc(old_dpi, m_dpi);
+
+		XeEnumChildWindows enumchildWnds(Hwnd(), true);
+
+		CRect rcCtrl;
+		if (enumchildWnds.m_children.size() > 0)
+		{
+			HDWP hDWP = ::BeginDeferWindowPos((int)enumchildWnds.m_children.size());
+			for (HWND hWndChild : enumchildWnds.m_children)
+			{
+				::GetWindowRect(hWndChild, rcCtrl);
+				ScreenToClient(rcCtrl);
+				CRect rcNewPos = dpi_calc.CalculateRect(rcCtrl);
+				hDWP = ::DeferWindowPos(hDWP, hWndChild, NULL,
+					rcNewPos.left, rcNewPos.top, rcNewPos.Width(), rcNewPos.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+			}
+			::EndDeferWindowPos(hDWP);
+			_RedrawDirectly();
+		}
+	}
 #pragma endregion MessageHandlers
 
 #pragma region CustomWindowFramesupport
@@ -1492,7 +1558,7 @@ protected:
 		int cx = GET_X_LPARAM(lParam);
 		int cy = GET_Y_LPARAM(lParam);
 
-		if (nType == SIZE_RESTORED)
+		if (nType == SIZE_RESTORED && !m_isWndMovingToDifferentDPImonitor)
 		{
 			m_glueControls.MoveGlueControlsOnSize(cx, cy);
 		}
@@ -1501,6 +1567,7 @@ protected:
 
 	virtual LRESULT _OnExitSizeMove() override
 	{
+		m_isWndMovingToDifferentDPImonitor = false;
 		if (m_isSizing)
 		{
 			SaveUserPreferredDlgSize();

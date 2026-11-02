@@ -75,7 +75,20 @@ public:
 #pragma endregion Create
 
 #pragma region CalculateUI
+public:
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 protected:
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		m_textLayout.Reset();
+		_RedrawDirectly();
+	}
+
 	D2D1_RECT_F _CalculateTextRect(const D2D1_RECT_F& rcClient)
 	{
 		D2D1_RECT_F rc = _GetFocusRect(rcClient);
@@ -95,7 +108,7 @@ protected:
 #pragma region UI_Drawing
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 	{
-		bool isStyleChanged = m_style.Update();
+		bool isStyleChanged = m_style.Update(m_dpi);
 		if (isStyleChanged && m_textLayout.Get())
 		{
 			m_textLayout.Reset();	// Re-create text object.
@@ -130,7 +143,14 @@ public:
 		XeASSERT(pRT);
 		std::wstring txt = GetWindowTextStdW(Hwnd());
 		bool hasText = txt.size() > 0;
-		bool hasImage = m_imagePID != PID::None || m_resourceId != 0 || m_hIcon != 0;
+		PID imagePID = m_imagePID;
+		bool hasImage = imagePID != PID::None || m_resourceId != 0 || m_hIcon != 0;
+
+		// Replace App ICON with PID::AppIcon
+		if (hasImage && m_hIcon == 0 && m_resourceId == 128 /* IDR_MAINFRAME */)
+		{
+			imagePID = PID::AppIcon48;
+		}
 		bool isShowImageAndText = hasImage && !m_style.WS().HasSS_ImageStyle();
 		bool isShowImageOnly = hasImage && m_style.WS().HasSS_ImageStyle();
 
@@ -143,7 +163,18 @@ public:
 
 		if (hasImage)
 		{
-			if ((m_resourceId != 0 || m_hIcon != 0) && m_style.WS().HasSS_IconStyle())
+			if (imagePID != PID::None)
+			{
+				// Draw image.
+				bool isImgOnLeftSide = isShowImageOnly ? false : hasText;
+				D2D1_RECT_F rcImg = pRctx->_DrawPID_Image(pRT, imagePID, rcText, isImgOnLeftSide, isEnabled, false);
+				if (!isShowImageOnly && hasText)
+				{
+					// Calculate text box.
+					rcText.left = rcImg.right + m_xTextMargin;
+				}
+			}
+			else if ((m_resourceId != 0 || m_hIcon != 0) && m_style.WS().HasSS_IconStyle())
 			{
 				if (!m_iconBitmap)
 				{
@@ -169,17 +200,6 @@ public:
 					_DrawIcon(pRT, rcIcon, m_iconBitmap.Get());
 				}
 			}
-			else if (m_imagePID != PID::None)
-			{
-				// Draw image.
-				bool isImgOnLeftSide = isShowImageOnly ? false : hasText;
-				D2D1_RECT_F rcImg = pRctx->_DrawButtonImage(pRT, m_imagePID, rcText, isImgOnLeftSide, isEnabled, false);
-				if (!isShowImageOnly && hasText)
-				{
-					// Calculate text box.
-					rcText.left = rcImg.right + m_xTextMargin;
-				}
-			}
 		}
 
 		// Draw text.
@@ -200,9 +220,9 @@ public:
 protected:
 	void _CreateTextLayout(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcText, const std::wstring& txt, CID fgCID)
 	{
-		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(m_font);
+		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(m_dpi, m_font);
 		HRESULT hr = m_xeUI->D2D_GetWriteFactory()->CreateTextLayout(txt.c_str(), (UINT32)txt.size(),
-			pUIfont, (rcText.right - rcText.left), (rcText.bottom - rcText.top), &m_textLayout);
+				pUIfont, (rcText.right - rcText.left), (rcText.bottom - rcText.top), &m_textLayout);
 		XeASSERT(hr == S_OK);
 		if (m_textLayout.Get())
 		{
@@ -212,7 +232,7 @@ protected:
 			DWRITE_PARAGRAPH_ALIGNMENT valign = /*m_style.IsBS_TOP() ? DWRITE_PARAGRAPH_ALIGNMENT_NEAR
 				: m_style.IsBS_BOTTOM() ? DWRITE_PARAGRAPH_ALIGNMENT_FAR :*/ DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
 			m_textLayout->SetParagraphAlignment(valign);
-			m_textLayout->SetWordWrapping(/*m_style.IsBS_MULTILINE() ? DWRITE_WORD_WRAPPING_WRAP :*/ DWRITE_WORD_WRAPPING_NO_WRAP);
+			m_textLayout->SetWordWrapping(m_style.WS().IsSS_LEFTNOWORDWRAP() ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WRAP);
 		}
 	}
 

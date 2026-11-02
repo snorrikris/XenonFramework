@@ -90,15 +90,16 @@ public:
 	uint32_t CreateComboBox(HWND hParent, uint32_t x, uint32_t y, const std::vector<std::wstring>& strings,
 			const wchar_t* tooltip)
 	{
-		x = AdjustXtoGrid(x);
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		x = AdjustXtoGrid(x, dpi);
 		uint32_t cx_txt = 0;
 		for (auto& string : strings)
 		{
-			CSize sizeLbl = m_xeUI->GetTextSizeUsingFontW(hParent, EXE_FONT::eUI_Font, string.c_str());
+			CSize sizeLbl = m_xeUI->GetTextSizeUsingFontW(hParent, dpi, EXE_FONT::eUI_Font, string.c_str());
 			if (cx_txt < (uint32_t)sizeLbl.cx) { cx_txt = (uint32_t)sizeLbl.cx; }
 		}
-		cx_txt = AdjustXtoGrid(cx_txt + 24);
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		cx_txt = AdjustXtoGrid(cx_txt + 24, dpi);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		CRect rc(x, y, x + cx_txt, y + tm.GetLineHeight() + 4);
 		m_control_type = XeCtrlType::ComboBox;
 		m_control_combobox = std::make_unique<CXeComboBoxEx>(m_xeUI);
@@ -117,13 +118,14 @@ public:
 	// Returns right edge of combobox.
 	uint32_t CreateEditControl(HWND hParent, uint32_t x, uint32_t y, const wchar_t* tooltip)
 	{
-		x = AdjustXtoGrid(x);
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		x = AdjustXtoGrid(x, dpi);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		std::vector<std::wstring> strings = getRangeStrings();
 		uint32_t cx_txt = 0;
 		for (auto& string : strings)
 		{
-			CSize sizeLbl = m_xeUI->GetTextSizeUsingFontW(hParent, EXE_FONT::eUI_Font, string.c_str());
+			CSize sizeLbl = m_xeUI->GetTextSizeUsingFontW(hParent, dpi, EXE_FONT::eUI_Font, string.c_str());
 			cx_txt = std::max((uint32_t)sizeLbl.cx, cx_txt);
 		}
 		if (cx_txt)
@@ -134,7 +136,7 @@ public:
 		{
 			cx_txt = 20 * tm.m_aveCharWidth;
 		}
-		cx_txt = AdjustXtoGrid(cx_txt);
+		cx_txt = AdjustXtoGrid(cx_txt, dpi);
 		CRect rc(x, y, x + cx_txt, y + (uint32_t)((double)tm.GetHeight() * 1.5 + 0.5));
 		m_control_type = XeCtrlType::EditControl;
 		m_control_edit = std::make_unique<CXeScintillaEditControl>(m_xeUI);
@@ -182,9 +184,9 @@ public:
 		return false;
 	}
 
-	uint32_t AdjustXtoGrid(uint32_t x)
+	uint32_t AdjustXtoGrid(uint32_t x, XeDPI dpi)
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		uint32_t x_grid = (uint32_t)(tm.m_aveCharWidth * 2);
 		uint32_t mod_x = x % x_grid;
 		if (mod_x)

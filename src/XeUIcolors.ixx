@@ -13,6 +13,7 @@ export module Xe.UIcolors;
 
 import std;
 import Xe.UIcolorsIF;
+import Xe.UI_helpers;
 import Xe.Theme;
 import Xe.UserSettings;
 import Xe.UserSettingsForUI;
@@ -22,7 +23,6 @@ import Xe.Menu;
 import Xe.PPTooltip;
 import Xe.PPTooltipWindow;
 import Xe.D2DWndBase;
-//import Xe.LogDefs;
 import Xe.StringTools;
 
 #ifdef _DEBUG
@@ -38,308 +38,7 @@ static char THIS_FILE[] = __FILE__;
 
 using json = nlohmann::json;
 
-// Convert font point size to DIPs conversion factor .
-constexpr float FONT_PT_TO_DIPS = 1.3333333333f;
-
-struct XeD2DFont
-{
-	XeFontMetrics	m_tm;
-	IDWriteTextFormat* m_pFont = nullptr;
-};
-
-class XeDWFontMap
-{
-	std::map<EXE_FONT, XeD2DFont> m_map;
-
-public:
-	XeDWFontMap() = default;
-	~XeDWFontMap()
-	{
-		XeASSERT(m_map.size() == 0);	// Call clear() before dtor.
-		_release_fonts();
-	}
-
-	void InitializeMap()
-	{
-		XeASSERT(m_map.size() == 0);	// Call when UIColors created.
-		for (size_t i = 0; i < static_cast<size_t>(EXE_FONT::eLastFont); ++i)
-		{
-			m_map[(EXE_FONT)i] = XeD2DFont();
-		}
-	}
-
-	void ReleaseFonts()
-	{
-		_release_fonts();
-	}
-
-	void SetFont(EXE_FONT key, IDWriteTextFormat* pTF)
-	{
-		if (m_map.contains(key))
-		{
-			XeD2DFont& tm = m_map.at(key);
-			XeASSERT(tm.m_pFont == nullptr);	// Font should not exist.
-			tm.m_pFont = pTF;
-		}
-		else
-		{
-			XeASSERT(false);	// font struct should exist.
-		}
-	}
-
-	bool HasFont(EXE_FONT key) const
-	{
-		if (m_map.contains(key))
-		{
-			return m_map.at(key).m_pFont != nullptr;
-		}
-		return false;
-	}
-
-	IDWriteTextFormat* GetFont(EXE_FONT key) const
-	{
-		const XeD2DFont* pTM = _GetFontInfoStructConst(key);
-		XeASSERT(pTM && pTM->m_pFont);
-		return pTM->m_pFont;
-	}
-
-	const XeFontMetrics& GetFontInfoConst(EXE_FONT key) const
-	{
-		const XeD2DFont* pTM = _GetFontInfoStructConst(key);
-		XeASSERT(pTM);
-		return pTM->m_tm;
-	}
-
-	void SetFontInfo(EXE_FONT key, const XeFontMetrics& tm)
-	{
-		XeD2DFont* pTM = _GetFontInfoStruct(key);
-		XeASSERT(pTM);
-		pTM->m_tm = tm;
-	}
-
-	void Clear()
-	{
-		_release_fonts();
-		m_map.clear();
-	}
-
-protected:
-	void _release_fonts()
-	{
-		for (auto& [eFont, tm] : m_map)
-		{
-			if (tm.m_pFont)
-			{
-				tm.m_pFont->Release();
-				tm.m_pFont = nullptr;
-			}
-		}
-	}
-
-	XeD2DFont* _GetFontInfoStruct(EXE_FONT key)
-	{
-		if (m_map.contains(key))
-		{
-			return &(m_map.at(key));
-		}
-		XeASSERT(false);	// struct should exist.
-
-		// Return default font if requested font not found in map.
-		if (key != EXE_FONT::eUI_Font)
-		{
-			return _GetFontInfoStruct(EXE_FONT::eUI_Font);
-		}
-		XeASSERT(false);
-		return nullptr;
-	}
-	const XeD2DFont* _GetFontInfoStructConst(EXE_FONT key) const
-	{
-		if (m_map.contains(key))
-		{
-			return &(m_map.at(key));
-		}
-		XeASSERT(false);	// struct should exist.
-
-		// Return default font if requested font not found in map.
-		if (key != EXE_FONT::eUI_Font)
-		{
-			return _GetFontInfoStructConst(EXE_FONT::eUI_Font);
-		}
-		XeASSERT(false);
-		return nullptr;
-	}
-};
-
-struct XeD2DWndInfo
-{
-	CXeD2DWndBase* m_pWndObj = nullptr;
-	std::wstring	m_className;
-	std::wstring	m_parentClassName;
-};
-class XeHwnd2ObjectMap
-{
-	std::map<HWND, XeD2DWndInfo> m_map;
-
-	// We keep the last hWnd removed - because it can happen that a window can receive messages
-	// after it has been removed (had a case of WM_IME_NOTIFY after WM_NCDESTROY for ViewsListWnd).
-	// When Get is called for a window not in the map - we just silently return null instead of ASSERT
-	// when the handle is the last removed window.
-	HWND m_last_hWnd_removed = 0;
-
-public:
-	XeHwnd2ObjectMap() = default;
-	//~XeHwnd2ObjectMap() {}
-
-	void Set(HWND hWnd, XeD2DWndInfo nfo)
-	{
-		if (m_map.contains(hWnd))
-		{
-			XeASSERT(false);	// Set called twice - why?
-		}
-		m_map[hWnd] = nfo;
-	}
-
-	bool HasHwnd(HWND hWnd) const
-	{
-		return m_map.contains(hWnd);
-	}
-
-	inline const XeD2DWndInfo* Get(HWND hWnd) const
-	{
-		if (m_map.contains(hWnd))
-		{
-			return &(m_map.at(hWnd));
-		}
-		if (hWnd != m_last_hWnd_removed)
-		{
-			XeASSERT(false);
-		}
-		return nullptr;
-	}
-
-	inline const XeD2DWndInfo* GetIfExists(HWND hWnd) const
-	{
-		if (m_map.contains(hWnd))
-		{
-			return &(m_map.at(hWnd));
-		}
-		return nullptr;
-	}
-
-	void Remove(HWND hWnd)
-	{
-		if (m_map.contains(hWnd))
-		{
-			m_map.erase(hWnd);
-		}
-		m_last_hWnd_removed = hWnd;
-	}
-};
-
-class XeHwnd2CallbackMap
-{
-	std::map<HWND, DialogClosedCallbackFunc> m_map;
-
-public:
-	XeHwnd2CallbackMap() = default;
-	//~XeHwnd2CallbackMap() {}
-
-	void Set(HWND hWnd, DialogClosedCallbackFunc callback)
-	{
-		if (m_map.contains(hWnd))
-		{
-			XeASSERT(false);	// Set called twice - why?
-		}
-		m_map[hWnd] = callback;
-	}
-
-	bool HasHwnd(HWND hWnd) const
-	{
-		return m_map.contains(hWnd);
-	}
-
-	inline DialogClosedCallbackFunc Get(HWND hWnd) const
-	{
-		if (m_map.contains(hWnd))
-		{
-			return m_map.at(hWnd);
-		}
-		XeASSERT(false);
-		return nullptr;
-	}
-
-	inline DialogClosedCallbackFunc GetIfExists(HWND hWnd) const
-	{
-		if (m_map.contains(hWnd))
-		{
-			return m_map.at(hWnd);
-		}
-		return nullptr;
-	}
-
-	void Remove(HWND hWnd)
-	{
-		if (m_map.contains(hWnd))
-		{
-			m_map.erase(hWnd);
-		}
-	}
-};
-
-class XeHwnd2KeyboardFilterMap
-{
-	std::map<HWND, FilterKeyboardMessageCallbackFunc> m_map;
-
-public:
-	XeHwnd2KeyboardFilterMap() = default;
-	//~XeHwnd2KeyboardFilterMap() {}
-
-	void Set(HWND hWnd, FilterKeyboardMessageCallbackFunc filter_callback)
-	{
-		if (m_map.contains(hWnd))
-		{
-			XeASSERT(false);	// Set called twice - why?
-		}
-		m_map[hWnd] = filter_callback;
-	}
-
-	bool HasHwnd(HWND hWnd) const
-	{
-		return m_map.contains(hWnd);
-	}
-
-	inline FilterKeyboardMessageCallbackFunc Get(HWND hWnd) const
-	{
-		if (m_map.contains(hWnd))
-		{
-			return m_map.at(hWnd);
-		}
-		XeASSERT(false);
-		return nullptr;
-	}
-
-	inline FilterKeyboardMessageCallbackFunc GetIfExists(HWND hWnd) const
-	{
-		if (m_map.contains(hWnd))
-		{
-			return m_map.at(hWnd);
-		}
-		return nullptr;
-	}
-
-	void Remove(HWND hWnd)
-	{
-		if (m_map.contains(hWnd))
-		{
-			m_map.erase(hWnd);
-		}
-	}
-};
-
 // Define function pointer for DWM dll functions.
-//typedef HRESULT (WINAPI * LPFNDLL_DwmEnableComposition)( UINT uCompositionAction );
-//LPFNDLL_DwmEnableComposition pFN 
-//	= (LPFNDLL_DwmEnableComposition)::GetProcAddress( hDWMdll, "DwmEnableComposition" );
 typedef HRESULT(WINAPI* LPFNDLL_DwmSetWindowAttribute)(__in HWND hwnd, __in DWORD dwAttribute, __in LPCVOID pvAttribute, __in DWORD cbAttribute);
 
 typedef std::function<int(CXeUIcolorsIF* pUIcolors, HWND hParent, const wchar_t* pMsg, const wchar_t* pTitle, UINT uType, CRect* pRectCell)> ShowMessageBoxCallbackFunc;
@@ -372,19 +71,7 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////
 	// Font data
 
-	int m_monospacedFontSize = 14, /*m_gridRowPitch = 6,*/ m_uiFontSize = 14;
-	//std::wstring m_strUI_FontName;
-	//int m_uiFontGridRowHeight = 20;
-
-	int m_cxTooltipDefaultUnscaled = 212;
-
-	double m_cxScaleFactor = 1.0, m_cyScaleFactor = 1.0;
-
-	int s_cyGridTH_RowHeight = 0;
-
-	int m_cxDefaultTooltip = 212;
-
-	MonospacedCharSize m_monospacedCharSize;
+	XeDWFontMap m_d2d_fonts;
 
 	/////////////////////////////////////////////////////////////////////////////
 	// Other data
@@ -403,9 +90,6 @@ protected:
 	Microsoft::WRL::ComPtr<ID2D1Factory> m_d2d_fa;
 	Microsoft::WRL::ComPtr<IDWriteFactory> m_d2d_writeFactory;
 
-	XeDWFontMap m_d2d_fonts;
-	int m_logPixelsY = 1;	// Logical pixels/inch in Y - of the desktop monitor (UI screen).
-
 	std::map<PID, Microsoft::WRL::ComPtr<IWICFormatConverter>> m_d2d_pid_map_img;
 	std::map<PID, CSize> m_d2d_pid_map_size;
 
@@ -421,22 +105,17 @@ public:
 		m_hInstance = hInstance;
 		m_appName = app_name;
 
-		//m_monospacedCharSize.cySingleLineRowHeight = 0/*20*/;
-		m_monospacedCharSize.cyMultiLineTextHeight = 0/*14*/;
-		m_monospacedCharSize.cxGridCharWidth = 8;
-
 		_ReadAllThemeFiles();
 		_InitializeThemeData(theme_name);
 
 		_InitializeDirect2D();
 
-		m_d2d_fonts.InitializeMap();
-		_CreateFonts();
+		m_d2d_fonts.SetFactoryPointer(m_d2d_writeFactory.Get());
 	}
 
 	void Destroy()
 	{
-		_DeleteFonts();
+		m_d2d_fonts.ReleaseFonts();
 
 		_UninitializeDirect2D();
 	}
@@ -663,60 +342,53 @@ protected:
 #pragma endregion System
 
 #pragma region Fonts
-	virtual const XeFontMetrics& GetFontMetric(EXE_FONT eFont) const override
+	virtual void CreateFonts(XeDPI dpi) override
 	{
-		return m_d2d_fonts.GetFontInfoConst(eFont);
+		if (!m_d2d_fonts.VerifyFontExists(dpi, EXE_FONT::eUI_Font))
+		{
+			_CreateFonts(dpi);
+		}
 	}
 
-	virtual UIScaleFactor GetUIScaleFactor() const override
+	virtual const XeFontMetrics& GetFontMetric(XeDPI dpi, EXE_FONT eFont) const override
 	{
-		return UIScaleFactor(m_cxScaleFactor, m_cyScaleFactor);
+		return m_d2d_fonts.GetFontInfoConst(dpi, eFont);
 	}
 
-	virtual CSize GetTextSizeW(EXE_FONT eFont, const wchar_t* szText) override
+	virtual UIScaleFactor GetUIScaleFactor(XeDPI dpi) const override
 	{
-		return GetTextSizeW(eFont, szText, std::wcslen(szText));
+		return m_d2d_fonts.GetUIScaleFactor(dpi);
 	}
-	virtual CSize GetTextSizeW(EXE_FONT eFont, const wchar_t* szText, size_t length) override
-	{
-		CSize size1;
 
-		HRESULT hr = S_OK;
-		IDWriteTextFormat* pUIfont = D2D_GetFont(eFont);
-		Microsoft::WRL::ComPtr<IDWriteTextLayout> pTextLayout;
-		float floatDim = 2500.0f;
-		// Create a text layout 
-		hr = m_d2d_writeFactory->CreateTextLayout(szText, (UINT32)length,
-				pUIfont, floatDim, floatDim, &pTextLayout);
-		XeASSERT(hr == S_OK);
+	virtual CSize GetTextSizeW(XeDPI dpi, EXE_FONT eFont, const wchar_t* szText) override
+	{
+		return GetTextSizeW(dpi, eFont, szText, std::wcslen(szText));
+	}
+	virtual CSize GetTextSizeW(XeDPI dpi, EXE_FONT eFont, const wchar_t* szText, size_t length) override
+	{
+		D2D1_SIZE_F sizeF;
+		HRESULT hr = m_d2d_fonts.GetTextSize(szText, length, dpi, eFont, sizeF);
 		if (SUCCEEDED(hr))
 		{
-			// Get text size  
-			DWRITE_TEXT_METRICS textMetrics;
-			hr = pTextLayout->GetMetrics(&textMetrics);
-			D2D1_SIZE_F size = D2D1::SizeF((float)ceil(textMetrics.widthIncludingTrailingWhitespace),
-				(float)ceil(textMetrics.height));
-			size1.cx = (int)(size.width + 0.5f);
-			size1.cy = (int)(size.height + 0.5f);
+			return CSize((int)(sizeF.width + 0.5f), (int)(sizeF.height + 0.5f));
 		}
-
-		return size1;
+		return CSize();
 	}
 
-	virtual CSize GetTextSizeUsingFontW(HWND hWnd, EXE_FONT eFontconst, const wchar_t* szText) override
+	virtual CSize GetTextSizeUsingFontW(HWND hWnd, XeDPI dpi, EXE_FONT eFontconst, const wchar_t* szText) override
 	{
-		return GetTextSizeW(eFontconst, szText);
+		return GetTextSizeW(dpi, eFontconst, szText);
 	}
 
 	// Get text widths using font and window DC.
 	// if pWnd is null then desktop window is used.
 	virtual std::vector<uint32_t> GetTextWidthsUsingFontW(const std::vector<std::wstring> texts,
-		EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) override
+			XeDPI dpi, EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) override
 	{
 		std::vector<uint32_t> cx_of_text;
 		for (const std::wstring& txt : texts)
 		{
-			CSize sizeText = GetTextSizeW(eFontconst, txt.c_str(), (int)txt.size());
+			CSize sizeText = GetTextSizeW(dpi, eFontconst, txt.c_str(), (int)txt.size());
 			cx_of_text.push_back(sizeText.cx);
 		}
 		return cx_of_text;
@@ -724,15 +396,15 @@ protected:
 
 	// Get max. text width of supplied strings using font.
 	virtual uint32_t GetMaxTextWidthUsingFontW(const std::vector<std::wstring> texts,
-		EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) override
+			XeDPI dpi, EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) override
 	{
-		std::vector<uint32_t> ln_cx = GetTextWidthsUsingFontW(texts, eFontconst, hWnd);
+		std::vector<uint32_t> ln_cx = GetTextWidthsUsingFontW(texts, dpi, eFontconst, hWnd);
 		auto it_max = std::max_element(ln_cx.begin(), ln_cx.end());
 		return it_max != ln_cx.end() ? *it_max : 0;
 	}
 
 	virtual CSize GetMultilineTextExtentW(const wchar_t* szTxt,
-			EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) override
+			XeDPI dpi, EXE_FONT eFontconst = EXE_FONT::eUI_Font, HWND hWnd = nullptr) override
 	{
 		CSize sizeTotal;
 
@@ -770,7 +442,7 @@ protected:
 				}
 			}
 
-			CSize sizeOfLine = GetTextSizeW(eFontconst, pSrc, (index >= 0 ? index : len));
+			CSize sizeOfLine = GetTextSizeW(dpi, eFontconst, pSrc, (index >= 0 ? index : len));
 			sizeTotal.cy += sizeOfLine.cy;
 			if (sizeOfLine.cx > sizeTotal.cx)
 			{
@@ -782,19 +454,12 @@ protected:
 		return sizeTotal;
 	}
 
-	//virtual int GetUI_FontGridRowHeight() const override { return m_uiFontGridRowHeight; }
-
-	virtual MonospacedCharSize GetLogGridCharSize() const override
+	virtual MonospacedCharSize GetLogGridCharSize(XeDPI dpi) const override
 	{
-		return m_monospacedCharSize;
+		return m_d2d_fonts.GetLogGridCharSize(dpi);
 	}
 
 protected:
-	void _DeleteFonts()
-	{
-		m_d2d_fonts.ReleaseFonts();
-	}
-
 	bool _LogIfErrorAndAssert(HRESULT hr, const std::string& fn)
 	{
 		XeASSERT(hr == S_OK);
@@ -805,233 +470,54 @@ protected:
 		return SUCCEEDED(hr);
 	}
 
-	bool _CreateFonts()
+	bool _CreateFonts(XeDPI dpi)
 	{
-		_DeleteFonts();
-		m_cxScaleFactor = m_cyScaleFactor = 1.0;
+		XeASSERT(!m_d2d_fonts.VerifyFontExists(dpi, EXE_FONT::eUI_Font));	// Delete DPI dont before calling here.
 
-		// Handle deprecated font size settings - use new font point size unless user has selected font pixel size.
-		//const CXeUserSetting& settingGridFontPointSize = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontPointSize");
-		//m_monospacedFontSize = xen::stoi(settingGridFontPointSize.getString().c_str());
-		//if (settingGridFontPointSize.m_value_is_default)
-		//{
-		//	const CXeUserSetting& settingGridFontSize = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontSize");
-		//	if (!settingGridFontSize.m_value_is_default)	// Deprecated "GridFontSize" is not default value?
-		//	{
-		//		int fontSizePixels = xen::stoi(settingGridFontSize.getString().c_str());
-		//		m_monospacedFontSize = (int)(((float)fontSizePixels / 1.3333f) + 0.5f);
-		//	}
-		//}
 		if (!s_xeUIsettings.Exists(L"GeneralSettings"))
 		{
 			XeASSERT(false);	// "GeneralSettings" MUST exist!
 		}
 		const CXeUserSettings& generalSettings = s_xeUIsettings[L"GeneralSettings"];
 		std::wstring fontSize = generalSettings.GetString_or_Val(L"UI_FontPointSize", L"10");
-		m_uiFontSize = xen::stoi(fontSize);
-		XeASSERT(m_uiFontSize > 0);
+		int uiFontSize = xen::stoi(fontSize);
+		XeASSERT(uiFontSize > 0);
 		const CXeUserSetting& settingUIFontPointSize = generalSettings.Get(L"UI_FontPointSize");
-		//m_uiFontSize = xen::stoi(settingUIFontPointSize.getString().c_str());
 		if (settingUIFontPointSize.m_value_is_default && generalSettings.Exists(L"UI_FontSize"))
 		{
 			const CXeUserSetting& settingUIFontSize = generalSettings.Get(L"UI_FontSize");
 			if (!settingUIFontSize.m_value_is_default)	// Deprecated "UI_FontSize" is not default value?
 			{
 				int fontSizePixels = xen::stoi(settingUIFontSize.getString().c_str());
-				m_uiFontSize = (int)(((float)fontSizePixels / 1.3333f) + 0.5f);
+				uiFontSize = (int)(((float)fontSizePixels / 1.3333f) + 0.5f);
 			}
 		}
-		m_monospacedFontSize = m_uiFontSize;
 
 		std::wstring monospacedFontName = generalSettings.GetString_or_Val(L"UI_MonospacedFontName", L"Consolas");
-		//XeASSERT(monospacedFontName.size() > 0);
-		//if (monospacedFontName.size() == 0)
-		//{
-		//	monospacedFontName = L"Consolas";
-		//}
-		//std::wstring monospacedFontName = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridFontName").getString();
-		//std::wstring gridRowPitch = s_xeUIsettings[L"LogFileGridSettings"].Get(L"GridRowPitch").getString();
-		//m_gridRowPitch = xen::stoi(gridRowPitch.c_str());
 
 		std::wstring strUI_FontName = generalSettings.GetString_or_Val(L"UI_FontName", L"Segoe UI");
 
-		m_d2d_fonts.SetFontInfo(EXE_FONT::eMonospacedFont, XeFontMetrics(monospacedFontName, m_monospacedFontSize));
+		std::vector<XeFontDescription> fonts;
+		fonts.push_back({ EXE_FONT::eMonospacedFont, true, monospacedFontName, uiFontSize });
 
-		m_d2d_fonts.SetFontInfo(EXE_FONT::eUI_Font, XeFontMetrics(strUI_FontName, m_uiFontSize));
+		fonts.push_back({ EXE_FONT::eUI_Font, false, strUI_FontName, uiFontSize });
 
-		XeFontMetrics tmUIfontBold(strUI_FontName, m_uiFontSize, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);
-		m_d2d_fonts.SetFontInfo(EXE_FONT::eUI_FontBold, tmUIfontBold);
+		fonts.push_back({ EXE_FONT::eUI_FontBold, false, strUI_FontName, uiFontSize,
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });
 
-		double dbl_size = m_uiFontSize;
-		XeFontMetrics tmUIfontMedBig(strUI_FontName, (int)(dbl_size * 1.25 + 0.5),
-				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);// eMediumBig is 25% bigger font.
-		m_d2d_fonts.SetFontInfo(EXE_FONT::eMediumBig, tmUIfontMedBig);
+		double dbl_size = uiFontSize;
+		fonts.push_back({ EXE_FONT::eMediumBig, false, strUI_FontName, (int)(dbl_size * 1.25 + 0.5),
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });// eMediumBig is 25% bigger font.
 
-		XeFontMetrics tmUIfontTabTitle(strUI_FontName, (int)(dbl_size * 1.43 + 0.5),
-				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);// 43% bigger size than uiFontSize - default is 14 - resulting in 20
-		m_d2d_fonts.SetFontInfo(EXE_FONT::eTabListTitleFont, tmUIfontTabTitle);
+		fonts.push_back({ EXE_FONT::eTabListTitleFont, false, strUI_FontName, (int)(dbl_size * 1.43 + 0.5),
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });// 43% bigger size than uiFontSize - default is 14 - resulting in 20
 
-		XeFontMetrics tmUIfontBig(strUI_FontName, (int)(dbl_size * 2.85 + 0.5),
-				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD);// 285% bigger size than uiFontSize - default is 14 - resulting in 40
-		m_d2d_fonts.SetFontInfo(EXE_FONT::eBigMsgFont, tmUIfontBig);
+		fonts.push_back({ EXE_FONT::eBigMsgFont, false, strUI_FontName, (int)(dbl_size * 2.85 + 0.5),
+				DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_WEIGHT_BOLD });// 285% bigger size than uiFontSize - default is 14 - resulting in 40
 
-		// Get metrics for all fonts.
-		HDC hDC = ::CreateCompatibleDC(0);
-		m_logPixelsY = ::GetDeviceCaps(hDC, LOGPIXELSY);
-		XeASSERT(m_logPixelsY > 1);
-		::DeleteDC(hDC);
+		m_d2d_fonts.InitializeFontsForDPI(dpi, fonts);
 
-		// Honestly stolen from: https://chromium.googlesource.com/chromium/src/+/51ba3e6902ecd7284d3be51db648127d1be2187f/ui/gfx/platform_font_win.cc
-		Microsoft::WRL::ComPtr<IDWriteFontCollection> font_collection;
-		HRESULT hrFC = m_d2d_writeFactory->GetSystemFontCollection(font_collection.GetAddressOf());
-		if (!_LogIfErrorAndAssert(hrFC, "GetSystemFontCollection"))
-		{
-			return false;
-		}
-		std::wstring dt(L"0000-00-00 00:00:00,000");
-		std::wstring ab(L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-		for (size_t i = 0; i < static_cast<size_t>(EXE_FONT::eLastFont); ++i)
-		{
-			EXE_FONT eFont = static_cast<EXE_FONT>(i);
-
-			XeFontMetrics tm = m_d2d_fonts.GetFontInfoConst(eFont);
-			std::string fontnameA = xet::toUTF8(tm.m_fontName);
-
-			float fsDIPs = (float)tm.m_fontPointSize * FONT_PT_TO_DIPS;	// font size is in points - D2D wants DIPs.
-
-			// Create font object (note - is managed by font map class).
-			IDWriteTextFormat* pTextFmt = nullptr;
-			HRESULT hr = m_d2d_writeFactory->CreateTextFormat(tm.m_fontName.c_str(), 0, tm.m_weight, tm.m_style,
-					tm.m_stretch, fsDIPs, L"", &pTextFmt);
-			if (_LogIfErrorAndAssert(hr, std::string("CreateTextFormat ") + fontnameA))
-			{
-				m_d2d_fonts.SetFont(eFont, pTextFmt);
-			}
-
-			D2D1_SIZE_F sizeF, sizeF_ab;
-			HRESULT hr1 = D2D_GetTextSize(dt, eFont, sizeF);
-			HRESULT hr2 = D2D_GetTextSize(ab, eFont, sizeF_ab);
-			XeASSERT(hr1 == S_OK && hr2 == S_OK);
-			if (_LogIfErrorAndAssert(hr1, "GetTextSize " + fontnameA) && SUCCEEDED(hr2))
-			{
-				tm.m_aveCharWidth = (int)(sizeF_ab.width / (float)ab.size() + 0.5f);
-				tm.m_height = (int)(sizeF.height + 0.5f);
-				tm.m_sizeDatetime.cx = (int)(sizeF.width + 0.5f), tm.m_sizeDatetime.cy = (int)(sizeF.height + 0.5f);
-
-				// Calculate some guessed values - in case get font metrics fails.
-				tm.m_descent = (int)(sizeF.height / 6.0f + 0.5f);
-				tm.m_ascent = tm.m_height - tm.m_descent;
-				tm.m_intLeading = (int)(sizeF.height / 6.0f + 0.5f);
-				tm.m_extLeading = 0;
-			}
-
-			if (eFont == EXE_FONT::eUI_Font)
-			{
-				double cyUIfont = tm.GetHeight();
-				//m_uiFontGridRowHeight = tm.GetHeight() + tm.GetInternalLeading();
-
-				// Calculate Data Grid row sizes.
-				s_cyGridTH_RowHeight = (int)(cyUIfont * 1.125);//tm.GetHeight() + m_gridRowPitch;
-
-				double scaleFactor = (double)cyUIfont / 18.0;
-				if (scaleFactor > 1.0)
-				{
-					m_cxScaleFactor = m_cyScaleFactor = scaleFactor;
-				}
-				m_cxDefaultTooltip = (int)(212.0 * m_cxScaleFactor + 0.5);
-			}
-			else if (eFont == EXE_FONT::eMonospacedFont)
-			{
-				// Set fall-back values in case calculate metrics fails.
-				//m_monospacedCharSize.cySingleLineRowHeight = tm.GetHeight() + m_gridRowPitch;
-				m_monospacedCharSize.cyMultiLineTextHeight = tm.GetHeight();
-				//m_monospacedCharSize.cyMultiLineTextTopMargin = (int)((double)tm.GetHeight() / 8.0 + 0.5);
-				//m_monospacedCharSize.cyMultiLineTextBottomMargin = (int)((double)tm.GetHeight() / 8.0 + 0.5);
-				m_monospacedCharSize.cxGridCharWidth = tm.m_aveCharWidth;
-			}
-
-			if (SUCCEEDED(hrFC))
-			{
-				_CalculateFontMetrics(eFont, fsDIPs, tm, font_collection.Get());
-			}
-			m_d2d_fonts.SetFontInfo(eFont, tm);
-		}
 		return true;
-	}
-
-	void _CalculateFontMetrics(EXE_FONT eFont, const float& fsDIPs, XeFontMetrics& tm, IDWriteFontCollection* pCollection)
-	{
-		std::string fontnameA = xet::toUTF8(tm.m_fontName);
-		BOOL exists = FALSE;
-		uint32_t index = 0;
-		HRESULT hr = pCollection->FindFamilyName(tm.m_fontName.c_str(), &index, &exists);
-		if (!_LogIfErrorAndAssert(hr, "FindFamilyName " + fontnameA))
-		{
-			return;
-		}
-		Microsoft::WRL::ComPtr<IDWriteFontFamily> font_family;
-		if (index != UINT_MAX && exists)
-		{
-			hr = pCollection->GetFontFamily(index, font_family.GetAddressOf());
-		}
-		else
-		{
-			// If we fail to find a matching font, then fallback to the first font in
-			// the list. This is what skia does as well.
-			hr = pCollection->GetFontFamily(0, font_family.GetAddressOf());
-		}
-		if (!_LogIfErrorAndAssert(hr, "GetFontFamily " + fontnameA))
-		{
-			return;
-		}
-		Microsoft::WRL::ComPtr<IDWriteFont> dwrite_font;
-		hr = font_family->GetFirstMatchingFont(tm.m_weight, tm.m_stretch, tm.m_style, dwrite_font.GetAddressOf());
-		if (!_LogIfErrorAndAssert(hr, "GetFirstMatchingFont " + fontnameA))
-		{
-			return;
-		}
-
-		dwrite_font->GetMetrics(&tm.m_dfm);
-
-		tm.m_ascent = (int)(tm.m_dfm.ascent * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-		tm.m_descent = (int)(tm.m_dfm.descent * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-		int capHeightPixels = (int)(tm.m_dfm.capHeight * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-		tm.m_intLeading = tm.m_ascent - capHeightPixels;
-		tm.m_extLeading = (int)(tm.m_dfm.lineGap * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-
-		if (eFont == EXE_FONT::eMonospacedFont)
-		{
-			Microsoft::WRL::ComPtr<IDWriteFontFace> fontFace;
-			hr = dwrite_font->CreateFontFace(fontFace.GetAddressOf());
-			if (_LogIfErrorAndAssert(hr, "CreateFontFace"))
-			{
-				uint32_t codepoints[2]{ wchar_t{L'M'}, wchar_t{L'y'} };
-				uint16_t glyphIdc[2]{ 0, 0 };
-
-				hr = fontFace->GetGlyphIndicesW(codepoints, 2, glyphIdc);
-				if (_LogIfErrorAndAssert(hr, "GetGlyphIndicesW"))
-				{
-					BOOL useGdiNatural = TRUE;
-					// When set to FALSE, the metrics are the same as the metrics of GDI aliased text.
-					// When set to TRUE, the metrics are the same as the metrics of text measured by GDI
-					// using a font created with CLEARTYPE_NATURAL_QUALITY.
-
-					DWRITE_GLYPH_METRICS glyph_meterics[2]{ 0, 0 };
-					hr = fontFace->GetGdiCompatibleGlyphMetrics(fsDIPs, 1.0f, nullptr, useGdiNatural, glyphIdc, 2, glyph_meterics);
-					if (_LogIfErrorAndAssert(hr, "GetGdiCompatibleGlyphMetrics"))
-					{
-						float cyHeight = (float)glyph_meterics[0].advanceHeight * 1.075f;
-						float cy = cyHeight * fsDIPs / (float)tm.m_dfm.designUnitsPerEm;
-						//m_monospacedCharSize.cySingleLineRowHeight = (int)(cy + 0.5) + m_gridRowPitch;
-						m_monospacedCharSize.cyMultiLineTextHeight = (int)(cy + 0.5);
-						//m_monospacedCharSize.cyMultiLineTextTopMargin = (int)(cy / 8.0 + 0.5);
-						//m_monospacedCharSize.cyMultiLineTextBottomMargin = (int)(cy / 8.0 + 0.5);
-						m_monospacedCharSize.cxGridCharWidth
-								= (int)((float)glyph_meterics[0].advanceWidth * fsDIPs / tm.m_dfm.designUnitsPerEm + 0.5f);
-					}
-				}
-			}
-		}
 	}
 #pragma endregion Fonts
 
@@ -1041,8 +527,6 @@ public:
 	{
 		m_theOneAndOnlyTooltipWindow->HideTooltip(hWndParent);
 	}
-
-	virtual int GetTooltipDefaultWidth() const override { return m_cxDefaultTooltip; }
 
 	virtual void SetNewTooltip(HWND hWndParent, CPoint point, const PPTOOLTIP_INFO& ttInfo) override
 	{
@@ -1408,47 +892,17 @@ protected:
 		}
 	}
 
-	//void _InitGridPaintObj()
-	//{
-	//	m_gridPaintObj.m_pCellBorderPen = GetPen(CID::GrdExcelBrd);
-	//	m_gridPaintObj.m_pDefBg = GetBrush(CID::GrdCellDefBg);
-	//	m_gridPaintObj.m_pSelCellBg = GetBrush(CID::GrdHdrCurCell);
-	//	m_gridPaintObj.m_rgbDefTxt = GetColor(CID::GrdCellDefTxt);
-	//	m_gridPaintObj.m_pDefTxtPen = GetPen(CID::GrdCellDefTxt);
-	//	m_gridPaintObj.m_pDefTxtBrush = GetBrush(CID::GrdCellDefTxt);
-	//	m_gridPaintObj.m_pDToffsetBg = GetBrush(CID::DateOffsetBg);
-	//	m_gridPaintObj.m_pMoreDataBg = GetBrush(CID::LogEvBg);
-	//	m_gridPaintObj.m_pNoDataBg = GetBrush(CID::MrgLogNoDataBg);
-	//	m_gridPaintObj.m_pHilite1FilterBg = GetBrush(CID::HiliteFilterBg);
-	//	m_gridPaintObj.m_pHilite2FilterBg = GetBrush(CID::Hilite2FilterBg);
-	//	m_gridPaintObj.m_pHilite3FilterBg = GetBrush(CID::Hilite3FilterBg);
-	//	m_gridPaintObj.m_pTimeGapBrush = GetBrush(CID::WarnBg);
-	//	m_gridPaintObj.m_pTimeJumpBrush = GetBrush(CID::ErrorBg);
-	//	m_gridPaintObj.m_pAboveFilteredBrush = GetBrush(CID::LogFilterHdrBg);
-	//	m_gridPaintObj.m_pBlankBg = GetBrush(CID::GrdBlankBG);
-
-	//	m_gridPaintObj.m_pPngMultilineExpBtn = GetPngImage(PID::MultilineExpBtn);
-	//	m_gridPaintObj.m_pPngMultilineClpsBtn = GetPngImage(PID::MultilineClpsBtn);
-	//	m_gridPaintObj.m_pPngSimpleBookmark = GetPngImage(PID::BookmarkTogglePng);
-	//	m_gridPaintObj.m_pPngCommentBookmark = GetPngImage(PID::BookmarkToggleWithCommentPng);
-	//	m_gridPaintObj.m_pSH_DefBg = GetBrush(CID::GrdHdrDefBg);
-	//	m_gridPaintObj.m_pSH_CurRowBg = GetBrush(CID::GrdHdrCurCell);
-	//	m_gridPaintObj.m_pSH_CurRowInActPaneBg = GetBrush(CID::GrdHdrCurCellInActPane);
-	//	m_gridPaintObj.m_rgbSH_DefTxt = GetColor(CID::GrdSHDefTxt);
-	//	m_gridPaintObj.m_rgbSH_CurRowTxt = GetColor(CID::GrdSHCurTxt);
-	//	m_gridPaintObj.m_pThreeDLightPen = GetPen(CID::GrdHdrBrd);
-	//	m_gridPaintObj.m_pThreeDDarkPen = GetPen(CID::GrdHdrBrd);
-	//}
-
 	std::wstring _GetPIDresourceName(PID pid)
 	{
 		switch (pid)
 		{
+		case PID::AppIcon48:					 return L"IDB_APP_ICON_PNG48";
+		case PID::AppIcon32:					 return L"IDB_APP_ICON_PNG32";
+		case PID::AppIcon16:					 return L"IDB_APP_ICON_PNG16";
 		case PID::LogFilterPng:                  return L"LOG_FILTER_PNG";
 		case PID::TimelineCenter:                return L"TL_CENTER_THEME1";
 		case PID::TimelineZoomIn:                return L"TL_ZOOMIN_THEME1";
 		case PID::TimelineZoomOut:               return L"TL_ZOOMOUT_THEME1";
-		case PID::unused5:                       return L"LOG_FILTER_PNG";
 		case PID::eRequested:                    return L"IDB_eRequested";
 		case PID::eQueued:                       return L"IDB_eQueued";
 		case PID::eOpening:                      return L"IDB_eOpening";
@@ -1473,7 +927,6 @@ protected:
 		case PID::MergePng:                      return L"TB_PNG_MERGE";
 		case PID::MultilineExpBtn:               return L"MULTILINE_EXP_BTN";
 		case PID::MultilineClpsBtn:              return L"MULTILINE_CLPS_BTN";
-		case PID::unused30:                      return L"LOG_FILTER_PNG";
 		case PID::BookmarkCurrentPng:            return L"BOOKMARK_CURRENT_THEME1";
 		case PID::BookmarkCurrentWithCommentPng: return L"BOOKMARK_CURRENT_WITH_COMMENT_THEME1";
 		case PID::TimeJumpWarningPng:            return L"TIME_JUMP_WARNING_THEME1";
@@ -1619,11 +1072,16 @@ protected:
 		menu.ShowMenu(hParentWnd, ptScreen, 0);
 	}
 
-	virtual void OnChangedSettings(const ChangedSettings& chg_settings) override
+	virtual void OnChangedSettings(const ChangedSettings& chg_settings, XeDPI dpi) override
 	{
 		if (IsFontSettingsChanged(chg_settings))
 		{
-			_CreateFonts();
+			std::vector<XeDPI> dpis = m_d2d_fonts.GetDPIlist();
+			m_d2d_fonts.ReleaseFonts();
+			for (XeDPI dpi : dpis)
+			{
+				_CreateFonts(dpi);
+			}
 		}
 		else if (chg_settings.IsChanged(L"Colors", L"Color"))
 		{
@@ -1632,35 +1090,9 @@ protected:
 		}
 	}
 
-	virtual int GetValue(UIV val) const override
+	virtual int GetUIValue(UIV val, XeDPI dpi) const override
 	{
-		switch (val)
-		{
-		case UIV::s_cyGridTH_RowHeight:
-			return s_cyGridTH_RowHeight;
-		case UIV::cxTooltipDefault:
-			return (int)((double)m_cxTooltipDefaultUnscaled * m_cxScaleFactor + 0.5);
-		case UIV::cxComboBoxButton:
-			return (int)((double)18 * m_cxScaleFactor + 0.5);
-		case UIV::cxComboBoxButtonArrow: {
-			int cxTri = (int)((double)8 * m_cxScaleFactor + 0.5);
-			if ((cxTri & 1)) { ++cxTri; }			// Must be even number
-			return cxTri; }
-		case UIV::cySubMenuArrow: {
-			int cxTri = (int)((double)6 * m_cxScaleFactor + 0.5);
-			if ((cxTri & 1)) { ++cxTri; }			// Must be even number
-			return cxTri; }
-		case UIV::cxyThickBorder:
-			return 6;
-		case UIV::cxyThinBorder:
-			return 3;
-		case UIV::cyWindowCaption:
-			return GetFontMetric(EXE_FONT::eUI_FontBold).GetHeight();
-		case UIV::cxyScrollbar:
-			return std::max(::GetSystemMetrics(SM_CXVSCROLL), ::GetSystemMetrics(SM_CYHSCROLL));		//pixels
-		}
-		XeASSERT(FALSE);
-		return 0;
+		return m_d2d_fonts.GetUIValue(val, dpi);
 	}
 
 	virtual HICON GetAppIconHandle() override
@@ -1738,7 +1170,7 @@ protected:
 	void _UninitializeDirect2D()
 	{
 		m_d2d_pid_map_img.clear();
-		m_d2d_fonts.Clear();
+		m_d2d_fonts.ReleaseFonts();
 		m_d2d_IWICFactory.Reset();
 		m_d2d_writeFactory.Reset();
 		m_d2d_fa.Reset();
@@ -1777,44 +1209,19 @@ public:
 		return hr;
 	}
 
-	virtual IDWriteTextFormat* D2D_GetFont(EXE_FONT font) override
+	virtual IDWriteTextFormat* D2D_GetFont(XeDPI dpi, EXE_FONT font) override
 	{
-		if (!m_d2d_fonts.HasFont(font))
+		if (!m_d2d_fonts.HasFont(dpi, font))
 		{
 			XeASSERT(false);	// All fonts should have been created at this point.
-			return m_d2d_fonts.GetFont(EXE_FONT::eUI_Font);
+			return m_d2d_fonts.GetFont(dpi, EXE_FONT::eUI_Font);
 		}
-		return m_d2d_fonts.GetFont(font);
+		return m_d2d_fonts.GetFont(dpi, font);
 	}
 
-	virtual HRESULT D2D_GetTextSize(const std::wstring& txt, EXE_FONT font, D2D1_SIZE_F& size) override
+	virtual HRESULT D2D_GetTextSize(const std::wstring& txt, XeDPI dpi, EXE_FONT font, D2D1_SIZE_F& size) override
 	{
-		HRESULT hr = S_OK;
-		IDWriteTextFormat* pUIfont = D2D_GetFont(font);
-		Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
-		float cxDim = 10000.0f, cyDim = 1000.f;
-		// Create a text layout
-		if (font != EXE_FONT::eMonospacedFont)
-		{
-			hr = m_d2d_writeFactory->CreateTextLayout(txt.c_str(), (UINT32)txt.size(),
-					pUIfont, cxDim, cyDim, textLayout.GetAddressOf());
-		}
-		else
-		{
-			float pixelsPerDip = 1.0f;
-			hr = m_d2d_writeFactory->CreateGdiCompatibleTextLayout(txt.c_str(), (UINT32)txt.size(),
-					pUIfont, cxDim, cyDim, pixelsPerDip, nullptr, TRUE, textLayout.GetAddressOf());
-		}
-		XeASSERT(hr == S_OK);
-		if (SUCCEEDED(hr))
-		{
-			// Get text size  
-			DWRITE_TEXT_METRICS textMetrics;
-			hr = textLayout->GetMetrics(&textMetrics);
-			size = D2D1::SizeF((float)ceil(textMetrics.widthIncludingTrailingWhitespace),
-					(float)ceil(textMetrics.height));
-		}
-		return hr;
+		return m_d2d_fonts.GetTextSize(txt, dpi, font, size);
 	}
 
 	virtual IWICFormatConverter* D2D_GetImage(PID pid, CSize* pSize = nullptr) override

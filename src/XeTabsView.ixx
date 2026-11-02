@@ -108,6 +108,13 @@ public:
 		m_listTabs->OnTabViewCreated(m_hParentOfViews, m_uViewDlgCtrlId);
 		m_fInitialUpdateDone = TRUE;
 	}
+
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		// Note - _OnDpiChangedAfterParent will be called for all views (that will call CalculateUI for all children).
+		return { 0, 0 };
+	}
 #pragma endregion Creation
 
 #pragma region Misc
@@ -177,7 +184,7 @@ public:
 				|| m_xeUI->IsFontSettingsChanged(chg_settings))
 		{
 			m_bUseDataSourceTextFgColorInTab = s_xeUIsettings[L"GeneralSettings"].Get(L"UseTextColorForFileInTabTitle").getBool();
-			m_listTabs->CalculateUI(m_listTabs->GetTabViewWidth());	// Recalculate tab row height.
+			m_listTabs->CalculateTabsVwUI(m_listTabs->GetTabViewWidth());	// Recalculate tab row height.
 			_RecalculateUIandRepositionWindowsIfNeeded();
 		}
 		if (chg_settings.IsChanged(L"Colors", L"Color"))
@@ -194,11 +201,18 @@ protected:
 		//int cy = GET_Y_LPARAM(lParam);
 		if (m_fInitialUpdateDone)	// Initialized?
 		{
-			m_listTabs->CalculateUI(cx);
+			m_listTabs->CalculateTabsVwUI(cx);
 			m_listTabs->MakeCurrentTabVisible(_GetCurrentView());
 			_RedrawDirectly();
 		}
 		return CXeD2DWndBase::_OnSize(hWnd, wParam, lParam);
+	}
+
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
+		_RecalculateUIandRepositionWindowsIfNeeded();
+		return result;
 	}
 
 	// WM_TIMER message handler.
@@ -679,7 +693,7 @@ protected:
 		_ShowView(pCurView, true);
 		m_pMainFrm->RecalculateWindowsRects();
 		CRect rcTabVw = m_pMainFrm->GetViewWindowRect(m_uTabVwDlgCtrlId);
-		m_listTabs->CalculateUI(rcTabVw.Width());
+		m_listTabs->CalculateTabsVwUI(rcTabVw.Width());
 		m_listTabs->MakeCurrentTabVisible(_GetCurrentView());
 		m_pMainFrm->RecalculateWindowsRects();
 		_SetThisTabViewPosition();
@@ -699,7 +713,7 @@ protected:
 	{
 		if (::GetDlgCtrlID(Hwnd()) == m_uTabVwDlgCtrlId)	// Is 'this' view visible?
 		{
-			bool isTabHeightChanged = m_listTabs->RecalculateUI();
+			bool isTabHeightChanged = m_listTabs->RecalculateTabsVwUI();
 			CXeFileVwIF* pCurView = _GetCurrentView();
 			if (pCurView)
 			{
@@ -1389,7 +1403,7 @@ protected:
 		std::vector<CXeFileVwIF*> allViews = GetAllViews();
 
 		CXeListBoxExCommon listBox(m_xeUI);
-		listBox.Initialize(LBType::DropDown,
+		listBox.InitializeListbox(LBType::DropDown,
 				[this](WORD nfCode, int item_idx) { _OnLBnotify(nfCode, item_idx); });
 		std::vector<ListBoxExItem> list;
 		int idx = 0, cur_idx = -1;
@@ -1408,7 +1422,7 @@ protected:
 				item.m_item_data.SetColor(pView->GetViewTitleTextColor());
 			}
 			list.push_back(item);
-			CSize sizeTxt = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, pView->GetViewName().c_str());
+			CSize sizeTxt = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, pView->GetViewName().c_str());
 			cxMaxName = std::max((int)sizeTxt.cx, cxMaxName);
 			if (pView->GetDataSourceId() == dwCurViewDSId)
 			{
@@ -1417,7 +1431,7 @@ protected:
 			++idx;
 		}
 		listBox.SetItemsList(list);
-		listBox.SetCheckBoxesMode(true, false, true, L"Close selected");
+		listBox.SetCheckBoxesMode(m_dpi, true, false, true, L"Close selected");
 		listBox.OnSetCurSelMsg(cur_idx, 0);
 
 		CRect rcParentCtrl = m_listTabs->m_rcLeftTabListDropDownBtn;
@@ -1425,8 +1439,8 @@ protected:
 		CRect rc;
 		GetWindowRect(rc);
 		int x = rc.left;
-		CSize sizeXtra = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, L"XXXXXX");
-		rc = listBox.CalcPopupWindowSize(x, rc.bottom, cxMaxName + sizeXtra.cx, 1, 20);
+		CSize sizeXtra = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, L"XXXXXX");
+		rc = listBox.CalcPopupWindowSize(m_dpi, x, rc.bottom, cxMaxName + sizeXtra.cx, 1, 20);
 		CXePopupCtrl popup(m_xeUI, &listBox, XeShowPopup::FadeIn80);
 		popup.ShowPopup(Hwnd(), rc, rcParentCtrl);
 		if (listBox.m_isSelEndOk)

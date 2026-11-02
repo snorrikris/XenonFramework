@@ -104,8 +104,6 @@ public:
 		m_xeUI = pUIcolors;
 		//set up the variables
 		m_btnWidth = GetSystemMetrics(SM_CXVSCROLL);
-		UIScaleFactor sf = m_xeUI->GetUIScaleFactor();
-		m_btnWidth = sf.ScaleX(m_btnWidth);
 
 		m_btnDown = FALSE;
 
@@ -553,6 +551,10 @@ protected:
 	***************************************************/
 	int StartDropList()
 	{
+		XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
+		UIScaleFactor sf = m_xeUI->GetUIScaleFactor(dpi);
+		m_btnWidth = sf.ScaleX(m_btnWidth);
+
 		CUGCell cell;
 		m_GI->GetCellIndirect(m_btnCol, m_btnRow, &cell);
 
@@ -574,7 +576,7 @@ protected:
 
 		LOGFONT		lf;
 		// set default font height
-		lf.lfHeight = m_GI->GetXeUI()->GetFontMetric(EXE_FONT::eUI_Font).GetHeight();
+		lf.lfHeight = m_GI->GetXeUI()->GetFontMetric(dpi, EXE_FONT::eUI_Font).GetHeight();
 
 		//get the font
 		EXE_FONT font = EXE_FONT::eUI_Font;
@@ -614,10 +616,10 @@ protected:
 			if (item.m_item_data.m_hasIcon) { hasIcons = true; }
 			texts.push_back(item.m_string);
 		}
-		uint32_t cxMax = m_xeUI->GetMaxTextWidthUsingFontW(texts);
+		uint32_t cxMax = m_xeUI->GetMaxTextWidthUsingFontW(texts, dpi);
 		// Add a little extra H space when list has icons.
-		if (hasIcons) { cxMax += m_xeUI->GetUIScaleFactor().ScaleX(24); }
-		cxMax += m_xeUI->GetUIScaleFactor().ScaleX(12);	// H margin
+		if (hasIcons) { cxMax += m_xeUI->GetUIScaleFactor(dpi).ScaleX(24); }
+		cxMax += m_xeUI->GetUIScaleFactor(dpi).ScaleX(12);	// H margin
 		if (rect.Width() > 0 && rect.Width() < (int)cxMax)
 		{
 			rect.right = rect.left + cxMax;
@@ -625,8 +627,8 @@ protected:
 
 		// create the list control
 		std::unique_ptr<CXeListBoxExCommon> listBox = std::make_unique<CXeListBoxExCommon>(m_xeUI);
-		listBox->Initialize(LBType::DropDown,
-			[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
+		listBox->InitializeListbox(LBType::DropDown,
+				[this](WORD nfCode, int item_idx) { OnLBnotify(nfCode, item_idx); });
 		m_listBox = listBox.get();
 
 		// add the items to the list
@@ -634,7 +636,7 @@ protected:
 
 		if (list.size() && list[0].m_item_data.m_isCheckbox)
 		{
-			listBox->SetCheckBoxesMode(true, false, false);
+			listBox->SetCheckBoxesMode(dpi, true, false, false);
 		}
 
 		CRect rcListbox(rect);

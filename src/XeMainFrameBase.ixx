@@ -165,6 +165,11 @@ public:
 
 		//m_pVwMgr->Create(Hwnd(), VW_ID_TABS_0, VW_ID_TABS_1, VW_ID_VIEW_0, VW_ID_VIEW_1);
 
+
+		DPI_AWARENESS_CONTEXT dpiAwCtx = ::GetWindowDpiAwarenessContext(Hwnd());
+		DPI_AWARENESS dpiAw = ::GetAwarenessFromDpiAwarenessContext(dpiAwCtx);
+		XeASSERT(dpiAw == DPI_AWARENESS::DPI_AWARENESS_PER_MONITOR_AWARE);
+
 		_OnCreateClient();	// Derived class creates its view window
 		m_isClientWndCreated = true;
 
@@ -198,6 +203,20 @@ public:
 		return hWnd != 0;
 	}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		if (m_pToolBar.get())
+		{
+			m_pToolBar->CalculateUI(dpi);
+		}
+		for (auto& pTabView : m_tabViews)
+		{
+			pTabView->CalculateUI(dpi);
+		}
+		return { 0, 0 };
+	}
+
 protected:
 	// Derived class should override this and process command line parameters.
 	virtual void _ProcessCommandLine(const CXeCommandLineInfo& cmdInfo)
@@ -222,6 +241,15 @@ protected:
 		}
 		::PostQuitMessage(0);
 		return 0;
+	}
+
+	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		LRESULT result = CXeD2DWndBase::_OnDpiChanged(hwnd, wParam, lParam);
+		m_pToolBar->RecalculateItems(m_dpi);
+		m_style.SetToolbarSize(m_pToolBar->GetToolBarSize(), m_dpi);
+		RepositionWindows();
+		return result;
 	}
 
 	virtual LRESULT _OnWmCommand(WORD wSource, WORD wID, HWND sender) override
@@ -310,7 +338,7 @@ protected:
 		// Create toolbar for custom frame NC area.
 		m_pToolBar->Create(hwnd, CRect(), 201, m_uIDR_MAINFRAME, true);
 		_OnCreateToolbar();
-		m_pToolBar->RecalculateItems();
+		m_pToolBar->RecalculateItems(m_dpi);
 
 		return CXeD2DWndBase::_OnNcCreate(hwnd, wParam, lParam);
 	}
@@ -323,8 +351,8 @@ protected:
 
 	virtual LRESULT _OnNcCalcSize(WPARAM wParam, LPARAM lParam) override
 	{
-		m_pToolBar->RecalculateItems();
-		m_style.SetToolbarSize(m_pToolBar->GetToolBarSize());
+		m_pToolBar->RecalculateItems(m_dpi);
+		m_style.SetToolbarSize(m_pToolBar->GetToolBarSize(), m_dpi);
 		return CXeD2DWndBase::_OnNcCalcSize(wParam, lParam);
 	}
 		
@@ -1069,7 +1097,7 @@ protected:
 			ShowWindow(SW_HIDE);
 		}
 
-		m_xeUI->OnChangedSettings(chg_settings);
+		m_xeUI->OnChangedSettings(chg_settings, m_dpi);
 		m_pToolBar->OnChangedSettings(chg_settings);
 
 		if (isFontSettingsChanged)

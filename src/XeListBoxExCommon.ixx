@@ -75,13 +75,13 @@ struct ListBoxBottomButtons
 	bool HasOkCancelButtons() const { return m_hasButtons && m_isOkCancelButtons; }
 	bool HasCustomButton() const { return m_hasButtons && !m_isOkCancelButtons; }
 	
-	void CalculateSize(CXeUIcolorsIF* xeUI)
+	void CalculateSize(CXeUIcolorsIF* xeUI, XeDPI dpi)
 	{
-		const XeFontMetrics& tm = xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		m_cyButtonsArea = tm.GetHeight() * 2;
 		m_cyButtons = (int)((double)tm.GetHeight() * 1.5 + 0.5);
 		m_cyButtonsMargin = (m_cyButtonsArea - m_cyButtons) / 2;
-		CSize sTxt = xeUI->GetTextSizeW(EXE_FONT::eUI_Font, (m_isOkCancelButtons ? L"Cancel" : m_txtButton.c_str()));
+		CSize sTxt = xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, (m_isOkCancelButtons ? L"Cancel" : m_txtButton.c_str()));
 		m_cxButtons = sTxt.cx + (tm.m_aveCharWidth * 2);
 		m_cxButtonsMaxMargin = tm.m_aveCharWidth * 3;
 		m_cxMinForButtons = m_isOkCancelButtons ? m_cxButtons * 2 + 6 : m_cxButtons + 6;
@@ -174,8 +174,7 @@ protected:
 	CPoint m_ptOfLbtnDown;
 
 	float m_cxMaxStringWidth = 0.0f;
-	float m_cyItem = 15.0f;
-	float m_x_start = 2.0f, m_y_start = 0.0f;
+	float m_cyItem = 0.0f;
 	float m_cxMenuRmargin = 10.0f;
 	bool m_hasIcons = false;
 	float m_cxIcon = 0;
@@ -223,7 +222,7 @@ public:
 #pragma region Create
 	CXeListBoxExCommon(CXeUIcolorsIF* pUIcolors) : CXeD2DCtrlBase(pUIcolors)
 	{
-		Initialize(LBType::Normal);
+		InitializeListbox(LBType::Normal);
 	}
 	virtual ~CXeListBoxExCommon() {}
 
@@ -246,26 +245,33 @@ public:
 		}
 	}
 
-	void Initialize(LBType type, NotifyComboboxCallbackFunc notifyComboBoxCallback = nullptr)
+	void InitializeListbox(LBType type, NotifyComboboxCallbackFunc notifyComboBoxCallback = nullptr)
 	{
 		m_type = type;
 		m_notifyComboBoxCallback = notifyComboBoxCallback;
-		_InitializeLBitemUIsize();
 	}
 
 protected:
+	virtual LRESULT _OnNcCreate(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		_InitializeLBitemUIsize();
+		return CXeD2DCtrlBase::_OnNcCreate(hwnd, wParam, lParam);
+	}
+
 	void _InitializeLBitemUIsize()
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		float cyText = (float)tm.GetHeight();
 		if (cyText == 0.0f)
 		{
+			XeASSERT(false);
 			cyText = 15.0f;
 		}
 		m_cxSysSbV = ::GetSystemMetrics(SM_CXVSCROLL);
 		m_cySysSbH = ::GetSystemMetrics(SM_CYHSCROLL);
 		m_cbDim.Calculate(cyText);
 		m_cyItem = m_type == LBType::Menu ? cyText * 1.5f : cyText;
+		_Update_cx_max(0xFFFFFFFF);
 	}
 
 	virtual LRESULT _OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override
@@ -363,23 +369,10 @@ protected:
 	virtual LRESULT _OnSize(HWND hWnd, WPARAM wParam, LPARAM lParam) override
 	{
 		XeASSERT(::IsWindow(Hwnd()));
-		m_style.Update();
+		m_style.Update(XeDPI(::GetDpiForWindow(hWnd)));
 		XeASSERT(!m_style.WS().hasLBS_UnsupportedStyle());
 
-		if (m_isEnsureVisibleNeeded)
-		{
-			if (m_curIdx < m_items.size())
-			{
-				_EnsureIsVisible(m_curIdx);
-			}
-			m_isEnsureVisibleNeeded = false;
-		}
-		if (m_buttonsHlpr.m_hasButtons)
-		{
-			CRect rcClient = _GetClientRect();
-			m_buttonsHlpr.PlaceButtons(rcClient);
-		}
-		_AdjustScrollBars();
+		_CalculateUI();
 		return CXeD2DWndBase::_OnSize(hWnd, wParam, lParam);
 	}
 
@@ -399,6 +392,37 @@ protected:
 		}
 		_RedrawDirectly();
 		return 0;
+	}
+
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		_CalculateUI();
+		_RedrawDirectly();
+	}
+
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
+	void _CalculateUI()
+	{
+		_InitializeLBitemUIsize();
+		if (m_isEnsureVisibleNeeded)
+		{
+			if (m_curIdx < m_items.size())
+			{
+				_EnsureIsVisible(m_curIdx);
+			}
+			m_isEnsureVisibleNeeded = false;
+		}
+		if (m_buttonsHlpr.m_hasButtons)
+		{
+			CRect rcClient = _GetClientRect();
+			m_buttonsHlpr.PlaceButtons(rcClient);
+		}
+		_AdjustScrollBars();
 	}
 #pragma endregion Create
 
@@ -423,6 +447,7 @@ public:
 		if (topIdx != 0xFFFFFFFF && topIdx >= list.size()) { topIdx = 0xFFFFFFFF; }
 		if (nSelIdx != -1 && nSelIdx >= (int)list.size()) { nSelIdx = -1; }
 		m_curIdx = nSelIdx >= 0 ? (size_t)nSelIdx : 0xFFFFFFFF;
+		m_mouseOverItemIdx = 0xFFFFFFFF;
 		m_topIdx = topIdx == 0xFFFFFFFF ? 0 : topIdx;
 		m_items.clear();
 		m_items = list;
@@ -486,20 +511,22 @@ public:
 	// - selecting an item does not make it the current item.
 	// - clicking on an item does not trigger select end ok.
 	//   (if the listbox is in a popup window the window is not dismissed).
-	void SetCheckBoxesMode(bool isCheckBoxesMode, bool hasOkCancelButtons,
+	void SetCheckBoxesMode(XeDPI dpi, bool isCheckBoxesMode, bool hasOkCancelButtons,
 			bool isSetCurItemEnabled, const wchar_t* pTxtCustomButton = nullptr)
 	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
 		m_isSetCurItemEnabled = isSetCurItemEnabled;
 		m_isCheckBoxesMode = isCheckBoxesMode;
 		if (hasOkCancelButtons)
 		{
-			m_buttonsHlpr.CalculateSize(m_xeUI);
+			m_buttonsHlpr.CalculateSize(m_xeUI, m_dpi);
 		}
 		else if (pTxtCustomButton)
 		{
 			m_buttonsHlpr.m_isOkCancelButtons = false;
 			m_buttonsHlpr.m_txtButton = pTxtCustomButton;	// Text of button (when custom text button used).
-			m_buttonsHlpr.CalculateSize(m_xeUI);
+			m_buttonsHlpr.CalculateSize(m_xeUI, m_dpi);
 		}
 	}
 
@@ -508,14 +535,18 @@ public:
 
 	bool IsOkOrCustomButtonClicked() const { return m_isOk_or_custom_button_clicked; }
 
-	CRect CalcPopupWindowSize(int x, int y, int cxMinWidth, double dblMaxWidthMultiplier,
-		int numItemsToShow)
+	CRect CalcPopupWindowSize(XeDPI dpi, int x, int y, int cxMinWidth, double dblMaxWidthMultiplier,
+			int numItemsToShow)
 	{
+		m_dpi = dpi;
 		_InitializeLBitemUIsize();
-		int cyHeight = numItemsToShow * GetItemHeight() + m_buttonsHlpr.GetButtonsCY();
+		int cxyMargin = m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
+		int cyHeight = numItemsToShow * GetItemHeight() + m_buttonsHlpr.GetButtonsCY()
+				+ (2 * cxyMargin);
 		int cxVscroll = m_items.size() > numItemsToShow ? GetVscrollbarWidth() : 0;
 		int cxCheckBox = m_isCheckBoxesMode ? GetCheckBoxCX() : 0;
-		int cxNeeded = cxCheckBox + GetMaxStringWidth() + cxVscroll;
+		int cxNeeded = cxCheckBox + GetMaxStringWidth() + cxVscroll
+				+ (2 * cxyMargin);
 		if (m_buttonsHlpr.GetMinCXforButtons() > cxMinWidth)
 		{
 			cxMinWidth = m_buttonsHlpr.GetMinCXforButtons();
@@ -532,8 +563,9 @@ public:
 		return CRect(x, y, x + cxNeeded, y + cyHeight);
 	}
 
-	CRect CalcPopupMenuSize(int x, int y)
+	CRect CalcPopupMenuSize(XeDPI dpi, int x, int y)
 	{
+		m_dpi = dpi;
 		_InitializeLBitemUIsize();
 		int numItemsToShow = (int)m_items.size();
 		int cyHeight = numItemsToShow * GetItemHeight();
@@ -554,8 +586,10 @@ public:
 		return CSize();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi, CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override
 	{
+		m_dpi = dpi;
+		_InitializeLBitemUIsize();
 		m_isCloseThisMenu = false;
 		int cyItem = GetItemHeight();
 		size_t num_items = m_items.size();
@@ -576,12 +610,9 @@ public:
 		return m_type == LBType::Menu ? DropWndOffset::OnParentCtrl : DropWndOffset::AboveParentCtrl;
 	}
 
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) override
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) override
 	{
-		XeASSERT(::IsWindow(hWnd));
-		SetHwnd(hWnd);
-		XeASSERT(Hwnd() && m_xeUI);
-		m_style.Set(Hwnd(), dwStyle, dwExStyle, m_xeUI);
+		InitializeThis(hWnd, pCS);
 		m_control_has_border = true;
 		m_isSelEndOk = m_isSelEndCancel = m_isSelEndCancelWithESCkey = false;
 		m_curIdxOriginal = m_curIdx;
@@ -688,10 +719,14 @@ protected:
 
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcWnd) override
 	{
+		if (m_cyItem == 0.0f)
+		{
+			_InitializeLBitemUIsize();
+		}
 		pRT->Clear(m_xeUI->GetColorF(CID::CtrlBg));
 
 		CRect rcReal = _GetRealClientRect(); // Not incl. buttons at bottom nor scrollbars
-		int xOffset = _GetHscrollInfo().nPos;
+		int xHscrollOffset = _GetHscrollInfo().nPos;
 		D2D1_RECT_F rcPaintF = RectFfromRect(rcReal);
 
 		D2D1_RECT_F rcClipSB(rcWnd);
@@ -705,12 +740,16 @@ protected:
 		}
 		pRT->PushAxisAlignedClip(rcClipSB, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 
 		bool isComboBoxDropDown = m_notifyComboBoxCallback != nullptr;
 
 		bool isAltKeyDown = (::GetAsyncKeyState(VK_MENU) & 0x8000) ? true : false;
 		bool isUseTabStops = m_style.WS().hasLBS_USETABSTOPS();
+
+		float xMargin = m_type == LBType::Menu ? 0.0f : (float)m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
+		float yMargin = xMargin;
+		float xHalfMargin = xMargin / 2;
 
 		std::vector<float> tab_stops;
 		for (uint32_t& ts : m_tab_stops)
@@ -722,8 +761,9 @@ protected:
 		{
 			const ListBoxExItem& item = m_items.at(i);
 			D2D1_RECT_F rcTxtF(rcPaintF);
-			rcTxtF.left -= (float)xOffset;
-			rcTxtF.top = m_y_start + (m_cyItem * (float)(i - m_topIdx));
+			rcTxtF.left += xMargin;
+			rcTxtF.left -= (float)xHscrollOffset;
+			rcTxtF.top = yMargin + (m_cyItem * (float)(i - m_topIdx));
 			rcTxtF.bottom = rcTxtF.top + m_cyItem;
 			bool isCurSelItem = i == m_curIdx;
 			bool isMouseOverItem = isComboBoxDropDown && i == m_mouseOverItemIdx;
@@ -733,7 +773,7 @@ protected:
 				D2D1_RECT_F rcPat(rcTxtF);
 				if (m_type == LBType::Menu)
 				{
-					rcPat.left += m_cbDim.GetCheckBoxCX() + m_x_start + (m_hasIcons ? m_cxIcon : 0.0f);
+					rcPat.left += m_cbDim.GetCheckBoxCX() + xHalfMargin + (m_hasIcons ? m_cxIcon : 0.0f);
 					rcPat.right -= m_cxMenuRmargin;
 					float y_mrg = (HeightOf(rcPat) - (float)tm.GetHeight()) / 2.0f;
 					rcPat.top += y_mrg;
@@ -807,7 +847,7 @@ protected:
 				}
 				bool isDrawEnabled = !item.m_item_data.m_isItemDisabled;
 				bool isOnLeft = true;
-				D2D1_RECT_F rcImg = _DrawButtonImage(pRT, item.m_item_data.GetIconPID(), rc1,
+				D2D1_RECT_F rcImg = _DrawPID_Image(pRT, item.m_item_data.GetIconPID(), rc1,
 						isOnLeft, isDrawEnabled, false);
 				if (m_type != LBType::Menu)
 				{
@@ -830,7 +870,7 @@ protected:
 			if (item.m_item_data.m_isSubMenu)
 			{
 				CID clrId_FG = !m_isEnabled || item.m_item_data.m_isItemDisabled ? CID::CtrlTxtDis : CID::CtrlTxt;
-				float cxTri = (float)m_xeUI->GetValue(UIV::cxComboBoxButtonArrow);
+				float cxTri = (float)m_xeUI->GetUIValue(UIV::cxComboBoxButtonArrow, m_dpi);
 				D2D1_RECT_F rcArw(rcTxtF);
 				rcArw.left = rcArw.right - m_cxMenuRmargin - cxTri;
 				_DrawSubMenuArrow(pRT, rcArw, clrId_FG);
@@ -844,7 +884,7 @@ protected:
 			{
 				rgbFg = m_xeUI->GetColor(CID::CtrlTxtDis);
 			}
-			rcTxtF.left += m_x_start;
+			rcTxtF.left += xHalfMargin;
 			auto [lhs, rhs] = _SplitOnTab(item.m_string);
 			int idxUnderscore = -1;	// When menu and Alt key down - show item 'hot' key underscored.
 			if (m_type == LBType::Menu)
@@ -1014,7 +1054,7 @@ protected:
 
 #pragma region Helpers
 public:
-	int GetItemHeight() const { return (int)(m_cyItem + 0.5f); }
+	int GetItemHeight() const { XeASSERT(m_cyItem > 0.0f); return (int)(m_cyItem + 0.5f); }
 	int GetMaxStringWidth() const { return (int)(m_cxMaxStringWidth + 0.5f); }
 	int GetHscrollbarHeight() const { return m_cxSysSbV; }
 	int GetVscrollbarWidth() const { return m_cySysSbH; }
@@ -1199,7 +1239,8 @@ protected:
 
 	CRect _GetItemRect(size_t idx) const
 	{
-		int y = (int)(m_y_start + (m_cyItem * (idx - m_topIdx)));
+		float yMargin = m_type == LBType::Menu ? 0.0f : (float)m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
+		int y = (int)(yMargin + (m_cyItem * (idx - m_topIdx)));
 		return CRect(0, y, _GetClientRightEdge(), y + (int)(m_cyItem+ 0.5f));
 	}
 
@@ -1219,10 +1260,12 @@ protected:
 	// 0xFFFFFFFF is returned if no item found.
 	size_t _GetItemIndexAtPosition(int x, int y) const
 	{
+		int yMargin = m_type == LBType::Menu ? 0 : m_xeUI->GetUIValue(UIV::cxCellMargin, m_dpi);
 		CRect rcRealClient = _GetRealClientRect();
 		bool isXinRect = (x >= rcRealClient.left && x < rcRealClient.right);
 		bool isYinRect = (y >= rcRealClient.top && y < rcRealClient.bottom);
-		size_t idx = isXinRect && isYinRect && m_cyItem > 0.0f ? m_topIdx + (y / (int)(m_cyItem + 0.5f)) : 0xFFFFFFFF;
+		size_t idx = isXinRect && isYinRect && y >= yMargin && m_cyItem > 0.0f
+				? m_topIdx + ((y - yMargin) / (int)(m_cyItem + 0.5f)) : 0xFFFFFFFF;
 		return idx;
 	}
 
@@ -1283,13 +1326,14 @@ protected:
 
 	bool _Update_cx_max(size_t new_item_idx)
 	{
+		if (!m_dpi.is_valid()) { return false; }	// Not created (yet).
 		bool isUseTabStops = m_style.WS().hasLBS_USETABSTOPS();
 
 		std::vector<uint32_t> cxTextCol;
 		std::function<void(size_t, const std::wstring&)>
 			set_cxTextCol = [&](size_t tabIdx, const std::wstring& str)
 		{
-			CSize sizeStr = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, str.c_str());
+			CSize sizeStr = m_xeUI->GetTextSizeW(m_dpi, EXE_FONT::eUI_Font, str.c_str());
 			if (cxTextCol.size() < tabIdx + 1) { cxTextCol.resize(tabIdx + 1); }
 			if (cxTextCol[tabIdx] < (uint32_t)sizeStr.cx) { cxTextCol[tabIdx] = (uint32_t)sizeStr.cx; }
 		};
@@ -1338,7 +1382,7 @@ protected:
 				size_t n = cxTabSetting.size();
 				cxTabSetting.push_back((n > 0 ? cxTabSetting[n - 1] : 0) + (int)m_cxDefaultTab);
 			}
-			UIScaleFactor sf = m_xeUI->GetUIScaleFactor();
+			UIScaleFactor sf = m_xeUI->GetUIScaleFactor(m_dpi);
 			for (uint32_t& ts : cxTabSetting)
 			{
 				ts = sf.ScaleX(ts);
@@ -2216,7 +2260,7 @@ public:
 		if (idx < m_items.size())
 		{
 			m_items.erase(m_items.begin() + idx);
-			_Update_cx_max(idx);
+			_Update_cx_max(0xFFFFFFFF);
 			_AdjustScrollBars();
 			_RedrawDirectly();
 			return m_items.size();

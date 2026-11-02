@@ -25,6 +25,8 @@ typedef std::function<bool(const MSG& msg)> KeyboardMessageFilterCallback;
 
 typedef std::function<void(std::vector<ListBoxExItem>&)> ExtendContextMenuCallback;
 
+typedef std::function<std::tuple<bool, LRESULT>(HWND, UINT, WPARAM, LPARAM)> ProcessScintillaWndMessageCallback;
+
 typedef std::function<bool(UINT)> ProcessSelectedContextMenuItemCallback;
 
 // Helper class (enum) - state of H/V scroll bars visibility.
@@ -181,6 +183,11 @@ export struct SelectedTextPositions
 
 constexpr wchar_t XESCINTILLAEDITCONTROLWND_CLASSNAME[] = L"XeScintillaEditControlWndClass";  // Window class name
 
+// Name of property that is stored in the "window" handle by Windows.
+// We store the original window proc pointer - when we "subclass" the control.
+constexpr wchar_t XEPROP_ORIG_SCINTILLA_WNDPROC[] = L"XePropOrigWndProc";
+LRESULT CALLBACK EditCtrlSubclass_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 export class CXeScintillaEditControl : public CXeD2DCtrlBase
 {
 protected:
@@ -196,6 +203,8 @@ protected:
 	ExtendContextMenuCallback m_extendContextMenuFunc = nullptr;
 
 	ProcessSelectedContextMenuItemCallback m_processSelectedContextMenuItemFunc = nullptr;
+
+	ProcessScintillaWndMessageCallback m_processScintillaWndMessageFunc = nullptr;
 
 	bool m_isSuppressEnChangeNotify = false;
 
@@ -231,7 +240,7 @@ public:
 			m_vScr->Create(WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | SBS_VERT, rc0, hWnd, 2002, nullptr);
 
 			XeWindowStyleValue ws(dwEditControlStyle, 0);
-			const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+			const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 			m_mode.Initialize(m_control_has_border, tm.GetHeight(), !ws.isES_MultiLine());
 			m_mode.SetClientRect(rcCtrl);
 
@@ -242,16 +251,23 @@ public:
 			m_hSciEdWnd = ::CreateWindowExW(0, L"Scintilla", L"EditCtrlWnd", dwEditControlStyle,
 					rcEC.left, rcEC.top, rcEC.Width(), rcEC.Height(),
 					hWndParent, 0, m_xeUI->GetInstanceHandle(), 0);
-			m_editStyle.Set(m_hSciEdWnd, dwEditControlStyle, 0, m_xeUI);
+			XeASSERT(m_hSciEdWnd != 0);
+			m_editStyle.Set(m_hSciEdWnd, dwEditControlStyle, 0, m_xeUI, m_dpi);
 
 			m_xeUI->RegisterScintillaKeyboardFilterCallback(m_hSciEdWnd,
 					[this](const MSG& msg) { return _OnKeyboardFilter(msg); });
 
+			// "subclass" Scintilla - so we can examine every message sent/posted to the Scintilla window.
+			::SetWindowLongPtr(m_hSciEdWnd, GWLP_USERDATA, (LPARAM)this);
+			WNDPROC origWndProc = (WNDPROC)::SetWindowLongPtrW(m_hSciEdWnd, GWLP_WNDPROC, (DWORD_PTR)EditCtrlSubclass_WndProc);
+			::SetPropW(m_hSciEdWnd, XEPROP_ORIG_SCINTILLA_WNDPROC, origWndProc);
+
 			// Disable the Scintilla context menu.
 			::SendMessage(m_hSciEdWnd, SCI_USEPOPUP, SC_POPUP_NEVER, 0);
 
-			// Note - uncomment following line to enable DirectWrite. (select not painted correctly, more flickering)
-			//::SendMessage(m_hSciEdWnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE, 0);
+			// Note - enable DirectWrite. (select not painted correctly, more flickering)
+			::SendMessage(m_hSciEdWnd, SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE, 0);
+			::SendMessage(m_hSciEdWnd, SCI_SETBUFFEREDDRAW, TRUE, 0);
 
 			::SendMessage(m_hSciEdWnd, SCI_SETMARGINS, 0, 0);
 
@@ -263,72 +279,13 @@ public:
 		return hWnd != 0;
 	}
 
-	XeWindowStyle GetXeStyle() const { return m_style; }
-
-	void SetComboBoxKeyDownFilterCallback(KeyboardMessageFilterCallback keyMsgFilterFunc)
+	virtual CSize CalculateUI(XeDPI dpi) override
 	{
-		m_comboBoxKeyboardFilterFunc = keyMsgFilterFunc;
-	}
-
-	void SetContextMenuCallbacks(ExtendContextMenuCallback extendCtxMenuCallback,
-			ProcessSelectedContextMenuItemCallback processSelectedCtxMenuItem)
-	{
-		m_extendContextMenuFunc = extendCtxMenuCallback;
-		m_processSelectedContextMenuItemFunc = processSelectedCtxMenuItem;
-	}
-
-	virtual void OnChangedUIsettings(bool isFontsChanged, bool isColorsChanged) override
-	{
-		if (isFontsChanged)
-		{
-			UpdateFont();
-		}
-		if (isColorsChanged)
-		{
-			UpdateColors();
-		}
-		_RedrawDirectly();
+		m_dpi = dpi;
+		return { 0, 0 };
 	}
 
 protected:
-	// Filter WM_KEYDOWN or WM_SYSKEYDOWN or WM_KEYUP or WM_SYSKEYUP or WM_CHAR
-	// Called from within the message loop (in the main app or modal dialog message loop).
-	bool _OnKeyboardFilter(const MSG& msg)
-	{
-		//bool isSingleLineEditControl = !m_style.isES_MultiLine();
-		bool isSingleLineEditControl = !m_editStyle.WS().isES_MultiLine();
-		CXeShiftCtrlAltKeyHelper sca;
-		UINT uKey = (UINT)msg.wParam;
-		if (isSingleLineEditControl)
-		{
-			if (m_comboBoxKeyboardFilterFunc && m_comboBoxKeyboardFilterFunc(msg))
-			{
-				return true;	// Suppress key (already handled by ComboBox parent control).
-			}
-			if (sca.IsNoneDown()
-					&& (msg.message == WM_KEYDOWN || msg.message == WM_CHAR) && uKey == VK_RETURN)
-			{
-				return true;	// Suppress key.
-			}
-			if (msg.message == WM_KEYDOWN
-					&& (uKey == VK_UP || uKey == VK_DOWN || uKey == VK_PRIOR || uKey == VK_NEXT))
-			{
-				return true;	// Suppress key.
-			}
-		}
-		if ((uKey == VK_F10 && sca.IsOnlyShiftDown())	// Is Shift+F10 (Context menu keyboard shortcut).
-				|| uKey == VK_RWIN)
-		{
-			if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
-			{
-				WPARAM wp = ((WPARAM)(UINT32)-1) | (((WPARAM)(UINT32)-1) << 32);
-				::PostMessageW(Hwnd(), WM_CONTEXTMENU, wp, 0);
-			}
-			return true;	// Suppress key.
-		}
-		return false;	// Process message normally
-	}
-
 	virtual LRESULT _OnDestroy() override
 	{
 		m_xeUI->UnRegisterScintillaKeyboardFilterCallback(m_hSciEdWnd);
@@ -359,7 +316,38 @@ protected:
 		}
 		return CXeD2DCtrlBase::_OnSize(hWnd, wParam, lParam);
 	}
+#pragma endregion Create
 
+#pragma region Misc
+public:
+	XeWindowStyle GetXeStyle() const { return m_style; }
+
+	void SetComboBoxKeyDownFilterCallback(KeyboardMessageFilterCallback keyMsgFilterFunc)
+	{
+		m_comboBoxKeyboardFilterFunc = keyMsgFilterFunc;
+	}
+
+	void SetContextMenuCallbacks(ExtendContextMenuCallback extendCtxMenuCallback,
+		ProcessSelectedContextMenuItemCallback processSelectedCtxMenuItem)
+	{
+		m_extendContextMenuFunc = extendCtxMenuCallback;
+		m_processSelectedContextMenuItemFunc = processSelectedCtxMenuItem;
+	}
+
+	virtual void OnChangedUIsettings(bool isFontsChanged, bool isColorsChanged) override
+	{
+		if (isFontsChanged)
+		{
+			UpdateFont();
+		}
+		if (isColorsChanged)
+		{
+			UpdateColors();
+		}
+		_RedrawDirectly();
+	}
+
+protected:
 	virtual LRESULT _OnOtherMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override
 	{
 		switch (uMsg)
@@ -383,12 +371,12 @@ protected:
 			if (wSource == SCEN_SETFOCUS)	// Scintilla got focus.
 			{
 				::SendMessage(::GetParent(Hwnd()), WM_COMMAND,
-						MAKEWPARAM(GetDlgCtrlID(), EN_SETFOCUS), reinterpret_cast<LPARAM>(Hwnd()));
+					MAKEWPARAM(GetDlgCtrlID(), EN_SETFOCUS), reinterpret_cast<LPARAM>(Hwnd()));
 			}
 			else if (wSource == SCEN_KILLFOCUS)	// Scintilla lost focus.
 			{
 				::SendMessage(::GetParent(Hwnd()), WM_COMMAND,
-						MAKEWPARAM(GetDlgCtrlID(), EN_KILLFOCUS), reinterpret_cast<LPARAM>(Hwnd()));
+					MAKEWPARAM(GetDlgCtrlID(), EN_KILLFOCUS), reinterpret_cast<LPARAM>(Hwnd()));
 			}
 		}
 		return CXeD2DCtrlBase::_OnWmCommand(wSource, wID, sender);
@@ -400,16 +388,69 @@ protected:
 		if (pNMhdr->code == SCN_SAVEPOINTLEFT)	// Text has been modified.
 		{
 			::SendMessage(::GetParent(Hwnd()), WM_COMMAND,
-					MAKEWPARAM(GetDlgCtrlID(), EN_CHANGE), reinterpret_cast<LPARAM>(Hwnd()));
+				MAKEWPARAM(GetDlgCtrlID(), EN_CHANGE), reinterpret_cast<LPARAM>(Hwnd()));
 		}
 		else if (pNMhdr->code == SCN_FOCUSIN		// Scintilla got focus.
-				|| pNMhdr->code == SCN_FOCUSOUT)	// Scintilla lost focus.
+			|| pNMhdr->code == SCN_FOCUSOUT)	// Scintilla lost focus.
 		{
 			::SendMessage(::GetParent(Hwnd()), WM_NOTIFY, wParam, lParam);
 		}
 		return CXeD2DCtrlBase::_OnNotify(wParam, lParam);
 	}
-#pragma endregion Create
+
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		UpdateFont();
+		_RedrawDirectly();
+	}
+
+	// Filter WM_KEYDOWN or WM_SYSKEYDOWN or WM_KEYUP or WM_SYSKEYUP or WM_CHAR
+	// Called from within the message loop (in the main app or modal dialog message loop).
+	bool _OnKeyboardFilter(const MSG& msg)
+	{
+		//bool isSingleLineEditControl = !m_style.isES_MultiLine();
+		bool isSingleLineEditControl = !m_editStyle.WS().isES_MultiLine();
+		CXeShiftCtrlAltKeyHelper sca;
+		UINT uKey = (UINT)msg.wParam;
+		if (isSingleLineEditControl)
+		{
+			if (m_comboBoxKeyboardFilterFunc && m_comboBoxKeyboardFilterFunc(msg))
+			{
+				return true;	// Suppress key (already handled by ComboBox parent control).
+			}
+			if (m_processScintillaWndMessageFunc)
+			{
+				auto [isProcessedByEditCtrl, lResult]
+						= m_processScintillaWndMessageFunc(msg.hwnd, msg.message, msg.wParam, msg.lParam);
+				if (!isProcessedByEditCtrl)
+				{
+					return true;	// Suppress key.
+				}
+			}
+			if (sca.IsNoneDown()
+				&& (msg.message == WM_KEYDOWN || msg.message == WM_CHAR) && uKey == VK_RETURN)
+			{
+				return true;	// Suppress key.
+			}
+			if (msg.message == WM_KEYDOWN
+				&& (uKey == VK_UP || uKey == VK_DOWN || uKey == VK_PRIOR || uKey == VK_NEXT))
+			{
+				return true;	// Suppress key.
+			}
+		}
+		if ((uKey == VK_F10 && sca.IsOnlyShiftDown())	// Is Shift+F10 (Context menu keyboard shortcut).
+			|| uKey == VK_RWIN)
+		{
+			if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP)
+			{
+				WPARAM wp = ((WPARAM)(UINT32)-1) | (((WPARAM)(UINT32)-1) << 32);
+				::PostMessageW(Hwnd(), WM_CONTEXTMENU, wp, 0);
+			}
+			return true;	// Suppress key.
+		}
+		return false;	// Process message normally
+	}
+#pragma endregion Misc
 
 #pragma region ContextMenu
 protected:
@@ -621,21 +662,23 @@ public:
 public:
 	void UpdateColors()
 	{
+		// Note - to future self - setting selection FG results in no visible selected text.
+		// (Scintilla paints only the BG, the text is not visible).
 		const COLORREF bg = m_xeUI->GetColor(CID::GrdCellDefBg);
 		const COLORREF fg = m_xeUI->GetColor(CID::GrdCellDefTxt);
 		const COLORREF sel_bg = m_xeUI->GetColor(CID::GrdSelTxtBg);
-		const COLORREF sel_fg = m_xeUI->GetColor(CID::GrdSelTxtFg);
+		//const COLORREF sel_fg = m_xeUI->GetColor(CID::GrdSelTxtFg);
 		::SendMessage(m_hSciEdWnd, SCI_STYLESETFORE, STYLE_DEFAULT, fg);
 		::SendMessage(m_hSciEdWnd, SCI_STYLESETBACK, STYLE_DEFAULT, bg);
 		::SendMessage(m_hSciEdWnd, SCI_SETCARETFORE, fg, 0);
-		::SendMessage(m_hSciEdWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_TEXT, sel_fg);
+		//::SendMessage(m_hSciEdWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_TEXT, sel_fg);
 		::SendMessage(m_hSciEdWnd, SCI_SETELEMENTCOLOUR, SC_ELEMENT_SELECTION_BACK, sel_bg);
 		::SendMessage(m_hSciEdWnd, SCI_STYLECLEARALL, 0, 0);	// Copies global style to all others
 	}
 
 	void UpdateFont()
 	{
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		SetSciFont(tm.m_fontName.c_str(), tm.m_fontPointSize);
 	}
 
@@ -731,6 +774,7 @@ protected:
 	}
 #pragma endregion ScrollBars
 
+#pragma region Focus
 	virtual LRESULT _OnSetFocus(HWND hOldWnd) override
 	{
 		//TRACE("CXeScintillaEditControl control got focus\n");
@@ -747,7 +791,9 @@ protected:
 		::SendMessage(::GetParent(Hwnd()), WMU_NOTIFY_LOST_FOCUS, (WPARAM)GetSafeHwnd(), (LPARAM)hNewWnd);
 		return 0;
 	}
+#pragma endregion Focus
 
+#pragma region Mouse
 	virtual LRESULT _OnMouseMove(UINT nFlags, CPoint point) override
 	{
 		if (m_mode.m_rcEditControl.PtInRect(point))
@@ -768,25 +814,13 @@ protected:
 		}
 		return CXeD2DCtrlBase::_OnMouseLeave(wparam, lparam);
 	}
+#pragma endregion Mouse
 
 #pragma region Paint
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rc) override
 	{
-		// Fill empty area above and below the edit control window.
-		CRect rcClient = _GetClientRect();
-		const CRect& rcEC = m_mode.m_rcEditControl;
-		CRect rcTop = rcClient, rcBtm = rcClient;
-		rcTop.bottom = rcEC.top;
-		if (rcTop.Height())
-		{
-			pRT->FillRectangle(RectFfromRect(rcTop), GetBrush(CID::GrdCellDefBg));
-		}
-		rcBtm.top = rcEC.bottom;
-		if (rcBtm.Height())
-		{
-			pRT->FillRectangle(RectFfromRect(rcBtm), GetBrush(CID::GrdCellDefBg));
-		}
+		pRT->Clear(m_xeUI->GetColorF(CID::GrdCellDefBg));
 
 		if (m_mode.HasBothScrollBars())
 		{
@@ -803,6 +837,49 @@ protected:
 		}
 	}
 #pragma endregion Paint
+
+#pragma region ScintillaSubclassMessageHandling
+public:
+	void SetProcessScintillWndMessageCallback(ProcessScintillaWndMessageCallback processScintillaWndMessageFunc)
+	{
+		m_processScintillaWndMessageFunc = processScintillaWndMessageFunc;
+	}
+
+	std::tuple<bool, LRESULT> _OnScintillaWnd_Message(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		if (m_processScintillaWndMessageFunc)
+		{
+			return m_processScintillaWndMessageFunc(hWnd, message, wParam, lParam);
+		}
+		return std::make_tuple(true, 0);	// Allow the Scintilla edit control to process the message.
+	}
+#pragma endregion ScintillaSubclassMessageHandling
 };
 
+LRESULT CALLBACK EditCtrlSubclass_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	WNDPROC origWndProc = (WNDPROC)::GetPropW(hwnd, XEPROP_ORIG_SCINTILLA_WNDPROC);
+
+	CXeScintillaEditControl* pThis = reinterpret_cast<CXeScintillaEditControl*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	XeASSERT(origWndProc != nullptr && pThis != nullptr);
+
+	if (!(origWndProc && pThis))
+	{
+		return ::DefWindowProc(hwnd, msg, wParam, lParam);
+	}
+	if (msg == WM_NCDESTROY)
+	{
+		// Restore original window proc pointer and delete the special property.
+		::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<INT_PTR>(origWndProc));
+		::RemovePropW(hwnd, XEPROP_ORIG_SCINTILLA_WNDPROC);
+	}
+
+	auto [isProcessByEditCtrl, lResult] = pThis->_OnScintillaWnd_Message(hwnd, msg, wParam, lParam);
+
+	if (isProcessByEditCtrl)
+	{
+		lResult = ::CallWindowProcW(origWndProc, hwnd, msg, wParam, lParam);
+	}
+	return lResult;
+}
 

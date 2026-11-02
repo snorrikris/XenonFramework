@@ -103,7 +103,7 @@ protected:
 		m_colorIDsListBox = _GetListBoxControl(IDC_LB_COLOR_ID);
 		m_paletteListBox = _GetListBoxControl(IDC_LB_PALETTE);
 		XeASSERT(m_colorIDsListBox && m_paletteListBox);
-		const XeFontMetrics& fm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& fm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		m_colorIDsListBox->SetTabStops({ (UINT)fm.DialogUnitsXtoPixels(109), (UINT)fm.DialogUnitsXtoPixels(98) });
 		m_paletteListBox->SetTabStops({ (UINT)fm.DialogUnitsXtoPixels(120) });
 
@@ -610,14 +610,7 @@ protected:
 	void OnBnClickedSaveColorIds()
 	{
 		std::wstring lastUsedFolder = s_xeLastUsedUIsettings.GetString_or_Val(L"LastUsedColorIDsFolder", L"");
-		//CFolderPickerDialog folderDlg(lastUsedFolder.c_str(), 0, CWnd::FromHandle(Hwnd()), 0);
-		//folderDlg.m_ofn.lpstrTitle = _T("Select folder containing ColorIDs.json and ColorIDs.h files");
-		//if (folderDlg.DoModal() != IDOK)
-		//{
-		//	return;
-		//}
-		//std::wstring folder = folderDlg.GetPathName().GetString();
-		std::wstring folder = ShowFolderPickerDlg(lastUsedFolder);
+		std::wstring folder = ShowFolderPickerDlg(Hwnd(), lastUsedFolder);
 		if (!folder.size())
 		{
 			return;

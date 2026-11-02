@@ -1455,3 +1455,33 @@ public:
 	}
 };
 
+export class XeEnumChildWindows
+{
+public:
+	HWND m_hParent;
+	bool m_isEnumOnlyDirectChildren;
+
+	std::vector<HWND> m_children;
+
+	XeEnumChildWindows(HWND hParent, bool isEnumOnlyDirectChildren)
+			: m_hParent(hParent), m_isEnumOnlyDirectChildren(isEnumOnlyDirectChildren)
+	{
+		::EnumChildWindows(m_hParent, XeEnumChildProc, reinterpret_cast<LPARAM>(this));
+	}
+
+	static BOOL CALLBACK XeEnumChildProc(HWND hwnd, LPARAM lParam)
+	{
+		XeEnumChildWindows* pThis = reinterpret_cast<XeEnumChildWindows*>(lParam);
+		if (pThis->m_isEnumOnlyDirectChildren)
+		{
+			HWND hParent = ::GetParent(hwnd);
+			if (hParent != pThis->m_hParent)
+			{
+				return TRUE;
+			}
+		}
+		pThis->m_children.push_back(hwnd);
+		return TRUE;
+	}
+};
+

@@ -43,6 +43,12 @@ public:
 		return hWnd != 0;
 	}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 public:
 	int SetPos(int pos)
 	{
@@ -111,6 +117,11 @@ protected:
 			return 0;
 		}
 		return CXeD2DCtrlBase::_OnOtherMessage(hWnd, uMsg, wParam, lParam);
+	}
+
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		_RedrawDirectly();
 	}
 
 #pragma region Paint

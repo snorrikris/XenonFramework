@@ -370,8 +370,6 @@ protected:
 
 	CalCtrlMode m_mode = CalCtrlMode::FullRange;
 
-	CSize m_sizeCtrl;
-
 	SEL m_selecting = SEL::DateTime;
 	XeCalPartEdit m_rctEditing;
 
@@ -408,13 +406,8 @@ public:
 	{
 		m_xeUI->RegisterWindowClass(XECALENDARWND_CLASSNAME, D2DCtrl_WndProc);
 
-		m_xeUI->D2D_GetFont(EXE_FONT::eTabListTitleFont);	// Create big text UI font.
-		m_xeUI->D2D_GetFont(EXE_FONT::eMediumBig);
-
 		m_fromDT = FILETIMEX::LocalNow(), m_toDT = mode == CalCtrlMode::FullRange ? FILETIMEX::LocalNow() : FILETIMEX();
 		m_actDT = ActiveDT::From;
-
-		m_sizeCtrl = _CalculateUI();
 	}
 	//virtual ~CXeCalendarCtrl() {}
 
@@ -424,7 +417,26 @@ public:
 		DWORD dwExStyle = 0;
 		HWND hWnd = CreateD2DCtrl(dwExStyle, XECALENDARWND_CLASSNAME, nullptr, dwStyle,
 				rect, hParentWnd, nID, tooltip);
+		_CalculateUI();
+		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eTabListTitleFont);	// Create big text UI font.
+		m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eMediumBig);
+
 		return hWnd != 0;
+	}
+
+	// CalculateControlSize calculates UI size. Can be called before window created.
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
+		return _CalculateUI();
+	}
+
+protected:
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		_CalculateUI();
+		_RedrawDirectly();
 	}
 #pragma endregion Create
 
@@ -436,19 +448,19 @@ public:
 
 	virtual CSize GetWindowPreferredSize() override
 	{
-		return GetControlSize();
+		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
+		return _CalculateUI();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(
-		CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
+			CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
 
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
 
 	// Called by XePopupParent when processing the NC_CREATE message.
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) override
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) override
 	{
-		SetHwnd(hWnd);
-		m_style.Set(hWnd, dwStyle, dwExStyle, m_xeUI);
+		InitializeThis(hWnd, pCS);
 		m_control_has_border = true;
 	}
 
@@ -494,8 +506,6 @@ public:
 
 #pragma region helpers
 public:
-	CSize GetControlSize() { return m_sizeCtrl; }
-
 	void SetDateTimes(const FILETIMEX& fromDT, const FILETIMEX& toDT)
 	{
 		m_fromDT = fromDT, m_toDT = toDT;
@@ -795,26 +805,26 @@ protected:
 		D2D1_SIZE_F szF{};
 		EXE_FONT mode_font = m_mode.GetDateTimeFontForMode();
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"W"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"W"), m_dpi, EXE_FONT::eUI_Font, szF);
 		float mul = m_mode.IsFullMode() ? 1.5f : m_mode.IsMinimalMode() ? 0.5f : 1.0f;
 		float marginL = szF.width * mul, spaceV = marginL * 0.5f, wndCX = 0;
 		float marginT = marginL;
 		float x = marginL, y = marginT;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"WED"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"WED"), m_dpi, EXE_FONT::eUI_Font, szF);
 		labelCX = szF.width * 1.8f;
 		labelCY = szF.height * 1.5f;
 
 		monthColCX = (7 * labelCX) / 2;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"Cancel"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"Cancel"), m_dpi, EXE_FONT::eUI_Font, szF);
 		float okBtnCX = szF.width * (m_mode.IsFullMode() ? 1.8f : 1.4f);
 		float okBtnCY = szF.height * (m_mode.IsFullMode() ? 1.5f : 1.2f);
 
 		if (m_mode.IsFullMode())
 		{
 			// From / To boxes
-			m_xeUI->D2D_GetTextSize(std::wstring(L"0000-00-00 00:00:00,000"), EXE_FONT::eUI_Font, szF);
+			m_xeUI->D2D_GetTextSize(std::wstring(L"0000-00-00 00:00:00,000"), m_dpi, EXE_FONT::eUI_Font, szF);
 			float dateBoxCX = szF.width * 1.1f;
 			float dateBoxCY = szF.height * 1.3f;
 			m_rr.Set((int)RCT::FromOnBox, x, y, dateBoxCY, dateBoxCY);
@@ -830,7 +840,7 @@ protected:
 			wndCX = (3 * marginL) + (2 * dateBoxCY) + (2 * dateBoxCX);
 
 			// Month Year line
-			m_xeUI->D2D_GetTextSize(std::wstring(L"0"), mode_font, szF);
+			m_xeUI->D2D_GetTextSize(std::wstring(L"0"), m_dpi, mode_font, szF);
 			float monthDecCXY = szF.height;
 			D2D1_ROUNDED_RECT monthDecBox = m_rr.Set((int)RCT::MonthDecBox, marginL, y, monthDecCXY, monthDecCXY);
 			D2D1_ROUNDED_RECT monthIncBox = m_rr.Set((int)RCT::MonthIncBox, wndCX - marginL - monthDecCXY, y, monthDecCXY, monthDecCXY);
@@ -855,12 +865,12 @@ protected:
 		}
 
 		// Calculate timeBox time boxes
-		m_xeUI->D2D_GetTextSize(std::wstring(L"0000"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"0000"), m_dpi, mode_font, szF);
 		float yyyyCX = szF.width * 1.2f;
-		m_xeUI->D2D_GetTextSize(std::wstring(L"00"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"00"), m_dpi, mode_font, szF);
 		float hhCX = szF.width * 1.2f;
 		float hhCY = szF.height;
-		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), mode_font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), m_dpi, mode_font, szF);
 		float msCX = szF.width * 1.2f;
 		float cx_dot = hhCY * 0.3f;
 		float cy_inc = hhCY * 0.3f, cx_inc = hhCX * 0.8f;
@@ -906,7 +916,7 @@ protected:
 		if (m_mode.IsFullMode())
 		{
 			// Now button
-			m_xeUI->D2D_GetTextSize(std::wstring(L"Now"), EXE_FONT::eUI_Font, szF);
+			m_xeUI->D2D_GetTextSize(std::wstring(L"Now"), m_dpi, EXE_FONT::eUI_Font, szF);
 			float nowBtnCX = szF.width * 1.8f;
 			x = wndCX - nowBtnCX - marginL;
 			y = msIncBox.rect.top + (((msDecBox.rect.bottom - msIncBox.rect.top) - okBtnCY) / 2);
@@ -1694,7 +1704,8 @@ public:
 	{
 		CXeCalendarCtrl calendar_ctrl(m_xeUI, mode);
 		calendar_ctrl.SetDateTimes(dates.m_ftFrom, dates.m_ftTo);
-		CSize sCtrl = calendar_ctrl.GetControlSize();
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		CSize sCtrl = calendar_ctrl.CalculateUI(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rcCtrl(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &calendar_ctrl, XeShowPopup::FadeIn80);

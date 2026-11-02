@@ -177,11 +177,14 @@ public:
 
 public:
 	CXeUIcolorsIF* m_xeUI = nullptr;
+	HWND m_hCurrentParentWnd = 0;	// Handle to current parent window.
 
 public:
 	//Drawing methods
-	void  PrepareOutput(LPCTSTR lpszHtml, LPSIZE lpSize) //Prepares to draw the HTML string
+	void  PrepareOutput(HWND hCurrentParentWnd, LPCTSTR lpszHtml, LPSIZE lpSize) //Prepares to draw the HTML string
 	{
+		m_hCurrentParentWnd = hCurrentParentWnd;
+
 		//ASSERT(FALSE); // FIXME if needed
 		//ENG: Copy initial parameters
 		//RUS:  опирование начальных параметров
@@ -1680,6 +1683,7 @@ protected:
 		int nIndex = 0;
 		//int nBegin = 0;
 		int i = 0;
+		XeDPI dpi(::GetDpiForWindow(m_hCurrentParentWnd));
 		while (i < sHtml.size())
 		{
 			//ENG: Searching a first tag
@@ -1730,7 +1734,8 @@ protected:
 
 					//ENG: Gets a size a output text
 					//RUS: ѕолучаем размер выводимого текста
-					sz = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, sText.c_str());
+					XeDPI dpi(::GetDpiForWindow(m_hCurrentParentWnd));
+					sz = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, sText.c_str());
 					//::GetTextExtentPoint32(m_hDC, sText, sText.GetLength(), &sz);
 
 					//ENG: Gets a real top coordinate to output with vertical alignment
@@ -1763,7 +1768,7 @@ protected:
 								//RUS: ≈сли это последний вывод в строке, то убираем пробелы справа
 								xet::rtrim(sTemp);
 								nSpacesInLine = GetCountOfChars(sTemp);
-								CSize szTemp = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, sTemp.c_str());
+								CSize szTemp = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, sTemp.c_str());
 								//::GetTextExtentPoint32(m_hDC, sTemp, sTemp.GetLength(), &szTemp);
 								nRealWidth -= (sz.cx - szTemp.cx);
 							} //if
@@ -1774,7 +1779,7 @@ protected:
 
 							//ENG: Gets a size a output text
 							//RUS: ѕолучаем размер выводимого текста
-							sz = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, sTemp.c_str());
+							sz = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, sTemp.c_str());
 							//::GetTextExtentPoint32(m_hDC, sTemp, sTemp.GetLength(), &sz);
 
 							//ENG: Stores a current area as a hyperlink area if it available
@@ -2745,7 +2750,7 @@ protected:
 								if (!sText.empty())
 								{
 									XeASSERT(FALSE);	// Draw text
-									sz = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, sText.c_str());
+									sz = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, sText.c_str());
 									//::GetTextExtentPoint32(m_hDC, sText, sText.GetLength(), &sz);
 									//if (MODE_FIRSTPASS == m_nNumPass) m_hline.nHorzAlign = m_defStyle.nHorzAlign; //Store a last horizontal alignment
 									//y = VerticalAlignText(ptOutput.y, sz.cy);
@@ -3163,7 +3168,8 @@ protected:
 	int  VerticalAlignText(int y, int nHeight)
 	{
 		//Vertical align
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		XeDPI dpi(::GetDpiForWindow(m_hCurrentParentWnd));
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		//const TEXTMETRICW& tm = otm.otmTextMetrics;
 		if (MODE_FIRSTPASS == m_nNumPass)
 		{
@@ -3289,7 +3295,8 @@ protected:
 
 		if (MODE_FIRSTPASS == m_nNumPass)
 		{
-			const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+			XeDPI dpi(::GetDpiForWindow(m_hCurrentParentWnd));
+			const XeFontMetrics& tm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 			//const TEXTMETRICW& tm = otm.otmTextMetrics;
 			if (!m_hline.nHeightLine)
 				m_hline.nHeightLine = tm.m_height;
@@ -3948,12 +3955,13 @@ protected:
 		CSize sz = { 0, 0 };
 		TCHAR tch = _T(' ');
 		CPPString sResult = _T("");
+		XeDPI dpi(::GetDpiForWindow(m_hCurrentParentWnd));
 		while ((sz.cx <= nRealSize) && (0 != tch))
 		{
 			nLastIndex = nCurIndex;
 			nCurIndex++;
 			tch = GetIndexNextChars(str, nCurIndex, PPHTMLDRAWER_BREAK_CHARS);
-			sz = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, str.c_str(), (size_t)nCurIndex);
+			sz = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, str.c_str(), (size_t)nCurIndex);
 			//::GetTextExtentPoint32(m_hDC, str, nCurIndex, &sz);
 		} //while
 
@@ -3972,13 +3980,13 @@ protected:
 					{
 						sResult = str.substr(0, i);
 						str = str.substr(i);
-						sz = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, sResult.c_str(), (size_t)i);
+						sz = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, sResult.c_str(), (size_t)i);
 						//::GetTextExtentPoint32(m_hDC, sResult, i, &sz);
 						nRealSize = sz.cx;
 						return sResult;
 					} //if
 				} //for
-				sz = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, str.c_str(), (size_t)i);
+				sz = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, str.c_str(), (size_t)i);
 				//::GetTextExtentPoint32(m_hDC, str, i, &sz);
 				//RUS: Ќевозможно разбить строку, выводим целиком
 				sResult = str;
@@ -3995,7 +4003,7 @@ protected:
 			sResult = str.substr(0, nLastIndex + 1);
 			str = str.substr(nLastIndex + 1);
 			xet::rtrim(sResult);
-			sz = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, sResult.c_str());
+			sz = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, sResult.c_str());
 			//::GetTextExtentPoint32(m_hDC, sResult, sResult.GetLength(), &sz);
 	//		str.TrimRight();
 			xet::ltrim(str);
@@ -4542,7 +4550,8 @@ protected:
 			return ::MulDiv(nDefault, percent, 100);
 		} //if
 
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		XeDPI dpi(::GetDpiForWindow(m_hCurrentParentWnd));
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
 		//const TEXTMETRICW& tm = otm.otmTextMetrics;
 		int nSign = 0;
 		if (str[0] == _T('+')) nSign = 1;
@@ -4561,7 +4570,7 @@ protected:
 		{
 			XeASSERT(FALSE);	// FIXME
 			CPPString strText = _T("x");
-			CSize szText = m_xeUI->GetTextSizeW(EXE_FONT::eUI_Font, strText.c_str());;
+			CSize szText = m_xeUI->GetTextSizeW(dpi, EXE_FONT::eUI_Font, strText.c_str());;
 			//::GetTextExtentPoint32(m_hDC, strText, strText.GetLength(), &szText);
 			nDefault = nValue * szText.cy;
 		}

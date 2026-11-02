@@ -42,36 +42,39 @@ public:
 
 	const XeWindowStyleValue& WS() const { return m_WS; }
 
-	void Set(HWND hWnd, DWORD dwStyle, DWORD dwExStyle, CXeUIcolorsIF* pUIcolors)
+	void Set(HWND hWnd, DWORD dwStyle, DWORD dwExStyle, CXeUIcolorsIF* pUIcolors, XeDPI dpi)
 	{
+		XeASSERT(dpi.is_valid());
 		m_xeUI = pUIcolors;
 		XeASSERT(m_xeUI);
 		m_ncR.SetXeUIptr(m_xeUI);
 		m_hWnd = hWnd;
 		m_WS.Set(dwStyle, dwExStyle);
-		m_ncR.Calculate(m_WS, m_hWnd);
+		m_ncR.Calculate(m_WS, m_hWnd, dpi);
 	}
 
-	bool Update()
+	bool Update(XeDPI dpi)
 	{
 		XeASSERT(m_hWnd && m_xeUI);
+		XeASSERT(dpi.is_valid());
 		bool isStyleChanged = m_WS.Update(::GetWindowLongW(m_hWnd, GWL_STYLE), ::GetWindowLongW(m_hWnd, GWL_EXSTYLE));
 		bool isWndRectChanged = _IsWindowRectChanged();
-		if (isStyleChanged || isWndRectChanged)
+		bool isDPIchanged = dpi != m_ncR.GetDPI();
+		if (isStyleChanged || isWndRectChanged || isDPIchanged)
 		{
-			m_ncR.Calculate(m_WS, m_hWnd);
+			m_ncR.Calculate(m_WS, m_hWnd, dpi);
 		}
-		if (m_WS.hasCaption() && isWndRectChanged)
+		if ((m_WS.hasCaption() && isWndRectChanged) || isDPIchanged)
 		{
 			_UpdateCustomWindowRegion();
 		}
 		return isStyleChanged || isWndRectChanged;
 	}
 
-	void SetToolbarSize(const CSize& sizeToolbar)
+	void SetToolbarSize(const CSize& sizeToolbar, XeDPI dpi)
 	{
 		m_ncR.SetToolbarSize(sizeToolbar);
-		m_ncR.Calculate(m_WS, m_hWnd);
+		m_ncR.Calculate(m_WS, m_hWnd, dpi);
 	}
 	CSize GetToolbarSize() const { return m_ncR.GetToolbarSize(); }
 
@@ -194,12 +197,12 @@ public:
 	// Returns one of HTXXXXX constants.
 	// Note - HTSYSMENU, HTMINBUTTON, HTMAXBUTTON or HTCLOSE are never returned
 	//        because Windows will paint it's ugly buttons if we do.
-	LRESULT NcHitTest(CPoint pt)
+	LRESULT NcHitTest(CPoint pt, XeDPI dpi)
 	{
 		bool isWndRectChanged = _IsWindowRectChanged();
 		if (isWndRectChanged)
 		{
-			m_ncR.Calculate(m_WS, m_hWnd);
+			m_ncR.Calculate(m_WS, m_hWnd, dpi);
 		}
 		return m_ncR.NcHitTest(pt, m_WS);
 	}

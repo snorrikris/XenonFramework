@@ -9,11 +9,11 @@ import std;
 export enum class PID : unsigned int
 {
 	None = 0,
-	LogFilterPng = 1,	// Log filter image (in Grid TH)
-	TimelineCenter = 2,
-	TimelineZoomIn = 3,
-	TimelineZoomOut = 4,
-	unused5 = 5,
+	AppIcon48 = 1,
+	LogFilterPng = 2,	// Log filter image (in Grid TH)
+	TimelineCenter = 3,
+	TimelineZoomIn = 4,
+	TimelineZoomOut = 5,
 	eRequested = 6,
 	eQueued = 7,
 	eOpening = 8,
@@ -38,7 +38,7 @@ export enum class PID : unsigned int
 	MergePng = 27,	// Merge image (in grid corner button)
 	MultilineExpBtn = 28,
 	MultilineClpsBtn = 29,
-	unused30 = 30,
+	AppIcon16 = 30,
 	BookmarkCurrentPng = 31,
 	BookmarkCurrentWithCommentPng = 32,
 	TimeJumpWarningPng = 33,
@@ -107,6 +107,7 @@ export enum class PID : unsigned int
 	EL_Debug = 96,
 	FileIconDevice = 97,
 	FilterRecall = 98,
+	AppIcon32 = 99,
 	PID_MAX = 100	// Array size
 };
 
@@ -114,11 +115,13 @@ export enum class PID : unsigned int
 export std::vector<PID> GetAllPIDs()
 {
 	return {
+		PID::AppIcon48,
+		PID::AppIcon32,
+		PID::AppIcon16,
 		PID::LogFilterPng,
 		PID::TimelineCenter,
 		PID::TimelineZoomIn,
 		PID::TimelineZoomOut,
-		PID::unused5,
 		PID::eRequested,
 		PID::eQueued,
 		PID::eOpening,
@@ -143,7 +146,6 @@ export std::vector<PID> GetAllPIDs()
 		PID::MergePng,
 		PID::MultilineExpBtn,
 		PID::MultilineClpsBtn,
-		PID::unused30,
 		PID::BookmarkCurrentPng,
 		PID::BookmarkCurrentWithCommentPng,
 		PID::TimeJumpWarningPng,

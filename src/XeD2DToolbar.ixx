@@ -123,18 +123,37 @@ public:
 
 #pragma region CalculateUIsize
 public:
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		_CalculateItems(dpi);
+		return { 0, 0 };
+	}
+
 	CSize GetToolBarSize() const
 	{
 		return CSize(m_xLastTBitem, m_cyItemsHeight + m_cyTopMargin + m_cyBottomMargin);
 	}
 
-	void RecalculateItems()
+	void RecalculateItems(XeDPI dpi)
 	{
-		m_cyItemsHeight = 24;
+		_CalculateItems(dpi);
+		for (auto& item : m_itemlist)
+		{
+			item->MoveWindowToCalculatedPosition();
+		}
+	}
+	
+protected:
+	void _CalculateItems(XeDPI dpi)
+	{
+		m_dpi = dpi;
+		const XeFontMetrics& fm = m_xeUI->GetFontMetric(dpi, EXE_FONT::eUI_Font);
+		int margin = 4;	// (1px border + 1px extra) * 2
+		m_cyItemsHeight = std::max((fm.GetHeight() + margin), 24);
 		int x = 2;
 		for (auto& item : m_itemlist)
 		{
-			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight);
+			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight, dpi);
 		}
 		for (auto& item : m_itemlist)
 		{
@@ -143,13 +162,11 @@ public:
 		x = 2;
 		for (auto& item : m_itemlist)
 		{
-			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight);
-
-			item->MoveWindowToCalculatedPosition();
+			x = item->CalculateItemRect(x, m_cyTopMargin, m_cyItemsHeight, dpi);
 		}
 		m_xLastTBitem = x;	// Save toolbar 'last' X pos.
 	}
-	
+
 	int _GetNextXpos() const
 	{
 		return m_itemlist.size() ? m_itemlist.back()->GetNextControlXpos() : 2;
@@ -270,7 +287,7 @@ public:
 		if (pItem)
 		{
 			pItem->SetVisibleState(visible);
-			RecalculateItems();
+			RecalculateItems(m_dpi);
 			_RedrawToolBar();
 		}
 	}
@@ -359,7 +376,7 @@ public:
 		if (pItem)
 		{
 			pItem->m_cxRmargin = cx;
-			RecalculateItems();
+			RecalculateItems(m_dpi);
 			_RedrawToolBar();
 		}
 	}
@@ -599,7 +616,7 @@ public:
 		}
 		if (isFontsChanged)
 		{
-			RecalculateItems();
+			RecalculateItems(m_dpi);
 		}
 		if (isColorsChanged)
 		{
@@ -920,7 +937,7 @@ protected:
 			CRect rcParentCtrl(pItem->m_rItem);
 			::ClientToScreen(Hwnd(), (LPPOINT)&rcParentCtrl);
 			::ClientToScreen(Hwnd(), ((LPPOINT)&rcParentCtrl) + 1);
-			CRect rcPopup = p->m_cmn->CalcPopupWindowSize(rcParentCtrl.left, rcParentCtrl.bottom,
+			CRect rcPopup = p->m_cmn->CalcPopupWindowSize(m_dpi, rcParentCtrl.left, rcParentCtrl.bottom,
 					rcParentCtrl.Width(), 4.0, item_count);
 			p->ShowPopup(Hwnd(), rcPopup, rcParentCtrl);
 			if (p->m_nLastUserSelectedItemIdx >= 0)

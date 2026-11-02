@@ -426,6 +426,21 @@ public:
 				rect, hParentWnd, nID, tooltip);
 		return hWnd != 0;
 	}
+
+	// CalculateControlSize calculates UI size. Can be called before window created.
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		XeASSERT(m_dpi.is_valid());
+		return _CalculateUI();
+	}
+
+protected:
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		_CalculateUI();
+		_RedrawDirectly();
+	}
 #pragma endregion Create
 
 #pragma region CXePopupCtrlBase_impl
@@ -436,19 +451,19 @@ public:
 
 	virtual CSize GetWindowPreferredSize() override
 	{
-		return CSize(_CalculateUI());
+		XeASSERT(GetSafeHwnd() != 0);	// Not supported before window created.
+		return _CalculateUI();
 	}
 
-	virtual void AdjustPopupWindowFinalSize(
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
 			CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) override {}
 
 	virtual DropWndOffset GetDropWndOffsetPreference() const override { return DropWndOffset::AboveParentCtrl; }
 
 	// Called by XePopupParent when processing the NC_CREATE message.
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) override
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) override
 	{
-		SetHwnd(hWnd);
-		m_style.Set(hWnd, dwStyle, dwExStyle, m_xeUI);
+		InitializeThis(hWnd, pCS);
 		m_control_has_border = true;
 	}
 
@@ -494,9 +509,6 @@ public:
 #pragma endregion CXePopupCtrlBase_impl
 
 #pragma region helpers
-public:
-	CSize GetControlSize() { return _CalculateUI(); }
-
 protected:
 	RCT _PtInRect(const float& x, const float& y)
 	{
@@ -709,21 +721,21 @@ protected:
 	void _CalculateDimensions()
 	{
 		D2D1_SIZE_F szF{};
-		m_xeUI->D2D_GetTextSize(std::wstring(L"GREEN"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"GREEN"), m_dpi, EXE_FONT::eUI_Font, szF);
 		labelCX = szF.width * 1.3f;
 		txtCY = szF.height;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"000"), m_dpi, EXE_FONT::eUI_Font, szF);
 		valueCX = szF.width * 1.1f;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"More>"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"More>"), m_dpi, EXE_FONT::eUI_Font, szF);
 		moreBtnCX = szF.width * 1.1f;
 		smallBtnCY = szF.height * 1.2f;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"{+}"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"{+}"), m_dpi, EXE_FONT::eUI_Font, szF);
 		pickerBtnCX = szF.width * 1.3f;
 
-		m_xeUI->D2D_GetTextSize(std::wstring(L"HH"), EXE_FONT::eUI_Font, szF);
+		m_xeUI->D2D_GetTextSize(std::wstring(L"HH"), m_dpi, EXE_FONT::eUI_Font, szF);
 		sliderCX = szF.width;
 		spcCX = sliderCX * 0.5f;
 
@@ -744,7 +756,7 @@ protected:
 		m_isDimensionsCalculated = true;
 	}
 
-	SIZE _CalculateUI()	// Return size needed for control.
+	CSize _CalculateUI()	// Return size needed for control.
 	{
 		_ResetRects();
 		bool isSimple = m_layout == ColorPickerMode::Simple;
@@ -756,7 +768,7 @@ protected:
 		// Color wheel and color squares rect.
 		ColorWheelRect = SetR(marginL, marginT, wheelCXY, wheelCXY);
 
-		SIZE sCtrl;
+		CSize sCtrl;
 		if (isSimple)
 		{
 			float yML = marginT + wheelCXY + (txtCY / 2);;
@@ -1080,7 +1092,7 @@ protected:
 				D2D1::Point2F(rect.right, rect.bottom)), pGradientStops.Get(), lbr.GetAddressOf());
 		pRT->FillRectangle(rect, lbr.Get());
 
-		IDWriteTextFormat* Text = m_xeUI->D2D_GetFont(EXE_FONT::eUI_Font);
+		IDWriteTextFormat* Text = m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eUI_Font);
 		Text->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 		Text->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		auto r2 = rect;
@@ -1544,7 +1556,8 @@ public:
 		color_picker.SELCOL.SetFromRGB(m_selectedColor, false);
 		color_picker.BEFORE = color_picker.SELCOL;
 		color_picker.m_notifyChangeWndSizeMsg = NF_POPUP_WND_SIZE_CHANGE;
-		CSize sCtrl = color_picker.GetControlSize();
+		XeDPI dpi(::GetDpiForWindow(hParent));
+		CSize sCtrl = color_picker.CalculateUI(dpi);
 		int scrX = rcParentCtrlScreenPos.left, scrY = rcParentCtrlScreenPos.bottom;
 		CRect rPicker(scrX, scrY, scrX + sCtrl.cx, scrY + sCtrl.cy);
 		CXePopupCtrl popup(m_xeUI, &color_picker, XeShowPopup::FadeIn80);

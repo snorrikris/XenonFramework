@@ -161,6 +161,12 @@ public:
 		m_tooltip_string = tooltip;
 		_EnableTooltip(L"CXeD2DButton");
 	}
+
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
 #pragma endregion Create
 
 #pragma region Misc
@@ -178,6 +184,13 @@ public:
 			m_bgClr = bgColor;
 			m_bgDialog = bgColor;
 		}
+	}
+
+protected:
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		m_textLayout.Reset();
+		_RedrawDirectly();
 	}
 #pragma endregion Misc
 
@@ -266,7 +279,7 @@ protected:
 		else if (m_style.WS().IsGroupBox())
 		{
 			rc = _GetGroupBoxRect(rcClient);
-			const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+			const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 			float xOfs = (float)tm.m_aveCharWidth * 1.0f;
 			rc.left += xOfs;
 			rc.right -= xOfs;
@@ -293,7 +306,7 @@ protected:
 	D2D1_RECT_F _GetGroupBoxRect(const D2D1_RECT_F& rcClient) const
 	{
 		D2D1_RECT_F rc(rcClient);
-		const XeFontMetrics& tm = m_xeUI->GetFontMetric(EXE_FONT::eUI_Font);
+		const XeFontMetrics& tm = m_xeUI->GetFontMetric(m_dpi, EXE_FONT::eUI_Font);
 		float xOfs = (float)tm.m_aveCharWidth / 2.0f;
 		float yOfs = (float)tm.GetHeight() / 2.0f;
 		//rc.left += xOfs;
@@ -308,7 +321,7 @@ protected:
 protected:
 	virtual void _PaintF(ID2D1RenderTarget* pRT, D2D1_RECT_F rcClient) override
 	{
-		bool isStyleChanged = m_style.Update();
+		bool isStyleChanged = m_style.Update(m_dpi);
 		if (isStyleChanged && m_textLayout.Get())
 		{
 			m_textLayout.Reset();	// Re-create text object.
@@ -387,7 +400,7 @@ public:
 			// Draw image.
 			bool isImgOnLeftSide = isShowImageOnly ? false : hasText /*&& m_style.HasImageStyle()*/;
 			D2D1_RECT_F rcImgBox = m_d2dstyle.IsMaxImgSize() ? rcClient : rcText;
-			D2D1_RECT_F rcImg = pRctx->_DrawButtonImage(pRT, m_imagePID, rcImgBox, isImgOnLeftSide, isEnabled, isHovering);
+			D2D1_RECT_F rcImg = pRctx->_DrawPID_Image(pRT, m_imagePID, rcImgBox, isImgOnLeftSide, isEnabled, isHovering);
 			if (!isShowImageOnly && hasText)
 			{
 				// Calculate text box.
@@ -494,7 +507,7 @@ public:
 protected:
 	void _CreateTextLayout(ID2D1RenderTarget* pRT, const D2D1_RECT_F& rcText, const std::wstring& txt, CID fgCID)
 	{
-		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(EXE_FONT::eUI_Font);
+		IDWriteTextFormat* pUIfont = m_xeUI->D2D_GetFont(m_dpi, EXE_FONT::eUI_Font);
 		HRESULT hr = m_xeUI->D2D_GetWriteFactory()->CreateTextLayout(txt.c_str(), (UINT32)txt.size(),
 			pUIfont, (rcText.right - rcText.left), (rcText.bottom - rcText.top), &m_textLayout);
 		XeASSERT(hr == S_OK);

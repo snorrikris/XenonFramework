@@ -2,6 +2,7 @@ module;
 
 #include "os_minimal.h"
 #include <cstdint>
+#include <dcommon.h>
 #include "XeAssert.h"
 
 // IMPORTANT - include this file ONLY here. (the compiler has problems if included in other modules).
@@ -350,3 +351,131 @@ export struct NM_PPTOOLTIP_NEED_TT
 	}
 };
 
+// Wrapper class for DPI (for type safety).
+export class XeDPI
+{
+	UINT m_dpi = 0;
+
+	float m_pixels_scale = 1.0f;
+
+	float m_font_point_size_to_pixels_scale = 96.0f / 72.0f;
+
+public:
+	XeDPI() = default;
+	explicit XeDPI(UINT dpi) : m_dpi(dpi) { _on_set(); }
+
+	bool operator==(const XeDPI& rhs) const { return m_dpi == rhs.m_dpi; }
+	bool operator!=(const XeDPI& rhs) const { return !operator==(rhs); }
+	bool operator<(const XeDPI& rhs) const { return m_dpi < rhs.m_dpi; }
+
+	UINT get() const { return m_dpi; }
+	void set(UINT dpi)
+	{
+		XeASSERT(dpi != 0);
+		m_dpi = dpi;
+		_on_set();
+	}
+	void set(const XeDPI& other)
+	{
+		m_dpi = other.m_dpi;
+		_on_set();
+	}
+
+	bool is_valid() const { return m_dpi != 0; }
+
+	// Calculate "normal" monitor (96 DPI) size pixels - to pixel value for current DPI.
+	int size_to_pixels(int cxy) const
+	{
+		float scaled = size_to_pixelsF_rounded((float)cxy);
+		return (int)(scaled + 0.5f);
+	}
+	CSize size_to_pixels(const CSize& s) const
+	{
+		return CSize(size_to_pixels(s.cx), size_to_pixels(s.cy));
+	}
+	float size_to_pixelsF_rounded(float cxy) const
+	{
+		float scaled = size_to_pixelsF(cxy);
+		return std::round(scaled);
+	}
+	float size_to_pixelsF(float cxy) const
+	{
+		return cxy * m_pixels_scale;
+	}
+	D2D_SIZE_F size_to_pixelsF_rounded(const CSize& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF_rounded((float)s.cx), size_to_pixelsF_rounded((float)s.cy));
+	}
+	D2D_SIZE_F size_to_pixelsF(const CSize& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF((float)s.cx), size_to_pixelsF((float)s.cy));
+	}
+	D2D_SIZE_F size_to_pixelsF_rounded(const D2D_SIZE_F& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF_rounded(s.width), size_to_pixelsF_rounded(s.height));
+	}
+	D2D_SIZE_F size_to_pixelsF(const D2D_SIZE_F& s) const
+	{
+		return D2D_SIZE_F(size_to_pixelsF(s.width), size_to_pixelsF(s.height));
+	}
+
+	float font_point_size_to_pixels(int point_size) const
+	{
+		return (float)point_size * m_font_point_size_to_pixels_scale;
+	}
+
+protected:
+	void _on_set()
+	{
+		if (m_dpi == 0)
+		{
+			m_pixels_scale = 1.0f;
+			m_font_point_size_to_pixels_scale = 96.0f / 72.0f;
+			return;
+		}
+		m_pixels_scale = (float)m_dpi / 96.0f;
+		m_font_point_size_to_pixels_scale = (float)m_dpi / 72.0f;
+	}
+};
+
+export class XeDPI_Calculator
+{
+public:
+	XeDPI m_beforeDPI, m_currentDPI;
+	double m_convFactor;
+
+	XeDPI_Calculator(XeDPI beforeDPI, XeDPI currentDPI) : m_beforeDPI(beforeDPI), m_currentDPI(currentDPI)
+	{
+		bool isValid = m_beforeDPI.is_valid() && m_currentDPI.is_valid();
+		XeASSERT(isValid);
+		m_convFactor = isValid ? (double)m_currentDPI.get() / (double)m_beforeDPI.get() : 1.0;
+	}
+
+	CRect CalculateRect(const CRect& rcBefore)
+	{
+		int x = (int)((double)rcBefore.left * m_convFactor + 0.5);
+		int y = (int)((double)rcBefore.top * m_convFactor + 0.5);
+		int cx = (int)((double)rcBefore.Width() * m_convFactor + 0.5);
+		int cy = (int)((double)rcBefore.Height() * m_convFactor + 0.5);
+		return CRect(CPoint(x, y), CSize(cx, cy));
+	}
+
+	CPoint CalculatePoint(const CPoint& ptBefore)
+	{
+		int x = (int)((double)ptBefore.x * m_convFactor + 0.5);
+		int y = (int)((double)ptBefore.y * m_convFactor + 0.5);
+		return CPoint(x, y);
+	}
+
+	CSize CalculateSize(const CSize& szBefore)
+	{
+		int cx = (int)((double)szBefore.cx * m_convFactor + 0.5);
+		int cy = (int)((double)szBefore.cy * m_convFactor + 0.5);
+		return CSize(cx, cy);
+	}
+
+	int CalculateScalar(int before)
+	{
+		return (int)((double)before * m_convFactor + 0.5);
+	}
+};

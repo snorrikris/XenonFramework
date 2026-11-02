@@ -245,6 +245,7 @@
     <ClCompile Include="..\src\XeUItypes.ixx" />
     <ClCompile Include="..\src\XeUItypesPID.ixx" />
     <ClCompile Include="..\src\XeUIWorkThread.ixx" />
+    <ClCompile Include="..\src\XeUI_helpers.ixx" />
     <ClCompile Include="..\src\XeUserSetting.ixx" />
     <ClCompile Include="..\src\XeUserSettingControl.ixx" />
     <ClCompile Include="..\src\XeUserSettings.ixx" />

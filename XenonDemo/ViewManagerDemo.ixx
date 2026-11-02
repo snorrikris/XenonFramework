@@ -178,7 +178,7 @@ protected:
 
 		std::wstring title = L"Open one or more files";
 		std::vector<std::pair<std::wstring, std::wstring>> file_types{ {L"All files", L"*.*"} };
-		std::vector<std::wstring> files = ShowOpenFileDlg(lastUsedDir, true, file_types, &title);
+		std::vector<std::wstring> files = ShowOpenFileDlg(m_hMainWnd, lastUsedDir, true, file_types, &title);
 		if (files.size() == 0)
 		{
 			return;

@@ -987,7 +987,7 @@ public:
 				rc1.left += 3;
 				//CSize size = pPng->DrawPng(graphics, rc1);
 
-				D2D1_RECT_F rcImg = pRctx->_DrawButtonImage(pRT, cell->GetPngImg(), RectFfromRect(rc1),
+				D2D1_RECT_F rcImg = pRctx->_DrawPID_Image(pRT, cell->GetPngImg(), RectFfromRect(rc1),
 					true, true, false);
 
 				//rect->left += size.cx + 3;
@@ -1013,10 +1013,11 @@ public:
 			h_align = DWRITE_TEXT_ALIGNMENT_TRAILING;
 			//left = rect->right - size.cx - m_GI->m_margin;
 		}
-		//else
-		//{
-		//	left = rect->left + m_GI->m_margin + offset;
-		//}	
+		else
+		{
+			rect->left += pRctx->m_xeUI->GetUIValue(UIV::cxCellMargin, pRctx->m_dpi);
+			//left = rect->left + m_GI->m_margin + offset;
+		}	
 
 		// vertical text alignment
 		DWRITE_PARAGRAPH_ALIGNMENT v_align = DWRITE_PARAGRAPH_ALIGNMENT_CENTER;
@@ -1668,7 +1669,8 @@ public:
 			//::DrawTextW(hDC, pStr, (int)len, rect, style );
 			//s.cx = rect.Width();
 			//s.cy = rect.Height();
-			s = m_GI->GetXeUI()->GetTextSizeW(font, cell->GetText());
+			XeDPI dpi(::GetDpiForWindow(m_GI->CtrlWnd()));
+			s = m_GI->GetXeUI()->GetTextSizeW(dpi, font, cell->GetText());
 		}
 
 		//use margins

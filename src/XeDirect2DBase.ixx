@@ -69,6 +69,8 @@ public:
 protected:
 	bool m_uiResourcesCreatedWnd = false, m_uiResourcesCreatedDC = false;
 
+	bool m_isWndMovingToDifferentDPImonitor = false;
+
 	bool m_isHovering = false, m_isTracking = false;
 
 	// Icon in the caption - when sys menu.
@@ -112,6 +114,23 @@ public:
 		}
 	}
 
+	/// <summary>
+	/// Calculate the window UI (if any) based on supplied DPI value.
+	/// All window types must implement this
+	/// - the minimal implementation should store the dpi into m_dpi and return {0,0}.
+	/// <para>
+	/// Note - CalculateUI is called when DPI value is changing (window moved to an other monitor with different DPI than current one).
+	/// </para>
+	/// <para>
+	/// Note - CalculateUI can be called before the window is created
+	/// - when the parent needs to know how big a window to create.
+	/// </para>
+	/// </summary>
+	/// <param name="dpi">The dots per inch value of the monitor where the window is/will be shown.
+	/// 96 is a "normal" DPI monitor.</param>
+	/// <returns>Return the size of the calculated UI - or {0,0} if unknown or don't care.</returns>
+	virtual CSize CalculateUI(XeDPI dpi) = 0;
+
 	HWND CreateD2DWindow(DWORD dwExStyle, const std::wstring& class_name, const wchar_t* pTitle, DWORD dwStyle,
 			const CRect& rcWnd, HWND hParentWnd, UINT uID, bool isEnableTooltip = false)
 	{
@@ -127,19 +146,36 @@ public:
 
 			m_control_has_border = true;
 		}
-		m_style.Set(0, dwStyle, dwExStyle, m_xeUI);
 		HINSTANCE hInstance = m_xeUI->GetInstanceHandle();
 		HWND hWnd = ::CreateWindowExW(dwExStyle, class_name.c_str(), pTitle, dwStyle,
 				rcWnd.left, rcWnd.top, rcWnd.Width(), rcWnd.Height(), hParentWnd, (HMENU)(uint64_t)uID, hInstance,
 				this);  // <-- pass 'this' pointer as parameter (to WM_NCCREATE)
 		// Note - WM_NCCREATE is the first message sent to the new window.
-		// When D2DCtrl_WndProc handles that message - the m_hWnd and m_style members are set.
+		// When D2DCtrl_WndProc handles WM_NCCREATE - the m_hWnd and m_style members are set.
 		XeASSERT(m_hWnd && m_style.IsInitialized());
 		if (isEnableTooltip)
 		{
 			_EnableTooltip(class_name);
 		}
 		return hWnd;
+	}
+
+	// Called from D2DCtrl_WndProc when handling WM_NCCREATE message.
+	void InitializeThis(HWND hWnd, CREATESTRUCT* pCS)
+	{
+		XeASSERT(::IsWindow(hWnd) && m_xeUI);
+		s_xeUI->SetHwndD2DBasePtr(hWnd, this, pCS->lpszClass);
+		SetHwnd(hWnd);
+		m_dpi.set(::GetDpiForWindow(Hwnd()));
+		m_xeUI->CreateFonts(m_dpi);
+		m_style.Set(hWnd, pCS->style, pCS->dwExStyle, m_xeUI, m_dpi);
+
+		if (m_style.WS().hasCaption())
+		{
+			// Disable DWM (Desktop Window Manager) rendering of NC window area.
+			DWMNCRENDERINGPOLICY ncrp = DWMNCRP_DISABLED;
+			::DwmSetWindowAttribute(m_hWnd, DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp));
+		}
 	}
 
 protected:
@@ -215,8 +251,14 @@ public:
 		case WM_QUERYENDSESSION:
 			return _OnQueryEndSession(wParam, lParam);
 
+		case WM_GETDPISCALEDSIZE:
+			return _OnGetDpiScaledSize(hWnd, wParam, lParam);
+
 		case WM_DPICHANGED:
 			return _OnDpiChanged(hWnd, wParam, lParam);
+
+		case WM_DPICHANGED_AFTERPARENT:
+			return _OnDpiChangedAfterParent(hWnd, wParam, lParam);
 
 		case WM_NOTIFY:
 			return _OnNotify(wParam, lParam);
@@ -355,25 +397,49 @@ protected:
 		return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
+	/// <summary>
+	/// WM_GETDPISCALEDSIZE is sent to a popup window and is the first message
+	/// received when 'this' window has been moved to a different DPI monitor.
+	/// <para>Note - WM_EXITSIZEMOVE is the last message sent in the DPI change procedure.</para>
+	/// </summary>
+	/// <param name="hwnd">'this' window handle.</param>
+	/// <param name="wParam">DPI value</param>
+	/// <param name="lParam">in/out pointer to a SIZE struct</param>
+	/// <returns>TRUE - a new size has been computed. FALSE - use default linear DPI scaling.</returns>
+	virtual LRESULT _OnGetDpiScaledSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
+	{
+		m_isWndMovingToDifferentDPImonitor = true;
+		return ::DefWindowProc(hwnd, WM_GETDPISCALEDSIZE, wParam, lParam);
+	}
+
 	virtual LRESULT _OnDpiChanged(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	{
 		UINT dpiX = LOWORD(wParam);
 		UINT dpiY = HIWORD(wParam);
-		RECT* prcNewWindow = (RECT*)lParam;
+		m_dpi.set(dpiY);
+		m_xeUI->CreateFonts(m_dpi);
+		m_style.Update(m_dpi);
+		CRect rcWnd((RECT*)lParam);
 		XeTRACE("DPI changed to %u x %u, new window rect: (%d, %d) - (%d, %d)\n", dpiX, dpiY,
-			prcNewWindow->left, prcNewWindow->top, prcNewWindow->right, prcNewWindow->bottom);
+				rcWnd.left, rcWnd.top, rcWnd.right, rcWnd.bottom);
+		::SetWindowPos(hwnd, NULL, rcWnd.left, rcWnd.top, rcWnd.Width(), rcWnd.Height(),
+				SWP_NOZORDER | SWP_NOACTIVATE);
 		return 0; // ::DefWindowProc(hwnd, WM_DPICHANGED, wParam, lParam);
+	}
+
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam)
+	{
+		XeDPI newDPI(::GetDpiForWindow(Hwnd()));
+		if (newDPI != m_dpi)
+		{
+			m_dpi = newDPI;
+			m_style.Update(m_dpi);
+		}
+		return 0;
 	}
 
 	virtual LRESULT _OnNcCreate(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	{
-		if (m_style.WS().hasCaption())
-		{
-			// Disable DWM (Desktop Window Manager) rendering of NC window area.
-			DWMNCRENDERINGPOLICY ncrp = DWMNCRP_DISABLED;
-			::DwmSetWindowAttribute(m_hWnd, DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp));
-		}
-
 		return ::DefWindowProc(hwnd, WM_NCCREATE, wParam, lParam);
 	}
 
@@ -580,7 +646,7 @@ protected:
 		if (!::IsIconic(m_hWnd))
 		{
 			CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-			return m_style.NcHitTest(point);
+			return m_style.NcHitTest(point, m_dpi);
 			//return HTCLIENT;
 		}
 		return ::DefWindowProc(m_hWnd, WM_NCHITTEST, wParam, lParam);
@@ -603,13 +669,13 @@ protected:
 
 	virtual LRESULT _OnStyleChanged(WPARAM wParam, LPARAM lParam)
 	{
-		m_style.Update();
+		m_style.Update(m_dpi);
 		return 0;
 	}
 
 	virtual LRESULT _OnMove(WPARAM wParam, LPARAM lParam)
 	{
-		m_style.Update();
+		m_style.Update(m_dpi);
 		//return ::DefWindowProc(m_hWnd, WM_MOVE, wParam, lParam);
 		return 0;
 	}
@@ -621,13 +687,14 @@ protected:
 		//int cx = GET_X_LPARAM(lParam);
 		//int cy = GET_Y_LPARAM(lParam);
 
-		m_style.Update();
+		m_style.Update(m_dpi);
 		return 0;
 	}
 
 	virtual LRESULT _OnExitSizeMove()
 	{
-		m_style.Update();
+		m_isWndMovingToDifferentDPImonitor = false;
+		m_style.Update(m_dpi);
 		return ::DefWindowProc(m_hWnd, WM_EXITSIZEMOVE, 0, 0);
 	}
 
@@ -1099,10 +1166,18 @@ public:
 
 	WINDOWPLACEMENT GetCurrentWindowPlacement()
 	{
-		WINDOWPLACEMENT	wp;
-		::ZeroMemory(&wp, sizeof(wp));
-		wp.length = sizeof wp;
+		WINDOWPLACEMENT	wp{ 0 };
+		wp.length = sizeof(wp);
 		::GetWindowPlacement(m_hWnd, &wp);
+		if (m_dpi != XeDPI(96))
+		{
+			// Need to scale window rect for "normal" DPI (96).
+			// - because SetWindowPlacement does not work correctly for non 96 DPI monitors.
+			XeDPI_Calculator dpi_calc(m_dpi, XeDPI(96));
+			CRect rcNP(wp.rcNormalPosition);
+			wp.rcNormalPosition.right = wp.rcNormalPosition.left + dpi_calc.CalculateScalar(rcNP.Width());
+			wp.rcNormalPosition.bottom = wp.rcNormalPosition.top + dpi_calc.CalculateScalar(rcNP.Height());
+		}
 		return wp;
 	}
 #pragma endregion MFC_Functions_Replacements
@@ -1218,28 +1293,27 @@ protected:
 			//-- Draw Icon and buttons into memory DC - note icon has no 'hot' or 'down' image.
 			if (m_style.WS().hasIcon())
 			{
-				if (!m_d2d_icon_bitmap)
-				{
-					m_d2d_icon_bitmap = _CreateFromHicon(m_xeUI->GetAppIconHandle());
-				}
-				if (m_d2d_icon_bitmap)
-				{
-					float cyIcon = HeightOf(rcIcon);
-					float cyIcnOfs = (HeightOf(rcTitle) - cyIcon) / 2;
-					rcIcon.top = rcTitle.top + cyIcnOfs;
-					rcIcon.bottom = rcIcon.top + cyIcon;
-					_DrawIcon(pRT, rcIcon, m_d2d_icon_bitmap.Get());
-				}
+				float cyIcon = HeightOf(rcIcon);
+				float cyIcnOfs = (HeightOf(rcTitle) - cyIcon) / 2;
+				rcIcon.top = rcTitle.top + cyIcnOfs;
+				rcIcon.bottom = rcIcon.top + cyIcon;
+				_DrawPID_Image(pRT, PID::AppIcon32, rcIcon, false, true, false);
 			}
 
-			PID uID_MinZe = m_style.GetMinimizeBtnImg();
-			_DrawButtonImage(pRT, uID_MinZe, rcMinZe, false, true, false);
+			if (m_style.WS().hasMinimizeBtn())
+			{
+				PID uID_MinZe = m_style.GetMinimizeBtnImg();
+				_DrawPID_Image(pRT, uID_MinZe, rcMinZe, false, true, false);
+			}
 
-			PID uID_MaxZe = m_style.GetMaximizeBtnImg();
-			_DrawButtonImage(pRT, uID_MaxZe, rcMaxZe, false, true, false);
+			if (m_style.WS().hasMaximizeBtn())
+			{
+				PID uID_MaxZe = m_style.GetMaximizeBtnImg();
+				_DrawPID_Image(pRT, uID_MaxZe, rcMaxZe, false, true, false);
+			}
 
 			PID uID_Close = m_style.GetCloseBtnImg();
-			_DrawButtonImage(pRT, uID_Close, rcClose, false, true, false);
+			_DrawPID_Image(pRT, uID_Close, rcClose, false, true, false);
 		}
 
 		//-- Paint left, right and bottom borders if needed.
@@ -1460,6 +1534,21 @@ protected:
 
 #pragma region Misc
 protected:
+	virtual LRESULT _OnDpiChangedAfterParent(HWND hwnd, WPARAM wParam, LPARAM lParam) override
+	{
+		XeDPI old_dpi = m_dpi;
+
+		LRESULT result = CXeD2DWndBase::_OnDpiChangedAfterParent(hwnd, wParam, lParam);
+
+		_OnDPIchangeForControl(old_dpi);
+
+		return result;
+	}
+
+	// All controls need to handle DPI change. E.g. recalculate layout and redraw.
+	// Note - parent window will already have moved and resized 'this' control window.
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) = 0;
+
 	virtual LRESULT _OnMouseLeave(WPARAM wparam, LPARAM lparam) override
 	{
 		LRESULT result = CXeD2DWndBase::_OnMouseLeave(wparam, lparam);
@@ -1484,9 +1573,7 @@ export LRESULT CALLBACK D2DCtrl_WndProc(HWND hwnd, UINT uiMsg, WPARAM wParam, LP
 		CREATESTRUCT* pCS = (CREATESTRUCT*)lParam;
 		pThis = (CXeD2DWndBase*)pCS->lpCreateParams;
 		XeASSERT(pThis);	// 'this' pointer is passed to 'us' as lpParam in CreateWindowExW.
-		s_xeUI->SetHwndD2DBasePtr(hwnd, pThis, pCS->lpszClass);
-		pThis->SetHwnd(hwnd);
-		pThis->m_style.Set(hwnd, pCS->style, pCS->dwExStyle, s_xeUI);
+		pThis->InitializeThis(hwnd, pCS);
 	}
 	else if (uiMsg == WM_GETMINMAXINFO)
 	{

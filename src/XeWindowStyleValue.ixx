@@ -391,6 +391,7 @@ public:
 	bool IsSS_LEFT() const { DWORD bs = m_dwStyle & SS_TYPEMASK; return bs == SS_LEFT; }
 	bool IsSS_RIGHT() const { DWORD bs = m_dwStyle & SS_TYPEMASK; return bs == SS_RIGHT; }
 	bool IsSS_CENTER() const { DWORD bs = m_dwStyle & SS_TYPEMASK; return bs == SS_CENTER; }
+	bool IsSS_LEFTNOWORDWRAP() const { DWORD bs = m_dwStyle & SS_TYPEMASK; return bs == SS_LEFTNOWORDWRAP; }
 
 	/*
 	 * Static Control Styles

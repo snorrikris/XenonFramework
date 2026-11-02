@@ -516,6 +516,11 @@ protected:
 		return CXeD2DCtrlBase::_OnWmCommand(wSource, wID, sender);
 	}
 
+	virtual void _OnDPIchangeForControl(const XeDPI& old_dpi) override
+	{
+		_RedrawDirectly();
+	}
+
 #pragma region MFC_Functions_Replacements
 public:
 	BOOL SetScrollInfo(LPSCROLLINFO lpScrollInfo, BOOL bRedraw = TRUE)
@@ -2234,6 +2239,12 @@ public:
 	CXeScrollBar(CXeUIcolorsIF* pUIcolors) : CXeScrollBarBase(pUIcolors) {}
 	//virtual ~CXeScrollBar() {}
 	
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 protected:
 	// Override base class member.
 	virtual void _DrawScrollBarBackLayer(XeScrollBar_PaintInfo& ps) override
@@ -2255,8 +2266,6 @@ protected:
 	virtual void _DrawScrollBarTopLayer(XeScrollBar_PaintInfo& ps) override
 	{
 	}
-
-	//DECLARE_MESSAGE_MAP()
 };
 
 //BEGIN_MESSAGE_MAP(CXeScrollBar, CXeScrollBarBase)
@@ -2268,6 +2277,12 @@ public:
 	CXeScrollBar64(CXeUIcolorsIF* pUIcolors) : CXeScrollBarBase64(pUIcolors) {}
 	virtual ~CXeScrollBar64() {}
 
+	virtual CSize CalculateUI(XeDPI dpi) override
+	{
+		m_dpi = dpi;
+		return { 0, 0 };
+	}
+
 protected:
 	// Override base class member.
 	virtual void _DrawScrollBarBackLayer(XeScrollBar_PaintInfo& ps) override
@@ -2289,8 +2304,6 @@ protected:
 	virtual void _DrawScrollBarTopLayer(XeScrollBar_PaintInfo& ps) override
 	{
 	}
-
-	//DECLARE_MESSAGE_MAP()
 };
 
 //BEGIN_MESSAGE_MAP(CXeScrollBar64, CXeScrollBarBase64)

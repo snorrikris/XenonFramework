@@ -6,6 +6,7 @@ export module Xe.PopupCtrlBase;
 
 import std;
 import Xe.mfc_types;
+import Xe.UItypes;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -35,8 +36,8 @@ public:
 	// This member is called after the popup control sent the NF_POPUP_WND_SIZE_CHANGE message.
 	virtual CSize GetWindowPreferredSize() = 0;
 
-	virtual void AdjustPopupWindowFinalSize(
-		CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) = 0;
+	virtual void AdjustPopupWindowFinalSize(XeDPI dpi,
+			CRect& rcScreenPos, const CRect& rcParentCtrlScreenPos) = 0;
 
 	// Called by CXePopupCtrl when it needs to place the drop window above the parent control.
 	// Derived class should return AboveParentCtrl if the drop window should be placed fully above
@@ -46,7 +47,7 @@ public:
 	virtual DropWndOffset GetDropWndOffsetPreference() const = 0;
 
 	// Called by XePopupParent when processing the NC_CREATE message.
-	virtual void PopupDropDown(HWND hWnd, DWORD dwStyle, DWORD dwExStyle) = 0;
+	virtual void PopupDropDown(HWND hWnd, CREATESTRUCT* pCS) = 0;
 
 	// Return true if 'this' is the first instance of the 'control'.
 	// The derived control should return true - unless 'this' instance is a 'sub-control' window (e.g. sub-menu).
